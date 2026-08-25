@@ -1,10 +1,11 @@
 """word_coach 插件入口。
 
 - 组件：服务（词书 + Leitner 复习）、word_quiz / word_lookup 工具、
-  /背单词 命令、word_stream_gate 可见性门控
+  /背单词 命令、word_stream_gate 可见性门控、内置 Web UI（router 组件）
 - 每日定时推送：按 [plugin].push_time（默认 09:00）向白名单目标流推送今日词单，
   用一次性调度 + 每次触发后重排下一次（调度器只支持 interval/delay 触发，
   不支持 cron，因此用「到点重排」模式对齐墙钟时间）
+- Web UI：挂载到框架统一的内嵌 HTTP 服务器（见 router.py），启动时打印实际地址
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from .command import WordCommand
 from .config import WordCoachConfig
 from .gate import WordStreamGate
 from .reminder import WordPendingReminder
+from .router import WordCoachWebRouter
 from .service import WordCoachService, resolve_stream_id
 from .tool import WordImportTool, WordLookupTool, WordQuizTool
 
@@ -56,7 +58,7 @@ class WordCoachPlugin(BasePlugin):
 
     plugin_name = "word_coach"
     plugin_description = "背单词助手：词书 + Leitner 复习 + 每日推送 + 对话测验"
-    plugin_version = "0.8.0"
+    plugin_version = "0.9.0"
 
     configs: list[type] = [WordCoachConfig]
     dependent_components: list[str] = []
@@ -83,6 +85,7 @@ class WordCoachPlugin(BasePlugin):
             WordCommand,
             WordStreamGate,
             WordPendingReminder,
+            WordCoachWebRouter,
         ]
 
     # ------------------------------------------------------------------
@@ -124,6 +127,27 @@ class WordCoachPlugin(BasePlugin):
                     name="word_coach_auto_import",
                     daemon=True,
                 )
+
+        self._log_web_ui_url()
+
+    def _log_web_ui_url(self) -> None:
+        """打印 Web UI 实际访问地址（读框架 HTTP 服务器单例的 host:port，不假设 8000）。"""
+        try:
+            # 公开 api 层未导出该入口，按规范 §6 回退到内部模块路径
+            from src.core.transport.router.http_server import get_http_server
+
+            server = get_http_server()
+            if server.is_running():
+                logger.info(
+                    f"word_coach Web UI 已就绪: {server.get_base_url()}/word-coach/"
+                )
+            else:
+                logger.info(
+                    "word_coach Web UI 路由已注册，但框架 HTTP 服务器未运行"
+                    "（如需访问请开启核心配置 [http_router].enable_http_router）"
+                )
+        except Exception as exc:
+            logger.warning(f"word_coach Web UI 地址探测失败（不影响插件功能）: {exc}")
 
     async def _auto_import_urls(self, urls: list[str]) -> None:
         """词书为空时按顺序尝试自动下载导入词库；成功后停止。"""

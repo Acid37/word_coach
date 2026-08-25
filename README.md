@@ -19,6 +19,8 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 | `word_import` | tool | 词库管理：状态（status）/ 下载导入（download）/ 扫描目录（sync） |
 | `背单词` | command | 主人查询命令（进度总览 / 单流详情 / 词库总览） |
 | `word_stream_gate` | event_handler | 工具可见性门控（BEFORE_TOOL_FILTER，按聊天流白名单动态注入/剔除） |
+| `word_pending_reminder` | event_handler | 待判定题提醒（ON_MESSAGE_RECEIVED 注入 system-reminder） |
+| `word_coach_web` | router | 内置 Web UI（仪表盘/词书/导入/测验/进度），挂载于框架 HTTP 服务器 |
 | `config` | config | 配置组件，映射到 `config/plugins/word_coach/config.toml` |
 
 ## 安装与启用
@@ -56,6 +58,44 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 | `auto_import_urls` | `[]` | 词书为空时启动自动下载的词库 URL 列表（按顺序尝试，成功即停） |
 | `auto_import_if_empty` | `true` | 是否启用上述自动导入（URL 列表为空时不触发网络请求） |
 | `preset_urls` | `{}` | 预置词库（名字 → 直链），供 `word_import` 的 `preset` 参数使用 |
+
+### [web]（0.9.0 新增）
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `owner_target` | `""` | 网页测验/进度绑定的主人聊天流，格式 `platform:user:ID`；留空回退 `[scope].allowed_targets` 第一项 |
+| `quiz_count` | `10` | 网页测验每次会话取词总数（到期复习优先） |
+| `quiz_new` | `3` | 网页测验每次会话的新词数量上限 |
+
+## Web UI（0.9.0 新增）
+
+插件内置全功能网页界面，**无需任何额外安装**：通过框架统一的内嵌 HTTP 服务器
+（FastAPI + uvicorn）挂载，不自己监听端口；前端为随插件分发的单文件 `web/index.html`
+（无构建、无 CDN 依赖）。
+
+### 访问地址
+
+- 地址 = 框架核心配置 `[http_router]` 的 `host:port` + `/word-coach/`（默认 `http://127.0.0.1:8000/word-coach/`）。
+- 插件启动时自动读取框架 HTTP 服务器单例打印实际地址（**不假设 8000**）——多个 Bot 实例各自改了端口也互不冲突。
+- 前置条件：核心配置 `[http_router].enable_http_router = true`（默认开启）。
+- 仅建议本机访问（默认绑定 127.0.0.1），未做鉴权。
+
+### 功能
+
+| 页面 | 能力 |
+|---|---|
+| 仪表盘 | 词书规模、来源分布、各聊天流进度条形图、绑定流的正确率圆环与今日待复习 |
+| 词书 | 搜索分页 + 添加/编辑/删除单词（补齐自然语言外的手动管理入口） |
+| 导入词库 | ① 粘贴 URL 一键下载 ② 预置词库下拉一键导入 ③ 上传本地词表文件 ④ 内置获取指引（格式示例、GitHub raw 直链获取、`preset_urls` 配置方法） |
+| 测验 | 卡片式背单词（先回忆→看答案→认识/不认识），进度计入绑定的主人聊天流 |
+| 进度 | 各流总览 + 单流详情（箱分布、待复习词单） |
+
+### 网页测验与聊天流的关系
+
+网页测验绑定主人的私人聊天流（`[web].owner_target`，默认回退白名单第一项）：
+
+- 进度、箱子、到期时间与 QQ 私聊**完全共用同一份数据**——网页上答对的词，QQ 里也不会重复考。
+- 网页测验不使用 pending 待判定机制（会话由前端跟踪）；但提交判定时若 QQ 侧恰有同一词的待判定题会顺手清除，避免互相卡住。
 
 ## 词库获取
 
@@ -188,6 +228,7 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 
 ## 版本历史
 
+- **0.9.0**：内置 Web UI（仪表盘/词书增删改查/一键导入词库/进度看板/网页测验，绑定主人聊天流）；`_normalize_entry` 支持主流开源词库字段别名（name/trans/usphone 等）；`manifest.json` 补声明 httpx 依赖；修复 `word_lookup` 引导到已移除添加命令的过期文案。
 - **0.8.0**：测验防漏记——服务端 pending 待判定题 + ON_MESSAGE_RECEIVED 自动提醒，`next` 挡住未闭环题目；新增 `cancel`；进度记录 platform/user_id 可读化，老库自动迁移。
 - **0.7.2**：新增 `[scope].tools_in_groups` 开关（默认群聊不注入工具）。
 - **0.7.1**：查询命令简化为「平台 + ID」输入。

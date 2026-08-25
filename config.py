@@ -18,8 +18,8 @@ from src.core.components.base.config import (
 class WordCoachConfig(BaseConfig):
     """word_coach 背单词助手插件配置。"""
 
-    name: ClassVar[str] = "config"
-    description: ClassVar[str] = "背单词助手插件配置"
+    config_name: ClassVar[str] = "config"
+    config_description: ClassVar[str] = "背单词助手插件配置"
 
     @config_section("plugin")
     class PluginSection(SectionBase):
@@ -81,6 +81,30 @@ class WordCoachConfig(BaseConfig):
             ),
         )
 
+    @config_section("web")
+    class WebSection(SectionBase):
+        """内置 Web UI 配置。"""
+
+        owner_target: str = Field(
+            default="",
+            description=(
+                "网页测验与网页进度绑定的主人聊天流，"
+                "格式：platform:user:ID（如 qq:user:2583090218）。"
+                "留空时回退 [scope].allowed_targets 的第一项。"
+                "网页端背单词的进度与该聊天流（QQ 私聊）完全共用。"
+            ),
+        )
+
+        quiz_count: int = Field(
+            default=10,
+            description="网页测验每次会话取词总数（到期复习优先）",
+        )
+
+        quiz_new: int = Field(
+            default=3,
+            description="网页测验每次会话中的新词数量上限",
+        )
+
     @config_section("source")
     class SourceSection(SectionBase):
         """词库来源配置（自动下载导入）。"""
@@ -111,4 +135,5 @@ class WordCoachConfig(BaseConfig):
 
     plugin: PluginSection = Field(default_factory=PluginSection)
     scope: ScopeSection = Field(default_factory=ScopeSection)
+    web: WebSection = Field(default_factory=WebSection)
     source: SourceSection = Field(default_factory=SourceSection)

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>word_coach · 背单词助手</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #23263a;
+    --muted: #8a8fa8;
+    --primary: #5b6cff;
+    --primary-dark: #4656e0;
+    --green: #2eb872;
+    --red: #e5484d;
+    --amber: #f5a623;
+    --border: #e7e9f2;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(35, 38, 58, .06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15px;
+  }
+  header {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 14px 24px 0; position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
+  nav { display: flex; gap: 4px; }
+  nav button {
+    border: none; background: none; padding: 10px 16px; cursor: pointer;
+    font-size: 14px; color: var(--muted); border-bottom: 2.5px solid transparent;
+  }
+  nav button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  h2 { font-size: 17px; margin: 24px 0 12px; }
+  h2:first-child { margin-top: 4px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px 18px; margin-bottom: 14px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat .num { font-size: 26px; font-weight: 700; }
+  .stat .lbl { color: var(--muted); font-size: 12.5px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .pill {
+    display: inline-block; padding: 1px 9px; border-radius: 999px;
+    background: #eef0ff; color: var(--primary); font-size: 12px; margin: 1px 2px;
+  }
+  .pill.gray { background: #f0f1f5; color: var(--muted); }
+  .pill.green { background: #e6f7ee; color: var(--green); }
+
+  button.btn {
+    border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer;
+    background: var(--primary); color: #fff; font-size: 14px;
+  }
+  button.btn:hover { background: var(--primary-dark); }
+  button.btn.ghost { background: #eef0ff; color: var(--primary); }
+  button.btn.green { background: var(--green); }
+  button.btn.red { background: var(--red); }
+  button.btn:disabled { opacity: .5; cursor: not-allowed; }
+  button.link {
+    border: none; background: none; color: var(--primary); cursor: pointer;
+    font-size: 13px; padding: 2px 6px;
+  }
+  button.link.danger { color: var(--red); }
+
+  input[type=text], input[type=search], select, textarea {
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    font-size: 14px; background: #fff; color: var(--text);
+  }
+  input[type=search] { width: 260px; }
+  input[type=file] { font-size: 13px; }
+  textarea { width: 100%; min-height: 64px; resize: vertical; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  td .word { font-weight: 700; font-size: 15px; }
+  tr:hover td { background: #fafbff; }
+
+  /* 条形图 */
+  .bars { display: flex; flex-direction: column; gap: 7px; }
+  .bars .bar-row { display: grid; grid-template-columns: 88px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; }
+  .bars .bar-track { background: #eef0f6; border-radius: 6px; height: 16px; overflow: hidden; }
+  .bars .bar-fill { background: var(--primary); height: 100%; border-radius: 6px; min-width: 2px; }
+
+  /* SVG 圆环 */
+  .ring-wrap { display: flex; align-items: center; gap: 14px; }
+  .ring { width: 84px; height: 84px; }
+  .ring .bg { fill: none; stroke: #eef0f6; stroke-width: 3.8; }
+  .ring .fg { fill: none; stroke: var(--green); stroke-width: 3.8; stroke-linecap: round;
+    stroke-dasharray: 0 100; transform: rotate(-90deg); transform-origin: center; transition: stroke-dasharray .5s; }
+  .ring-num { font-size: 20px; font-weight: 700; }
+
+  /* 测验卡片 */
+  .quiz-card { text-align: center; padding: 36px 24px; }
+  .quiz-card .q-word { font-size: 40px; font-weight: 800; letter-spacing: .5px; }
+  .quiz-card .q-phonetic { color: var(--muted); font-size: 17px; margin-top: 6px; }
+  .quiz-card .q-answer { margin-top: 22px; border-top: 1px dashed var(--border); padding-top: 18px; text-align: left; }
+  .quiz-card .q-meaning { font-size: 19px; margin-bottom: 6px; }
+  .quiz-card .q-example { color: var(--muted); font-size: 14px; font-style: italic; }
+  .quiz-progress { height: 8px; background: #eef0f6; border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .quiz-progress > div { height: 100%; background: var(--primary); width: 0; transition: width .3s; }
+  .quiz-verdict { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+  .quiz-verdict button { padding: 10px 26px; font-size: 15px; }
+
+  details.guide { background: #fafbff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-top: 14px; }
+  details.guide summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+  details.guide pre {
+    background: #23263a; color: #e8eaf6; border-radius: 8px; padding: 12px 14px;
+    font-size: 12.5px; overflow-x: auto; line-height: 1.55;
+  }
+  details.guide h4 { margin: 14px 0 6px; font-size: 14px; }
+  details.guide p, details.guide li { font-size: 13.5px; line-height: 1.7; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: #23263a; color: #fff; padding: 10px 22px; border-radius: 99px;
+    font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99;
+    max-width: 86vw; text-align: center;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err { background: var(--red); }
+
+  #modal-mask {
+    position: fixed; inset: 0; background: rgba(30, 33, 52, .45); display: none;
+    align-items: center; justify-content: center; z-index: 50;
+  }
+  #modal-mask.open { display: flex; }
+  #modal {
+    background: var(--card); border-radius: var(--radius); width: 460px; max-width: 92vw;
+    padding: 20px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.18);
+  }
+  #modal h3 { margin: 0 0 14px; font-size: 16px; }
+  #modal label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  #modal input, #modal textarea { width: 100%; }
+
+  .pager { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 word_coach · 背单词助手</h1>
+  <div class="sub">内置 Web UI · 与聊天流共用同一份词书与进度</div>
+  <nav>
+    <button data-tab="dashboard" class="active">仪表盘</button>
+    <button data-tab="words">词书</button>
+    <button data-tab="import">导入词库</button>
+    <button data-tab="quiz">测验</button>
+    <button data-tab="progress">进度</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ 仪表盘 ============ -->
+  <section class="tab active" id="tab-dashboard">
+    <div class="grid" id="dash-stats"></div>
+    <h2>我的学习（网页绑定的聊天流）</h2>
+    <div class="card" id="dash-binding"></div>
+    <h2>各聊天流进度</h2>
+    <div id="dash-streams"></div>
+  </section>
+
+  <!-- ============ 词书 ============ -->
+  <section class="tab" id="tab-words">
+    <div class="row" style="margin-bottom:12px;">
+      <input type="search" id="words-search" placeholder="搜索单词或释义…">
+      <button class="btn ghost" onclick="loadWords(0)">搜索</button>
+      <span style="flex:1"></span>
+      <button class="btn" onclick="openWordModal()">＋ 添加单词</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>单词</th><th>音标</th><th>释义</th><th>来源</th><th style="width:120px;">操作</th>
+        </tr></thead>
+        <tbody id="words-body"></tbody>
+      </table>
+      <div class="pager">
+        <button class="btn ghost" id="words-prev" onclick="wordsPage(-1)">上一页</button>
+        <span class="muted" id="words-pageinfo"></span>
+        <button class="btn ghost" id="words-next" onclick="wordsPage(1)">下一页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 导入词库 ============ -->
+  <section class="tab" id="tab-import">
+    <div class="card">
+      <h2>① 从 URL 下载导入</h2>
+      <div class="row">
+        <input type="text" id="import-url" placeholder="词库直链（.json/.csv/.tsv/.txt，未知后缀自动识别）" style="flex:1; min-width:280px;">
+        <button class="btn" onclick="importUrl()">下载导入</button>
+      </div>
+      <div class="muted" style="margin-top:6px;">支持 JSON / CSV / TSV / 纯文本词表；未知后缀会自动嗅探内容。</div>
+    </div>
+
+    <div class="card">
+      <h2>② 预置词库一键导入</h2>
+      <div class="row">
+        <select id="import-preset" style="min-width:220px;"></select>
+        <button class="btn" onclick="importPreset()">导入</button>
+      </div>
+      <div class="muted" style="margin-top:6px;" id="preset-hint">加载中…</div>
+    </div>
+
+    <div class="card">
+      <h2>③ 上传本地词表文件</h2>
+      <div class="row">
+        <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt">
+        <button class="btn" onclick="importFile()">上传导入</button>
+      </div>
+      <div class="muted" style="margin-top:6px;">支持 .json / .csv / .tsv / .txt（UTF-8 编码）。</div>
+    </div>
+
+    <div id="import-result"></div>
+
+    <details class="guide">
+      <summary>📖 词库获取与配置指引（怎么找到自己的词库）</summary>
+
+      <h4>四种支持的词表格式</h4>
+      <p><b>JSON 数组</b>（推荐，字段最全）：</p>
+<pre>[
+  {"word": "apple", "phonetic": "/ˈæpl/", "meaning": "n. 苹果", "example": "an apple a day"},
+  {"word": "give up", "meaning": "放弃"}
+]</pre>
+      <p><b>JSON 字典</b>（最简，只有词和释义）：</p>
+<pre>{"apple": "n. 苹果", "book": "n. 书 v. 预订"}</pre>
+      <p><b>CSV / TSV</b>（Excel 另存为 UTF-8 CSV 即可）：带表头时列名支持中英双语
+      （word/单词、meaning/释义、phonetic/音标、example/例句、tags/标签）；无表头时按此顺序排列。</p>
+      <p><b>纯文本</b>：每行一个词，后面可跟释义（Tab 或空格分隔），# 开头为注释。</p>
+
+      <h4>开源词库字段也能直接用</h4>
+      <p>主流开源词库（如 GitHub 上的 kajiweb/dict、JEPCAM 等）常用的字段名已自动兼容：
+      <code>name/entry → word</code>、<code>trans/definition/chinese → 释义</code>、
+      <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>，下载后直接导入即可。</p>
+
+      <h4>怎么拿到 GitHub 上词库的直链</h4>
+      <p>在 GitHub 打开词库文件 → 点右上角「Raw」→ 复制浏览器地址栏的
+      <code>raw.githubusercontent.com/…</code> 链接，粘贴到上面「从 URL 下载导入」即可。</p>
+
+      <h4>配置自己的预置词库（让「一键导入」更方便）</h4>
+      <p>编辑 <code>config/plugins/word_coach/config.toml</code> 的 <code>[source]</code> 节：</p>
+<pre>[source]
+preset_urls = { cet4 = "https://example.com/cet4.json", kaoyan = "https://example.com/kaoyan.json" }</pre>
+      <p>保存后重启 Bot，页面「预置词库」下拉框即可一键导入；聊天里也可以直接说
+      「下载词库 cet4」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
+    </details>
+  </section>
+
+  <!-- ============ 测验 ============ -->
+  <section class="tab" id="tab-quiz">
+    <div class="card" id="quiz-panel"></div>
+  </section>
+
+  <!-- ============ 进度 ============ -->
+  <section class="tab" id="tab-progress">
+    <div class="card" id="progress-streams-card">
+      <table>
+        <thead><tr><th>聊天流</th><th>已学</th><th>复习次数</th><th>正确率</th><th>今日待复习</th><th></th></tr></thead>
+        <tbody id="progress-streams"></tbody>
+      </table>
+    </div>
+    <div id="progress-detail"></div>
+  </section>
+
+</main>
+
+<!-- 添加/编辑词条弹窗 -->
+<div id="modal-mask">
+  <div id="modal">
+    <h3 id="modal-title">添加单词</h3>
+    <input type="hidden" id="f-id">
+    <label>单词 *</label><input type="text" id="f-word" placeholder="apple">
+    <label>释义</label><input type="text" id="f-meaning" placeholder="n. 苹果">
+    <label>音标</label><input type="text" id="f-phonetic" placeholder="/ˈæpl/">
+    <label>例句</label><input type="text" id="f-example" placeholder="an apple a day">
+    <label>标签</label><input type="text" id="f-tags" placeholder="如：cet4, 食物">
+    <div class="row" style="justify-content:flex-end; margin-top:16px;">
+      <button class="btn ghost" onclick="closeWordModal()">取消</button>
+      <button class="btn" onclick="saveWord()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- 基础工具 ---------------- */
+
+const $ = (s) => document.querySelector(s);
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+let toastTimer = null;
+function toast(msg, isErr = false) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.className = "show" + (isErr ? " err" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ""; }, 2600);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) { /* 非 JSON */ }
+  if (!res.ok) {
+    const detail = body && (body.detail || body.message);
+    throw new Error(typeof detail === "string" ? detail : `请求失败（HTTP ${res.status}）`);
+  }
+  return body;
+}
+
+/* ---------------- Tab 切换 ---------------- */
+
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
+    btn.classList.add("active");
+    const name = btn.dataset.tab;
+    $("#tab-" + name).classList.add("active");
+    if (name === "dashboard") loadDashboard();
+    if (name === "words") loadWords(0);
+    if (name === "import") loadPresets();
+    if (name === "quiz") quizIntro();
+    if (name === "progress") loadProgress();
+  });
+});
+
+/* ---------------- 仪表盘 ---------------- */
+
+async function loadDashboard() {
+  let data;
+  try { data = await api("api/overview"); } catch (e) { toast(e.message, true); return; }
+
+  const book = data.book || { total: 0, by_source: {} };
+  const streams = data.streams || [];
+  const dueTotal = streams.reduce((a, s) => a + (s.due_now || 0), 0);
+  const learnedMax = streams.length ? Math.max(...streams.map((s) => s.learned || 0)) : 0;
+
+  $("#dash-stats").innerHTML = `
+    <div class="card stat"><span class="num">${book.total}</span><span class="lbl">词书总词数</span></div>
+    <div class="card stat"><span class="num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
+    <div class="card stat"><span class="num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
+    <div class="card stat"><span class="num">${dueTotal}</span><span class="lbl">今日待复习（全部流）</span></div>`;
+
+  // 绑定流卡片
+  const b = data.binding;
+  if (!b) {
+    $("#dash-binding").innerHTML = `<div class="muted">未配置网页绑定的聊天流。请在配置
+      <code>[web].owner_target</code> 填写 <code>platform:user:ID</code>
+      （如 qq:user:2583090218），网页测验将使用你的私人聊天流进度。</div>`;
+  } else {
+    const acc = b.accuracy || 0;
+    $("#dash-binding").innerHTML = `
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 36 36">
+          <circle class="bg" cx="18" cy="18" r="15.9"/>
+          <circle class="fg" cx="18" cy="18" r="15.9" stroke-dasharray="${acc} 100"/>
+        </svg>
+        <div>
+          <div class="ring-num">${acc}% 正确率</div>
+          <div class="muted">绑定流：${esc(b.stream_id)}</div>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:14px;">
+        <div class="stat"><span class="num">${b.learned}</span><span class="lbl">已学单词</span></div>
+        <div class="stat"><span class="num">${b.total_reviews}</span><span class="lbl">累计复习次数</span></div>
+        <div class="stat"><span class="num" style="color:var(--green)">${b.correct}</span><span class="lbl">答对</span></div>
+        <div class="stat"><span class="num" style="color:var(--red)">${b.wrong}</span><span class="lbl">答错</span></div>
+        <div class="stat"><span class="num" style="color:var(--amber)">${b.due_now}</span><span class="lbl">今日待复习</span></div>
+      </div>`;
+  }
+
+  // 各流卡片
+  if (!streams.length) {
+    $("#dash-streams").innerHTML = `<div class="card empty">还没有任何聊天流产生进度</div>`;
+  } else {
+    const bars = streams.map((s) => {
+      const pct = learnedMax ? Math.round((s.learned / learnedMax) * 100) : 0;
+      return `<div class="bar-row">
+        <span title="${esc(s.user_key || "")}">${esc(s.label || s.user_key || "?")}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span>
+        <span>${s.learned} 词</span>
+      </div>`;
+    }).join("");
+    $("#dash-streams").innerHTML =
+      `<div class="card"><div class="bars">${bars}</div>
+       <div class="muted" style="margin-top:8px;">条形为已学词数对比；详情见「进度」页。</div></div>`;
+  }
+}
+
+/* ---------------- 词书管理 ---------------- */
+
+let wordsState = { q: "", offset: 0, limit: 50, total: 0 };
+
+async function loadWords(offset) {
+  if (offset !== undefined) wordsState.offset = offset;
+  wordsState.q = $("#words-search").value;
+  const p = new URLSearchParams({
+    q: wordsState.q, offset: wordsState.offset, limit: wordsState.limit,
+  });
+  let data;
+  try { data = await api("api/words?" + p); } catch (e) { toast(e.message, true); return; }
+  wordsState.total = data.total;
+
+  const rows = data.words.map((w) => `
+    <tr>
+      <td><span class="word">${esc(w.word)}</span></td>
+      <td class="muted">${esc(w.phonetic || "")}</td>
+      <td>${esc(w.meaning || "（待补充）")}
+        ${w.example ? `<div class="muted">${esc(w.example)}</div>` : ""}</td>
+      <td><span class="pill gray">${esc(w.source || "manual")}</span></td>
+      <td>
+        <button class="link" onclick='openWordModal(${JSON.stringify(w)})'>编辑</button>
+        <button class="link danger" onclick="deleteWord(${w.id}, ${JSON.stringify(w.word)})">删除</button>
+      </td>
+    </tr>`).join("");
+  $("#words-body").innerHTML =
+    rows || `<tr><td colspan="5" class="empty">没有匹配的词条</td></tr>`;
+
+  const page = Math.floor(wordsState.offset / wordsState.limit) + 1;
+  const pages = Math.max(1, Math.ceil(wordsState.total / wordsState.limit));
+  $("#words-pageinfo").textContent =
+    wordsState.total ? `共 ${wordsState.total} 词 · 第 ${page}/${pages} 页` : "共 0 词";
+  $("#words-prev").disabled = wordsState.offset <= 0;
+  $("#words-next").disabled = wordsState.offset + wordsState.limit >= wordsState.total;
+}
+
+function wordsPage(delta) {
+  loadWords(Math.max(0, wordsState.offset + delta * wordsState.limit));
+}
+
+$("#words-search").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loadWords(0);
+});
+
+function openWordModal(word) {
+  $("#modal-title").textContent = word ? "编辑单词" : "添加单词";
+  $("#f-id").value = word ? word.id : "";
+  $("#f-word").value = word ? word.word : "";
+  $("#f-meaning").value = word ? (word.meaning || "") : "";
+  $("#f-phonetic").value = word ? (word.phonetic || "") : "";
+  $("#f-example").value = word ? (word.example || "") : "";
+  $("#f-tags").value = word ? (word.tags || "") : "";
+  $("#modal-mask").classList.add("open");
+  $("#f-word").focus();
+}
+
+function closeWordModal() { $("#modal-mask").classList.remove("open"); }
+
+$("#modal-mask").addEventListener("click", (e) => {
+  if (e.target === $("#modal-mask")) closeWordModal();
+});
+
+async function saveWord() {
+  const id = $("#f-id").value;
+  const payload = {
+    word: $("#f-word").value.trim(),
+    meaning: $("#f-meaning").value.trim(),
+    phonetic: $("#f-phonetic").value.trim(),
+    example: $("#f-example").value.trim(),
+    tags: $("#f-tags").value.trim(),
+  };
+  if (!payload.word) { toast("单词不能为空", true); return; }
+  try {
+    if (id) {
+      await api("api/words/" + id, { method: "PUT", body: JSON.stringify(payload) });
+      toast("已更新 " + payload.word);
+    } else {
+      await api("api/words", { method: "POST", body: JSON.stringify(payload) });
+      toast("已添加 " + payload.word);
+    }
+    closeWordModal();
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteWord(id, word) {
+  if (!confirm(`确定删除「${word}」？该词在所有聊天流的进度也会一并清除。`)) return;
+  try {
+    await api("api/words/" + id, { method: "DELETE" });
+    toast("已删除 " + word);
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 词库导入 ---------------- */
+
+async function loadPresets() {
+  let data;
+  try { data = await api("api/import/presets"); } catch (e) { return; }
+  const presets = Object.entries(data.presets || {});
+  const sel = $("#import-preset");
+  if (!presets.length) {
+    sel.innerHTML = `<option value="">（未配置预置词库）</option>`;
+    sel.disabled = true;
+    $("#preset-hint").innerHTML =
+      `还没有配置预置词库。在 <code>config/plugins/word_coach/config.toml</code> 的
+       <code>[source].preset_urls</code> 添加「名字 = 直链」后重启即可，详见下方指引。`;
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = presets.map(([k, v]) =>
+      `<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    $("#preset-hint").textContent = `共 ${presets.length} 个预置词库，选择后点「导入」。`;
+  }
+}
+
+function showImportResult(data) {
+  $("#import-result").innerHTML = `
+    <div class="card">
+      <b>✅ 导入完成：${esc(data.message)}</b>
+      ${data.errors && data.errors.length
+        ? `<div class="muted" style="margin-top:6px;">失败详情：${data.errors.slice(0, 5).map(esc).join("；")}${data.errors.length > 5 ? "…" : ""}</div>`
+        : ""}
+    </div>`;
+}
+
+async function importUrl() {
+  const url = $("#import-url").value.trim();
+  if (!url) { toast("请先粘贴词库直链", true); return; }
+  toast("正在下载…");
+  try {
+    const data = await api("api/import/url", { method: "POST", body: JSON.stringify({ url }) });
+    showImportResult(data);
+    $("#import-url").value = "";
+  } catch (e) { toast(e.message, true); $("#import-result").innerHTML = ""; }
+}
+
+async function importPreset() {
+  const name = $("#import-preset").value;
+  if (!name) { toast("没有可选的预置词库", true); return; }
+  toast("正在下载…");
+  try {
+    const data = await api("api/import/preset", { method: "POST", body: JSON.stringify({ name }) });
+    showImportResult(data);
+  } catch (e) { toast(e.message, true); }
+}
+
+async function importFile() {
+  const input = $("#import-file");
+  const file = input.files && input.files[0];
+  if (!file) { toast("请先选择词表文件", true); return; }
+  const content = await file.text();
+  try {
+    const data = await api("api/import/file", {
+      method: "POST",
+      body: JSON.stringify({ filename: file.name, content }),
+    });
+    showImportResult(data);
+    input.value = "";
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 网页测验 ---------------- */
+
+const quiz = { words: [], index: 0, revealed: false, correct: 0, wrong: 0, stream: "" };
+
+function quizIntro() {
+  $("#quiz-panel").innerHTML = `
+    <div style="text-align:center; padding:20px 0;">
+      <div style="font-size:42px;">🎴</div>
+      <h2 style="margin-top:8px;">网页背单词测验</h2>
+      <p class="muted">进度计入你的私人聊天流（与 QQ 私聊同一份数据）。<br>
+      到期复习词优先，穿插少量新词。</p>
+      <button class="btn" onclick="quizStart()">开始测验</button>
+    </div>`;
+}
+
+async function quizStart() {
+  let data;
+  try { data = await api("api/quiz/session"); }
+  catch (e) { $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  quiz.words = data.words || [];
+  quiz.index = 0; quiz.correct = 0; quiz.wrong = 0; quiz.stream = data.stream_id;
+  if (!quiz.words.length) {
+    $("#quiz-panel").innerHTML = `
+      <div class="empty">
+        没有待测单词（今日词单已学完或词书为空）。<br><br>
+        <button class="btn ghost" onclick="quizIntro()">返回</button>
+      </div>`;
+    return;
+  }
+  quizRender();
+}
+
+function quizRender() {
+  const total = quiz.words.length;
+  const w = quiz.words[quiz.index];
+  const pct = Math.round((quiz.index / total) * 100);
+  $("#quiz-panel").innerHTML = `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="muted" style="text-align:center;">
+      第 ${quiz.index + 1} / ${total} 张 · 绑定流 ${esc(quiz.stream)}
+      ${w.is_new ? ' · <span class="pill green">✨ 新词</span>' : ` · <span class="pill">🔁 箱${w.box}</span>`}
+    </div>
+    <div class="quiz-card">
+      <div class="q-word">${esc(w.word)}</div>
+      <div class="q-phonetic">${esc(w.phonetic || "")}</div>
+      ${quiz.revealed ? `
+        <div class="q-answer">
+          <div class="q-meaning">${esc(w.meaning || "（暂无释义）")}</div>
+          ${w.example ? `<div class="q-example">${esc(w.example)}</div>` : ""}
+        </div>
+        <div class="quiz-verdict">
+          <button class="btn green" onclick="quizAnswer(true)">✅ 认识</button>
+          <button class="btn red" onclick="quizAnswer(false)">❌ 不认识</button>
+        </div>`
+      : `
+        <div class="quiz-verdict">
+          <button class="btn" onclick="quizReveal()">看答案</button>
+        </div>
+        <div class="muted" style="margin-top:12px;">先在心里回忆释义，再看答案</div>`}
+    </div>`;
+}
+
+function quizReveal() { quiz.revealed = true; quizRender(); }
+
+async function quizAnswer(correct) {
+  const w = quiz.words[quiz.index];
+  try {
+    await api("api/quiz/submit", {
+      method: "POST",
+      body: JSON.stringify({ word_id: w.id, correct }),
+    });
+  } catch (e) { toast(e.message, true); return; }
+  if (correct) quiz.correct++; else quiz.wrong++;
+  quiz.index++;
+  quiz.revealed = false;
+  if (quiz.index >= quiz.words.length) return quizFinish();
+  quizRender();
+}
+
+function quizFinish() {
+  const total = quiz.words.length;
+  const acc = Math.round((quiz.correct / total) * 100);
+  $("#quiz-panel").innerHTML = `
+    <div style="text-align:center; padding:24px 0;">
+      <div style="font-size:42px;">🎉</div>
+      <h2>本轮完成！</h2>
+      <p>${quiz.correct} 张认识 · ${quiz.wrong} 张不认识 · 正确率 ${acc}%</p>
+      <p class="muted">答对的词已推进复习间隔，答错的回到第 1 箱明天再见。</p>
+      <div class="row" style="justify-content:center; margin-top:14px;">
+        <button class="btn" onclick="quizStart()">再来一轮</button>
+        <button class="btn ghost" onclick="quizIntro()">返回</button>
+      </div>
+    </div>`;
+}
+
+/* ---------------- 进度 ---------------- */
+
+async function loadProgress() {
+  let data;
+  try { data = await api("api/progress/streams"); } catch (e) { toast(e.message, true); return; }
+  const streams = data.streams || [];
+  if (!streams.length) {
+    $("#progress-streams").innerHTML = `<tr><td colspan="6" class="empty">还没有任何聊天流产生进度</td></tr>`;
+    $("#progress-detail").innerHTML = "";
+    return;
+  }
+  $("#progress-streams").innerHTML = streams.map((s) => `
+    <tr>
+      <td><b>${esc(s.label || s.user_key)}</b></td>
+      <td>${s.learned} 词</td>
+      <td>${s.total_reviews} 次</td>
+      <td>${s.accuracy}%</td>
+      <td>${s.due_now ? `<span class="pill">${s.due_now}</span>` : "0"}</td>
+      <td><button class="link" onclick="loadStreamDetail(${JSON.stringify(s.user_key)}, ${JSON.stringify(s.label || s.user_key)})">详情</button></td>
+    </tr>`).join("");
+}
+
+async function loadStreamDetail(userKey, label) {
+  let d;
+  try { d = await api("api/progress/stream?user_key=" + encodeURIComponent(userKey)); }
+  catch (e) { toast(e.message, true); return; }
+
+  const dist = Object.entries(d.box_dist || {}).sort((a, b) => a[0] - b[0]);
+  const distMax = dist.length ? Math.max(...dist.map(([, c]) => c)) : 1;
+  const intervals = { 1: "1天", 2: "2天", 3: "4天", 4: "7天", 5: "15天" };
+  const bars = dist.map(([box, count]) => `
+    <div class="bar-row">
+      <span>箱${box}（${intervals[box] || "?"}）</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${Math.round(count / distMax * 100)}%"></span></span>
+      <span>${count}</span>
+    </div>`).join("");
+
+  const dueRows = (d.due_list || []).map((w) => `
+    <tr>
+      <td><b>${esc(w.word)}</b></td>
+      <td class="muted">${esc(w.phonetic || "")}</td>
+      <td>${esc(w.meaning || "")}</td>
+      <td><span class="pill gray">箱${w.box}</span></td>
+      <td>${w.last_result === 1 ? '<span class="pill green">上次对</span>' : w.last_result === 0 ? '<span class="pill" style="background:#fdeaea;color:var(--red)">上次错</span>' : '<span class="pill gray">未测</span>'}</td>
+    </tr>`).join("");
+
+  $("#progress-detail").innerHTML = `
+    <div class="card" style="margin-top:14px;">
+      <h2>📖 ${esc(label)}</h2>
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学单词</span></div>
+        <div class="stat"><span class="num">${d.total_reviews}</span><span class="lbl">复习次数</span></div>
+        <div class="stat"><span class="num" style="color:var(--green)">${d.accuracy}%</span><span class="lbl">正确率</span></div>
+        <div class="stat"><span class="num" style="color:var(--amber)">${d.due_now}</span><span class="lbl">今日待复习</span></div>
+      </div>
+      <h2>箱分布</h2>
+      <div class="bars">${bars || '<div class="muted">暂无数据</div>'}</div>
+      <h2>待复习词单</h2>
+      ${dueRows
+        ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th></tr></thead><tbody>${dueRows}</tbody></table>`
+        : `<div class="muted">没有到期的复习词 🎉</div>`}
+    </div>`;
+}
+
+/* ---------------- 启动 ---------------- */
+
+loadDashboard();
+loadWords(0);
+loadPresets();
+quizIntro();
+</script>
+</body>
+</html>

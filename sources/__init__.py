@@ -223,8 +223,33 @@ def default_import_dir(project_root: Path) -> Path:
     return path
 
 
+def _first_str(raw: Any, keys: tuple[str, ...]) -> str:
+    """按别名顺序取第一个非空字符串值（兼容主流开源词库字段命名）。"""
+    for key in keys:
+        value = raw.get(key)
+        if value is None:
+            continue
+        if isinstance(value, list):
+            # trans 列表常见形态：["n. 苹果", "vt. 投资"]，拼接保留全部释义
+            parts = [str(item).strip() for item in value if str(item).strip()]
+            if parts:
+                return "; ".join(parts)
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
+
+
 def _normalize_entry(raw: Any) -> dict[str, str] | None:
-    """把一条记录归一化为 {word, phonetic, meaning, example, tags}。"""
+    """把一条记录归一化为 {word, phonetic, meaning, example, tags}。
+
+    字段别名（覆盖 kajiweb/dict 等主流开源词库的命名）：
+    - word: word / name / entry
+    - meaning: meaning / trans / definition / chinese
+    - phonetic: phonetic / usphone / ukphone / pron
+    - example: example / sentence
+    """
     if isinstance(raw, str):
         return {
             "word": raw.strip(),
@@ -235,14 +260,14 @@ def _normalize_entry(raw: Any) -> dict[str, str] | None:
         }
     if not isinstance(raw, dict):
         return None
-    word = str(raw.get("word") or "").strip()
+    word = _first_str(raw, ("word", "name", "entry"))
     if not word:
         return None
     return {
         "word": word,
-        "phonetic": str(raw.get("phonetic") or "").strip(),
-        "meaning": str(raw.get("meaning") or "").strip(),
-        "example": str(raw.get("example") or "").strip(),
+        "phonetic": _first_str(raw, ("phonetic", "usphone", "ukphone", "pron")),
+        "meaning": _first_str(raw, ("meaning", "trans", "definition", "chinese")),
+        "example": _first_str(raw, ("example", "sentence")),
         "tags": str(raw.get("tags") or "").strip(),
     }
 

@@ -70,8 +70,8 @@ def _due_at_for_box(box: int) -> str:
 class WordCoachService(BaseService):
     """背单词服务：词书 + 复习进度 + Leitner 调度。"""
 
-    name = "word_coach"
-    description = "背单词词书与复习进度服务"
+    service_name = "word_coach"
+    service_description = "背单词词书与复习进度服务"
 
     def __init__(self, plugin: Any) -> None:
         super().__init__(plugin)
@@ -208,6 +208,92 @@ class WordCoachService(BaseService):
             (max(limit, 1),),
         )
         return [dict(r) for r in await cur.fetchall()]
+
+    async def list_words_filtered(
+        self,
+        query: str = "",
+        *,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """按关键字搜索词条（匹配单词/释义），分页返回 (词条列表, 总数)。"""
+        assert self._db is not None
+        limit = min(max(limit, 1), 200)
+        offset = max(offset, 0)
+        pattern = f"%{query.strip().lower()}%" if query.strip() else "%"
+        where = "WHERE word LIKE ? OR meaning LIKE ?"
+        cur = await self._db.execute(
+            f"SELECT COUNT(*) AS c FROM words {where}", (pattern, pattern)
+        )
+        row = await cur.fetchone()
+        total = int(row["c"]) if row else 0
+        cur = await self._db.execute(
+            "SELECT id, word, phonetic, meaning, example, source, tags FROM words "
+            f"{where} ORDER BY word LIMIT ? OFFSET ?",
+            (pattern, pattern, limit, offset),
+        )
+        return [dict(r) for r in await cur.fetchall()], total
+
+    async def update_word(
+        self,
+        word_id: int,
+        *,
+        word: str | None = None,
+        phonetic: str | None = None,
+        meaning: str | None = None,
+        example: str | None = None,
+        tags: str | None = None,
+    ) -> tuple[bool, str]:
+        """编辑词条字段（仅更新传入的非 None 字段）。"""
+        assert self._db is not None
+        cur = await self._db.execute("SELECT id, word FROM words WHERE id = ?", (word_id,))
+        row = await cur.fetchone()
+        if row is None:
+            return False, f"词条 id={word_id} 不存在"
+
+        fields: dict[str, str] = {}
+        if word is not None:
+            new_word = word.strip().lower()
+            if not new_word:
+                return False, "单词不能为空"
+            if new_word != row["word"]:
+                dup = await self._db.execute(
+                    "SELECT id FROM words WHERE word = ? AND id != ?",
+                    (new_word, word_id),
+                )
+                if await dup.fetchone() is not None:
+                    return False, f"「{new_word}」已在词书中"
+            fields["word"] = new_word
+        for key, value in (
+            ("phonetic", phonetic),
+            ("meaning", meaning),
+            ("example", example),
+            ("tags", tags),
+        ):
+            if value is not None:
+                fields[key] = value.strip()
+        if not fields:
+            return True, "没有需要更新的字段"
+
+        assignments = ", ".join(f"{key} = ?" for key in fields)
+        await self._db.execute(
+            f"UPDATE words SET {assignments} WHERE id = ?",
+            (*fields.values(), word_id),
+        )
+        await self._db.commit()
+        return True, f"已更新 {fields.get('word', row['word'])}"
+
+    async def delete_word_by_id(self, word_id: int) -> tuple[bool, str]:
+        """按 id 删除词条（连带清掉所有进度）。"""
+        assert self._db is not None
+        cur = await self._db.execute("SELECT word FROM words WHERE id = ?", (word_id,))
+        row = await cur.fetchone()
+        if row is None:
+            return False, f"词条 id={word_id} 不存在"
+        await self._db.execute("DELETE FROM progress WHERE word_id = ?", (word_id,))
+        await self._db.execute("DELETE FROM words WHERE id = ?", (word_id,))
+        await self._db.commit()
+        return True, f"已删除 {row['word']}"
 
     async def count_words(self) -> int:
         assert self._db is not None

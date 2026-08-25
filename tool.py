@@ -51,8 +51,8 @@ def _format_word(item: dict) -> str:
 class WordQuizTool(BaseTool):
     """对话式背单词测验工具。"""
 
-    name = "word_quiz"
-    description = (
+    tool_name = "word_quiz"
+    tool_description = (
         "背单词测验。action=next 时取下一个待测单词（含释义/音标/例句），"
         "由你据此向用户出题（可英译中、中译英、听音选义等，灵活变换题型）；"
         "用户作答后，必须调用 action=submit 并传 correct（true/false）提交判定——"
@@ -163,8 +163,8 @@ class WordQuizTool(BaseTool):
 class WordLookupTool(BaseTool):
     """查词工具。"""
 
-    name = "word_lookup"
-    description = (
+    tool_name = "word_lookup"
+    tool_description = (
         "查询词书中的单词释义、音标与例句；词书没有时返回提示。"
         "用户问单词意思、或你想确认某个词是否在词书中时使用。"
     )
@@ -185,8 +185,9 @@ class WordLookupTool(BaseTool):
         if entry is None:
             return (
                 True,
-                f"词书里没有「{word}」。可以提示用户用 /背单词 添加 <单词> <释义> 收录它，"
-                "或用 word_import 导入词库。",
+                f"词书里没有「{word}」。可以提示用户把词表文件放进 "
+                "data/word_coach/imports/ 后同步词表，或在 Web UI（词书页）手动添加，"
+                "也可以用 word_import 导入词库。",
             )
         return True, _format_word(entry)
 
@@ -194,8 +195,8 @@ class WordLookupTool(BaseTool):
 class WordImportTool(BaseTool):
     """词库管理工具：状态 / 下载导入 / 扫描目录。"""
 
-    name = "word_import"
-    description = (
+    tool_name = "word_import"
+    tool_description = (
         "词库管理：查看词书状态、下载导入远程词库、扫描导入目录。"
         "当用户要求『导入/扩充/下载词库』『加词表』『换词书』『词书里有什么』时使用。"
         "action=status 查看词书规模、来源分布与可用预置词库；"
