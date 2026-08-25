@@ -131,18 +131,48 @@ class WordCoachWebRouter(BaseRouter):
     def _owner_binding(self) -> tuple[str, str, str]:
         """解析网页测验绑定的主人聊天流。
 
+        优先级：框架 [permissions].owner_list[0] → [web].owner_target
+        → [scope].allowed_targets[0] → 503。owner_list 是框架标准的
+        主人列表（格式 platform:user_id），填上后插件自动绑定，
+        无需在 word_coach 配置里重复填写。
+
         Returns:
             (stream_id, platform, user_id)
 
         Raises:
             HTTPException: 未配置或配置非法时抛 503。
         """
+        # 1. 优先从框架核心配置读 owner_list（标准主人列表）
+        # owner_list 格式是 "platform:user_id"（两段），需转成三段
+        # "platform:user:user_id" 才能被 _parse_owner_target 解析
+        try:
+            from src.core.config import get_core_config
+
+            core_cfg = get_core_config()
+            raw_owners = list(core_cfg.permissions.owner_list or [])
+        except Exception as exc:
+            logger.warning(f"word_coach 读取核心 owner_list 失败，回退到插件配置: {exc}")
+            raw_owners = []
+
+        owner_targets: list[str] = []
+        for raw in raw_owners:
+            raw = raw.strip()
+            if not raw:
+                continue
+            parts = raw.split(":")
+            if len(parts) == 2:
+                # "qq:2750694203" → "qq:user:2750694203"
+                owner_targets.append(f"{parts[0]}:user:{parts[1]}")
+            else:
+                owner_targets.append(raw)
+
         cfg = self._config()
-        targets: list[str] = []
+        targets: list[str] = list(owner_targets)  # owner_list 优先
         if cfg is not None:
             if cfg.web.owner_target.strip():
                 targets.append(cfg.web.owner_target)
             targets.extend(cfg.scope.allowed_targets)
+
         for target in targets:
             parsed = _parse_owner_target(target.strip())
             if parsed:
@@ -150,8 +180,10 @@ class WordCoachWebRouter(BaseRouter):
         raise HTTPException(
             status_code=503,
             detail=(
-                "未配置网页测验绑定的聊天流：请在配置 [web].owner_target "
-                "填写 platform:user:ID（如 qq:user:2583090218）"
+                "未配置网页测验绑定的聊天流。请在框架核心配置 "
+                "[permissions].owner_list 填写 platform:user_id"
+                "（如 qq:2750694203），或在 word_coach 配置 "
+                "[web].owner_target 填写 platform:user:ID"
             ),
         )
 

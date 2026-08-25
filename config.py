@@ -55,7 +55,7 @@ class WordCoachConfig(BaseConfig):
         """工具可见范围配置。"""
 
         allowed_targets: list[str] = Field(
-            default=["qq:user:2583090218"],
+            default=[],
             description=(
                 "word_quiz / word_lookup 工具可见的聊天流白名单，"
                 "格式：platform:user:ID（私聊）或 platform:group:ID（群聊），"
