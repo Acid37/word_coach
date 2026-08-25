@@ -627,6 +627,44 @@ class WordCoachService(BaseService):
     def has_pending(self, user_key: str) -> bool:
         return user_key in self._pending
 
+    async def clear_stream_progress(self, user_key: str) -> tuple[int, int]:
+        """清空某聊天流的所有进度（词条保留，只删 progress 记录）。
+
+        Returns:
+            (删除的进度行数, pending 是否清除)
+        """
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT COUNT(*) AS c FROM progress WHERE user_key = ?", (user_key,)
+        )
+        row = await cur.fetchone()
+        deleted = int(row["c"]) if row else 0
+        await self._db.execute(
+            "DELETE FROM progress WHERE user_key = ?", (user_key,)
+        )
+        await self._db.commit()
+        had_pending = self.has_pending(user_key)
+        self.clear_pending(user_key)
+        return deleted, had_pending
+
+    async def delete_word_progress(
+        self, user_key: str, word_id: int
+    ) -> tuple[bool, str]:
+        """删除某聊天流中单个词的进度记录（词条保留）。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT word_id FROM progress WHERE user_key = ? AND word_id = ?",
+            (user_key, word_id),
+        )
+        if await cur.fetchone() is None:
+            return False, f"该流没有 word_id={word_id} 的进度记录"
+        await self._db.execute(
+            "DELETE FROM progress WHERE user_key = ? AND word_id = ?",
+            (user_key, word_id),
+        )
+        await self._db.commit()
+        return True, "已删除该词进度"
+
     async def stats(self, user_key: str) -> dict[str, Any]:
         """该 user_key 的学习统计。"""
         assert self._db is not None

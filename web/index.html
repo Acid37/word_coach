@@ -717,11 +717,15 @@ async function loadStreamDetail(userKey, label) {
       <td>${esc(w.meaning || "")}</td>
       <td><span class="pill gray">箱${w.box}</span></td>
       <td>${w.last_result === 1 ? '<span class="pill green">上次对</span>' : w.last_result === 0 ? '<span class="pill" style="background:#fdeaea;color:var(--red)">上次错</span>' : '<span class="pill gray">未测</span>'}</td>
+      <td><button class="link danger" onclick="deleteWordProgress('${esc(userKey)}', ${w.word_id}, ${JSON.stringify(w.word)})">删除</button></td>
     </tr>`).join("");
 
   $("#progress-detail").innerHTML = `
     <div class="card" style="margin-top:14px;">
       <h2>📖 ${esc(label)}</h2>
+      <div class="row" style="justify-content:flex-end; margin-bottom:10px;">
+        <button class="btn red" onclick="clearStreamProgress('${esc(userKey)}', ${JSON.stringify(label)})">清空该流进度</button>
+      </div>
       <div class="grid" style="margin-bottom:14px;">
         <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学单词</span></div>
         <div class="stat"><span class="num">${d.total_reviews}</span><span class="lbl">复习次数</span></div>
@@ -732,9 +736,28 @@ async function loadStreamDetail(userKey, label) {
       <div class="bars">${bars || '<div class="muted">暂无数据</div>'}</div>
       <h2>待复习词单</h2>
       ${dueRows
-        ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th></tr></thead><tbody>${dueRows}</tbody></table>`
+        ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th><th style="width:60px;">操作</th></tr></thead><tbody>${dueRows}</tbody></table>`
         : `<div class="muted">没有到期的复习词 🎉</div>`}
     </div>`;
+}
+
+async function clearStreamProgress(userKey, label) {
+  if (!confirm(`确定清空「${label}」的所有进度？\n词条不会删除，但所有箱/复习记录/正确率都会归零。`)) return;
+  try {
+    const data = await api("api/progress/stream?user_key=" + encodeURIComponent(userKey), { method: "DELETE" });
+    toast(data.message);
+    loadProgress();
+    loadStreamDetail(userKey, label);
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteWordProgress(userKey, wordId, word) {
+  if (!confirm(`删除「${word}」在这条流的进度记录？\n词条保留，只重置这一个词。`)) return;
+  try {
+    const data = await api(`api/progress/stream/${wordId}?user_key=` + encodeURIComponent(userKey), { method: "DELETE" });
+    toast(data.message);
+    loadStreamDetail(userKey, "");
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ---------------- 启动 ---------------- */

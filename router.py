@@ -367,6 +367,30 @@ class WordCoachWebRouter(BaseRouter):
             """单个聊天流的进度详情。"""
             return await self._service().stream_progress_detail(user_key)
 
+        @app.delete("/api/progress/stream")
+        async def clear_stream_progress(
+            user_key: str = Query(..., description="聊天流 user_key（stream_id）"),
+        ) -> dict[str, Any]:
+            """清空某聊天流的所有进度（词条保留）。"""
+            deleted, had_pending = await self._service().clear_stream_progress(user_key)
+            return {
+                "ok": True,
+                "deleted": deleted,
+                "cleared_pending": had_pending,
+                "message": f"已清空 {deleted} 条进度记录" + ("（含待判定题）" if had_pending else ""),
+            }
+
+        @app.delete("/api/progress/stream/{word_id}")
+        async def delete_word_progress(
+            word_id: int,
+            user_key: str = Query(..., description="聊天流 user_key（stream_id）"),
+        ) -> dict[str, Any]:
+            """删除某聊天流中单个词的进度记录（词条保留）。"""
+            ok, message = await self._service().delete_word_progress(user_key, word_id)
+            if not ok:
+                raise HTTPException(status_code=404, detail=message)
+            return {"ok": True, "message": message}
+
         # ---------------- 网页测验 ----------------
 
         @app.get("/api/quiz/session")
