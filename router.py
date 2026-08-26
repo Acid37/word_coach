@@ -299,15 +299,49 @@ class WordCoachWebRouter(BaseRouter):
 
         @app.get("/api/words")
         async def list_words(
-            q: str = Query(default="", description="搜索关键字（匹配单词/释义）"),
+            q: str = Query(default="", description="搜索关键字"),
             offset: int = Query(default=0, ge=0),
             limit: int = Query(default=50, ge=1, le=200),
+            source: str = Query(default=""),
+            tags: str = Query(default=""),
+            sort: str = Query(default="word"),
         ) -> dict[str, Any]:
-            """词条搜索分页列表。"""
+            """词条搜索分页列表，支持来源/标签筛选和排序。"""
             words, total = await self._service().list_words_filtered(
-                q, offset=offset, limit=limit
+                q, offset=offset, limit=limit, source=source, tags=tags, sort=sort
             )
             return {"words": words, "total": total, "offset": offset, "limit": limit}
+
+        @app.get("/api/words/export")
+        async def export_words(fmt: str = Query(default="json")) -> dict[str, Any]:
+            """导出全部词条为 JSON 或 CSV 文本。"""
+            text = await self._service().export_words(fmt)
+            return {"format": fmt, "data": text}
+
+        @app.post("/api/words/batch")
+        async def batch_words(body: dict[str, Any]) -> dict[str, Any]:
+            """批量操作词条（删除或加标签）。"""
+            service = self._service()
+            ids = body.get("ids", [])
+            action = body.get("action", "")
+            if not ids or not action:
+                raise HTTPException(status_code=400, detail="需要 ids 和 action")
+            deleted = 0
+            tagged = 0
+            if action == "delete":
+                for wid in ids:
+                    ok, _ = await service.delete_word_by_id(int(wid))
+                    if ok:
+                        deleted += 1
+                return {"ok": True, "message": f"已删除 {deleted} 个词条"}
+            elif action == "tag":
+                tag = body.get("tag", "")
+                for wid in ids:
+                    ok, _ = await service.update_word(int(wid), tags=tag)
+                    if ok:
+                        tagged += 1
+                return {"ok": True, "message": f"已给 {tagged} 个词条加标签"}
+            raise HTTPException(status_code=400, detail="action 只支持 delete/tag")
 
         @app.post("/api/words")
         async def add_word(body: WordBody) -> dict[str, Any]:
@@ -515,8 +549,8 @@ class WordCoachWebRouter(BaseRouter):
             return {
                 "stream_id": stream_id,
                 "label": label,
-                "push_time": cfg.plugin.push_time if cfg else "09:00",
-                "daily_word_count": cfg.plugin.daily_word_count if cfg else 10,
+                "push_time": await service.get_setting("push_time", cfg.plugin.push_time if cfg else "09:00"),
+                "daily_word_count": int(await service.get_setting("daily_word_count", str(cfg.plugin.daily_word_count if cfg else 10))),
                 "daily_new_count": plan["daily_new_count"],
                 "learned": plan["learned"],
                 "book_size": plan["book_size"],
@@ -649,9 +683,24 @@ class WordCoachWebRouter(BaseRouter):
                 "due_in_days": result.get("due_in_days"),
             }
 
+        @app.get("/api/quiz/stats")
+        async def quiz_stats() -> dict[str, Any]:
+            """绑定流的学习统计。"""
+            stream_id, _platform, _user_id = self._owner_binding()
+            stats = await self._service().stats(stream_id)
+            return {"stream_id": stream_id, **stats}
+
+        @app.get("/api/quiz/history")
+        async def quiz_history(limit: int = Query(default=20, ge=1, le=50)) -> dict[str, Any]:
+            """测验历史记录。"""
+            service = self._service()
+            stream_id, _p, _u = self._owner_binding()
+            results = await service.list_quiz_results(stream_id, limit=limit)
+            return {"stream_id": stream_id, "results": results}
+
         @app.post("/api/quiz/finish")
         async def quiz_finish(body: QuizFinishBody) -> dict[str, Any]:
-            """测验结束，将结果注入 system reminder，由 LLM 下次对话时自然提起。"""
+            """测验结束，记录结果 + 注入 system reminder。"""
             from src.core.prompt import get_system_reminder_store
 
             service = self._service()
@@ -660,10 +709,13 @@ class WordCoachWebRouter(BaseRouter):
             correct = body.correct
             wrong = total - correct
             acc = round(correct / total * 100) if total else 0
-
-            # 构造结果摘要
-            parts = [f"用户刚在网页背单词测验了 {total} 个词，对了 {correct} 个，错了 {wrong} 个，正确率 {acc}%。"]
             wrong_words = body.wrong_words or []
+
+            # 记录到 quiz_results 表
+            await service.record_quiz_result(stream_id, total, correct, wrong_words)
+
+            # 构造结果摘要注入 reminder
+            parts = [f"用户刚在网页背单词测验了 {total} 个词，对了 {correct} 个，错了 {wrong} 个，正确率 {acc}%。"]
             if wrong_words:
                 wrong_list = "、".join(
                     f"{w.get('word', '?')}（{w.get('meaning', '?')}）" for w in wrong_words[:10]
@@ -672,20 +724,44 @@ class WordCoachWebRouter(BaseRouter):
             parts.append("请在下次对话时根据语境自然地提起这个结果，可以鼓励或安慰，不要生硬地复述。")
             content = "\n".join(parts)
 
-            # 注入到 actor reminder 桶，LLM 下次对话时会看到
             try:
                 store = get_system_reminder_store()
                 store.set("actor", name="背单词测验结果", content=content)
-                return {"ok": True, "message": "结果已注入 Bot 上下文，下次聊天时 Bot 会自然提起"}
+                return {"ok": True, "message": "结果已记录并注入 Bot 上下文，下次聊天时 Bot 会自然提起"}
             except Exception as exc:
-                return {"ok": False, "message": f"注入失败：{exc}"}
+                return {"ok": False, "message": f"注入失败（已记录）：{exc}"}
 
-        @app.get("/api/quiz/stats")
-        async def quiz_stats() -> dict[str, Any]:
-            """绑定流的学习统计。"""
-            stream_id, _platform, _user_id = self._owner_binding()
-            stats = await self._service().stats(stream_id)
-            return {"stream_id": stream_id, **stats}
+        @app.post("/api/push/preview")
+        async def push_preview() -> dict[str, Any]:
+            """手动触发一次今日词单推送预览（不实际发送到 QQ，只返回内容）。"""
+            service = self._service()
+            cfg = self._config()
+            stream_id, _p, _u = self._owner_binding()
+            plan = await service.get_plan(
+                stream_id, fallback_new_count=cfg.plugin.daily_new_count if cfg else 3
+            )
+            push_time = await service.get_setting(
+                "push_time", cfg.plugin.push_time if cfg else "09:00"
+            )
+            daily_count = int(await service.get_setting(
+                "daily_word_count", str(cfg.plugin.daily_word_count if cfg else 10)
+            ))
+            words = await service.due_words(
+                stream_id, total_limit=daily_count, new_limit=plan["daily_new_count"]
+            )
+            lines = []
+            for i, w in enumerate(words, 1):
+                mark = "✨ 新" if w["is_new"] else f"🔁 箱{w['box']}"
+                lines.append(
+                    f"{i}. {w['word']} {w.get('phonetic', '')} {w.get('meaning', '')} [{mark}]"
+                )
+            return {
+                "push_time": push_time,
+                "total_words": len(words),
+                "new_words": sum(1 for w in words if w.get("is_new")),
+                "review_words": sum(1 for w in words if not w.get("is_new")),
+                "preview": lines,
+            }
 
 
 # 供 plugin.py 类型标注使用

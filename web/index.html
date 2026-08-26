@@ -167,6 +167,18 @@
   .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); margin: 0 auto 4px; }
   .timeline-date { font-size: 10px; color: var(--muted); }
   .timeline-count { font-size: 14px; font-weight: 700; }
+  @media (max-width: 640px) {
+    main { padding: 10px 8px 60px; }
+    header { padding: 10px 12px 0; }
+    nav { flex-wrap: wrap; }
+    nav button { padding: 8px 10px; font-size: 13px; }
+    .grid { grid-template-columns: 1fr !important; }
+    #dash-binding > div[style*="grid-template-columns:280px"] { grid-template-columns: 1fr !important; }
+    table { font-size: 13px; }
+    th, td { padding: 6px 4px; }
+    .quiz-card .q-word { font-size: 28px !important; }
+    #settings-panel { width: calc(100vw - 32px); right: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -202,15 +214,30 @@
 
   <!-- ============ 词书 ============ -->
   <section class="tab" id="tab-words">
-    <div class="row" style="margin-bottom:12px;">
-      <input type="search" id="words-search" placeholder="搜索单词或释义…">
+    <div class="row" style="margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <input type="search" id="words-search" placeholder="搜索单词或释义…" style="min-width:160px;">
+      <select id="words-source" style="min-width:100px;"><option value="">全部来源</option></select>
+      <select id="words-sort" style="min-width:100px;">
+        <option value="word">按字母</option>
+        <option value="source">按来源</option>
+        <option value="created">按时间</option>
+      </select>
       <button class="btn ghost" onclick="loadWords(0)">搜索</button>
       <span style="flex:1"></span>
-      <button class="btn" onclick="openWordModal()">＋ 添加单词</button>
+      <button class="btn ghost" onclick="exportWords('json')">导出 JSON</button>
+      <button class="btn ghost" onclick="exportWords('csv')">导出 CSV</button>
+      <button class="btn" onclick="openWordModal()">＋ 添加</button>
     </div>
     <div class="card">
+      <div class="row" style="margin-bottom:8px; gap:8px;">
+        <label style="font-size:13px;"><input type="checkbox" id="words-select-all" onchange="toggleSelectAll(this)"> 全选</label>
+        <span id="words-selected-count" class="muted" style="font-size:12px;"></span>
+        <span style="flex:1"></span>
+        <button class="btn ghost" style="font-size:12px; padding:4px 10px;" onclick="batchDelete()">批量删除</button>
+      </div>
       <table>
         <thead><tr>
+          <th style="width:30px;"><input type="checkbox" id="words-select-all-head" onchange="toggleSelectAll(this)"></th>
           <th>单词</th><th>音标</th><th>释义</th><th>来源</th><th style="width:120px;">操作</th>
         </tr></thead>
         <tbody id="words-body"></tbody>
@@ -422,6 +449,16 @@ async function loadDashboard() {
   const dueTotal = streams.reduce((a, s) => a + (s.due_now || 0), 0);
   const learnedMax = streams.length ? Math.max(...streams.map((s) => s.learned || 0)) : 0;
 
+  // 填充词书页来源下拉框
+  const sourceSelect = $("#words-source");
+  if (sourceSelect) {
+    const current = sourceSelect.value;
+    const sources = Object.keys(book.by_source || {});
+    sourceSelect.innerHTML = '<option value="">全部来源</option>' +
+      sources.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+    if (sources.includes(current)) sourceSelect.value = current;
+  }
+
   $("#dash-stats").innerHTML = `
     <div class="card stat"><span class="num">${book.total}</span><span class="lbl">词书总词数</span></div>
     <div class="card stat"><span class="num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
@@ -448,24 +485,21 @@ async function loadDashboard() {
     const dailyNew = plan.daily_new_count || 3;
     const boxDist = plan.box_dist || {};
 
-    // 遗忘曲线 SVG 折线图
+    // 遗忘曲线：纯 CSS 条形图，自适应高度
     const intervals = [1, 2, 4, 7, 15];
     const maxBox = Math.max(...Object.values(boxDist), 1);
-    const pts = intervals.map((days, i) => {
+    const curveBars = intervals.map((days, i) => {
       const count = boxDist[i + 1] || 0;
-      const x = 30 + i * 50;
-      const y = 60 - (count / maxBox) * 48;
-      return { x, y, count, days };
-    });
-    const polyline = pts.map(p => `${p.x},${p.y}`).join(" ");
-    const curveDots = pts.map(p => `
-      <circle cx="${p.x}" cy="${p.y}" r="${3 + p.count / maxBox * 4}" fill="var(--primary)" opacity="${0.4 + p.count / maxBox * 0.6}"/>
-      <text x="${p.x}" y="78" text-anchor="middle" font-size="8" fill="var(--muted)">${p.days}天</text>
-      <text x="${p.x}" y="${p.y - 8}" text-anchor="middle" font-size="8" fill="var(--text)" font-weight="bold">${p.count || ""}</text>
-    `).join("");
+      const pct = Math.round(count / maxBox * 100);
+      return `<div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:40px;">
+        <div style="font-size:13px; font-weight:700; margin-bottom:4px;">${count || "0"}</div>
+        <div style="width:60%; min-height:4px; max-height:80px; height:${Math.max(pct, count > 0 ? 8 : 4)}px; background:var(--primary); opacity:${0.35 + count / maxBox * 0.65}; border-radius:4px 4px 0 0;"></div>
+        <div style="font-size:10px; color:var(--muted); margin-top:4px;">${days}天</div>
+      </div>`;
+    }).join("");
 
     // 左右双栏：左侧进度环+计划，右侧统计+遗忘曲线
-    const hasCurve = pts.some(p => p.count > 0);
+    const hasCurve = Object.values(boxDist).some(v => v > 0);
     $("#dash-binding").innerHTML = `
       <div style="display:grid; grid-template-columns:280px 1fr; gap:14px; align-items:start;">
 
@@ -499,12 +533,9 @@ async function loadDashboard() {
             <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${b.correct}</span><span class="lbl">答对</span></div>
             <div class="stat" style="text-align:center;"><span class="num" style="color:var(--red); font-size:22px;">${b.wrong}</span><span class="lbl">答错</span></div>
           </div>
-          <div>
-            <div class="muted" style="margin-bottom:4px; font-size:12px;">遗忘曲线</div>
-            ${hasCurve ? `<svg viewBox="0 0 280 90" style="width:100%;">
-              <polyline points="${polyline}" fill="none" stroke="var(--primary)" stroke-width="1.5" opacity="0.5"/>
-              ${curveDots}
-            </svg>` : '<div class="muted" style="font-size:13px; padding:20px 0; text-align:center;">还没有复习数据，开始测验后这里会显示</div>'}
+            <div>
+              <div class="muted" style="margin-bottom:4px; font-size:12px;">遗忘曲线</div>
+              ${hasCurve ? `<div style="display:flex; align-items:flex-end; gap:4px; padding:8px 0;">${curveBars}</div>` : '<div class="muted" style="font-size:13px; padding:20px 0; text-align:center;">还没有复习数据，开始测验后这里会显示</div>'}
           </div>
         </div>
 
@@ -545,19 +576,47 @@ async function editPlan(current) {
   try {
     await api("api/plan", { method: "POST", body: JSON.stringify({ daily_new_count: n }) });
     toast(`已设为每天 ${n} 个新词`);
+    loadPlanDetail();
     loadDashboard();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function editPushTime(current) {
+  const input = prompt(`每日推送时间？（当前 ${current}，24小时制 HH:MM）`, current);
+  if (input === null) return;
+  const m = input.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m || parseInt(m[1]) > 23 || parseInt(m[2]) > 59) { toast("格式不对，应为 HH:MM（如 09:00）", true); return; }
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify({ push_time: input.trim() }) });
+    toast(`已设为 ${input.trim()} 推送`);
+    loadPlanDetail();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function editWordCount(current) {
+  const input = prompt(`每次推送词数？（当前 ${current}）`, current);
+  if (input === null) return;
+  const n = parseInt(input, 10);
+  if (!n || n < 1 || n > 50) { toast("请输入 1-50 的整数", true); return; }
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify({ daily_word_count: String(n) }) });
+    toast(`已设为每次 ${n} 词`);
+    loadPlanDetail();
   } catch (e) { toast(e.message, true); }
 }
 
 /* ---------------- 词书管理 ---------------- */
 
-let wordsState = { q: "", offset: 0, limit: 50, total: 0 };
+let wordsState = { q: "", offset: 0, limit: 50, total: 0, source: "", sort: "word" };
 
 async function loadWords(offset) {
   if (offset !== undefined) wordsState.offset = offset;
   wordsState.q = $("#words-search").value;
+  wordsState.source = $("#words-source") ? $("#words-source").value : "";
+  wordsState.sort = $("#words-sort") ? $("#words-sort").value : "word";
   const p = new URLSearchParams({
     q: wordsState.q, offset: wordsState.offset, limit: wordsState.limit,
+    source: wordsState.source, sort: wordsState.sort,
   });
   let data;
   try { data = await api("api/words?" + p); } catch (e) { toast(e.message, true); return; }
@@ -565,6 +624,7 @@ async function loadWords(offset) {
 
   const rows = data.words.map((w) => `
     <tr>
+      <td><input type="checkbox" class="word-checkbox" value="${w.id}"></td>
       <td><span class="word">${esc(w.word)}</span></td>
       <td class="muted">${esc(w.phonetic || "")}</td>
       <td>${esc(w.meaning || "（待补充）")}
@@ -576,7 +636,7 @@ async function loadWords(offset) {
       </td>
     </tr>`).join("");
   $("#words-body").innerHTML =
-    rows || `<tr><td colspan="5" class="empty">没有匹配的词条</td></tr>`;
+    rows || `<tr><td colspan="6" class="empty">没有匹配的词条</td></tr>`;
 
   const page = Math.floor(wordsState.offset / wordsState.limit) + 1;
   const pages = Math.max(1, Math.ceil(wordsState.total / wordsState.limit));
@@ -584,6 +644,41 @@ async function loadWords(offset) {
     wordsState.total ? `共 ${wordsState.total} 词 · 第 ${page}/${pages} 页` : "共 0 词";
   $("#words-prev").disabled = wordsState.offset <= 0;
   $("#words-next").disabled = wordsState.offset + wordsState.limit >= wordsState.total;
+  updateSelectedCount();
+}
+
+function toggleSelectAll(checkbox) {
+  document.querySelectorAll(".word-checkbox").forEach(cb => cb.checked = checkbox.checked);
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const n = document.querySelectorAll(".word-checkbox:checked").length;
+  if ($("#words-selected-count")) $("#words-selected-count").textContent = n ? `已选 ${n} 个` : "";
+}
+
+async function batchDelete() {
+  const ids = Array.from(document.querySelectorAll(".word-checkbox:checked")).map(cb => parseInt(cb.value));
+  if (!ids.length) { toast("请先勾选要删除的词条", true); return; }
+  if (!confirm(`确定删除 ${ids.length} 个词条？`)) return;
+  try {
+    const data = await api("api/words/batch", { method: "POST", body: JSON.stringify({ ids, action: "delete" }) });
+    toast(data.message);
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function exportWords(fmt) {
+  try {
+    const data = await api("api/words/export?fmt=" + fmt);
+    const blob = new Blob([data.data], { type: fmt === "csv" ? "text/csv" : "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `word_coach_export.${fmt}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(`已导出 ${fmt.toUpperCase()}`);
+  } catch (e) { toast(e.message, true); }
 }
 
 function wordsPage(delta) {
@@ -764,7 +859,43 @@ function quizIntro() {
         </select>
       </div>
       <button class="btn" style="margin-top:14px;" onclick="quizStart()">开始测验</button>
+      <div style="margin-top:14px;"><button class="link" onclick="loadQuizHistory()">查看测验历史</button></div>
     </div>`;
+}
+
+async function loadQuizHistory() {
+  $("#quiz-panel").innerHTML = '<div class="muted" style="text-align:center; padding:20px 0;">加载中…</div>';
+  try {
+    const data = await api("api/quiz/history?limit=20");
+    const results = data.results || [];
+    if (!results.length) {
+      $("#quiz-panel").innerHTML = `<div class="empty">还没有测验记录<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`;
+      return;
+    }
+    const rows = results.map(r => {
+      const date = (r.created_at || "").replace("T", " ").slice(0, 16);
+      const wrong = (r.wrong_words || []).map(w => esc(w.word || "?")).join("、");
+      return `<tr>
+        <td class="muted" style="white-space:nowrap;">${esc(date)}</td>
+        <td style="text-align:center;">${r.total}</td>
+        <td style="text-align:center; color:var(--green);">${r.correct}</td>
+        <td style="text-align:center; color:var(--red);">${r.wrong}</td>
+        <td style="text-align:center;">${r.accuracy}%</td>
+        <td class="muted" style="font-size:12px;">${wrong ? esc(wrong) : "—"}</td>
+      </tr>`;
+    }).join("");
+    $("#quiz-panel").innerHTML = `
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h2 style="margin:0;">测验历史</h2>
+          <button class="link" onclick="quizIntro()">← 返回</button>
+        </div>
+        <table>
+          <thead><tr><th>时间</th><th>总题数</th><th>答对</th><th>答错</th><th>正确率</th><th>错词</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (e) { $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`; }
 }
 
 async function quizStart() {
@@ -974,20 +1105,48 @@ async function loadPlanDetail() {
     <div class="card">
       <h2>📋 学习计划 <span class="pill">${esc(d.label || "?")}</span></h2>
       <div class="grid" style="margin-top:14px;">
-        <div class="stat"><span class="num">${esc(d.push_time || "09:00")}</span><span class="lbl">每日推送时间</span></div>
-        <div class="stat"><span class="num">${d.daily_word_count}</span><span class="lbl">每次推送词数</span></div>
-        <div class="stat"><span class="num" style="color:var(--primary)">${d.daily_new_count}</span><span class="lbl">每日新词</span></div>
+        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学</span></div>
+        <div class="stat"><span class="num">${d.book_size}</span><span class="lbl">词书总量</span></div>
         <div class="stat"><span class="num">${d.remaining}</span><span class="lbl">剩余未学</span></div>
         <div class="stat"><span class="num" style="color:var(--amber)">${d.estimated_days}</span><span class="lbl">预计学完（天）</span></div>
         <div class="stat"><span class="num" style="color:var(--green)">${estDate}</span><span class="lbl">预计完成日期</span></div>
-        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学</span></div>
-        <div class="stat"><span class="num">${d.book_size}</span><span class="lbl">词书总量</span></div>
+        <div class="stat"><span class="num" style="color:var(--green)">${d.streak}</span><span class="lbl">连续打卡天数</span></div>
       </div>
-      <div class="row" style="margin-top:14px; gap:10px;">
-        <span class="muted">每天</span>
-        <b style="cursor:pointer; color:var(--primary); font-size:16px;" onclick="editPlan(${d.daily_new_count})">${d.daily_new_count} 个新词</b>
-        <span class="muted">·</span>
-        <span class="muted">连续打卡 ${d.streak} 天</span>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>⚙️ 计划设置</h2>
+      <div style="display:grid; gap:10px; margin-top:10px;">
+        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;">每日推送时间</div>
+            <div class="muted" style="font-size:12px;">每天这个时间向你推送今日词单</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <b style="font-size:18px;">${esc(d.push_time || "09:00")}</b>
+            <button class="btn ghost" onclick="editPushTime('${esc(d.push_time || "09:00")}')">修改</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;">每日新词数</div>
+            <div class="muted" style="font-size:12px;">每次推送和测验中加入的新词数量</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <b style="font-size:18px; color:var(--primary);">${d.daily_new_count}</b>
+            <button class="btn ghost" onclick="editPlan(${d.daily_new_count})">修改</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0;">
+          <div>
+            <div style="font-weight:600;">每次推送词数</div>
+            <div class="muted" style="font-size:12px;">每日推送的总词数（含复习+新词）</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <b style="font-size:18px;">${d.daily_word_count}</b>
+            <button class="btn ghost" onclick="editWordCount(${d.daily_word_count})">修改</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="card" style="margin-top:14px;">
@@ -998,7 +1157,27 @@ async function loadPlanDetail() {
       <h2>复习节奏 · 未来 30 天</h2>
       <div class="timeline">${timeline}</div>
       <div class="muted" style="margin-top:8px; font-size:12px;">每个节点是某天到期的复习词数，帮你预判复习压力。</div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <h2>推送预览</h2>
+      <div class="muted" style="margin-bottom:8px; font-size:12px;">看看下次推送会发什么词（不实际发送）</div>
+      <div id="push-preview-content"><button class="btn ghost" onclick="loadPushPreview()">加载预览</button></div>
     </div>`;
+}
+
+async function loadPushPreview() {
+  $("#push-preview-content").innerHTML = '<span class="muted">加载中…</span>';
+  try {
+    const d = await api("api/push/preview");
+    if (!d.preview || !d.preview.length) {
+      $("#push-preview-content").innerHTML = '<span class="muted">没有待推送的词（今日词单已学完或词书为空）</span>';
+      return;
+    }
+    const lines = d.preview.map(l => `<div style="padding:4px 0; border-bottom:1px solid var(--border); font-size:14px;">${esc(l)}</div>`).join("");
+    $("#push-preview-content").innerHTML = `
+      <div class="muted" style="margin-bottom:6px;">推送时间 ${esc(d.push_time)} · ${d.total_words} 词（新 ${d.new_words} / 复习 ${d.review_words}）</div>
+      ${lines}`;
+  } catch (e) { $("#push-preview-content").innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
 }
 
 /* ---------------- 外观设置 ---------------- */

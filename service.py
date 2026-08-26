@@ -143,6 +143,15 @@ class WordCoachService(BaseService):
                 value TEXT NOT NULL DEFAULT '',
                 updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
             );
+            CREATE TABLE IF NOT EXISTS quiz_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_key TEXT NOT NULL,
+                total INTEGER NOT NULL,
+                correct INTEGER NOT NULL,
+                wrong INTEGER NOT NULL,
+                wrong_words TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
             """
         )
         await self._migrate_progress_identity()
@@ -235,24 +244,57 @@ class WordCoachService(BaseService):
         *,
         offset: int = 0,
         limit: int = 50,
+        source: str = "",
+        tags: str = "",
+        sort: str = "word",
     ) -> tuple[list[dict[str, Any]], int]:
-        """按关键字搜索词条（匹配单词/释义），分页返回 (词条列表, 总数)。"""
+        """按关键字搜索词条，支持来源/标签筛选和排序，分页返回。"""
         assert self._db is not None
         limit = min(max(limit, 1), 200)
         offset = max(offset, 0)
-        pattern = f"%{query.strip().lower()}%" if query.strip() else "%"
-        where = "WHERE word LIKE ? OR meaning LIKE ?"
-        cur = await self._db.execute(
-            f"SELECT COUNT(*) AS c FROM words {where}", (pattern, pattern)
-        )
+        conditions = []
+        params: list[Any] = []
+        if query.strip():
+            conditions.append("(word LIKE ? OR meaning LIKE ?)")
+            pattern = f"%{query.strip().lower()}%"
+            params.extend([pattern, pattern])
+        if source:
+            conditions.append("source = ?")
+            params.append(source)
+        if tags:
+            conditions.append("tags LIKE ?")
+            params.append(f"%{tags}%")
+        where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+        sort_col = {"word": "word", "source": "source", "created": "id"}.get(sort, "word")
+        cur = await self._db.execute(f"SELECT COUNT(*) AS c FROM words{where}", params)
         row = await cur.fetchone()
         total = int(row["c"]) if row else 0
         cur = await self._db.execute(
             "SELECT id, word, phonetic, meaning, example, source, tags FROM words "
-            f"{where} ORDER BY word LIMIT ? OFFSET ?",
-            (pattern, pattern, limit, offset),
+            f"{where} ORDER BY {sort_col} LIMIT ? OFFSET ?",
+            (*params, limit, offset),
         )
         return [dict(r) for r in await cur.fetchall()], total
+
+    async def export_words(self, fmt: str = "json") -> str:
+        """导出全部词条为 JSON 或 CSV 文本。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT word, phonetic, meaning, example, tags FROM words ORDER BY word"
+        )
+        rows = [dict(r) for r in await cur.fetchall()]
+        if fmt == "csv":
+            import csv, io as _io
+
+            buf = _io.StringIO()
+            writer = csv.DictWriter(buf, fieldnames=["word", "phonetic", "meaning", "example", "tags"])
+            writer.writeheader()
+            writer.writerows(rows)
+            return buf.getvalue()
+        else:
+            import json as _json
+
+            return _json.dumps(rows, ensure_ascii=False)
 
     async def update_word(
         self,
@@ -817,6 +859,41 @@ class WordCoachService(BaseService):
             (user_key, now, days),
         )
         return [{"date": str(r["d"]), "count": int(r["c"])} for r in await cur.fetchall()]
+
+    async def record_quiz_result(
+        self, user_key: str, total: int, correct: int, wrong_words: list[dict[str, str]]
+    ) -> None:
+        """记录一次测验结果到 quiz_results 表。"""
+        assert self._db is not None
+        import json as _json
+
+        wrong_text = _json.dumps(wrong_words, ensure_ascii=False) if wrong_words else ""
+        await self._db.execute(
+            "INSERT INTO quiz_results (user_key, total, correct, wrong, wrong_words) VALUES (?, ?, ?, ?, ?)",
+            (user_key, total, correct, total - correct, wrong_text),
+        )
+        await self._db.commit()
+
+    async def list_quiz_results(self, user_key: str, limit: int = 20) -> list[dict[str, Any]]:
+        """查该流最近的测验记录。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT id, total, correct, wrong, wrong_words, created_at "
+            "FROM quiz_results WHERE user_key = ? ORDER BY created_at DESC LIMIT ?",
+            (user_key, max(limit, 1)),
+        )
+        import json as _json
+
+        results = []
+        for r in await cur.fetchall():
+            d = dict(r)
+            try:
+                d["wrong_words"] = _json.loads(d.get("wrong_words") or "[]")
+            except Exception:
+                d["wrong_words"] = []
+            d["accuracy"] = round(int(d["correct"]) / int(d["total"]) * 100) if int(d["total"]) else 0
+            results.append(d)
+        return results
 
     async def stats(self, user_key: str) -> dict[str, Any]:
         """该 user_key 的学习统计。"""
