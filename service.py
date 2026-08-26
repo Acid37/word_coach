@@ -133,6 +133,16 @@ class WordCoachService(BaseService):
             );
             CREATE INDEX IF NOT EXISTS idx_progress_due ON progress(user_key, due_at);
             CREATE INDEX IF NOT EXISTS idx_words_word ON words(word);
+            CREATE TABLE IF NOT EXISTS study_plans (
+                user_key TEXT PRIMARY KEY,
+                daily_new_count INTEGER NOT NULL DEFAULT 3,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS web_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
             """
         )
         await self._migrate_progress_identity()
@@ -206,6 +216,16 @@ class WordCoachService(BaseService):
             "SELECT id, word, phonetic, meaning, source, tags FROM words "
             "ORDER BY word LIMIT ?",
             (max(limit, 1),),
+        )
+        return [dict(r) for r in await cur.fetchall()]
+
+    async def random_words(self, *, exclude_id: int = 0, limit: int = 3) -> list[dict[str, Any]]:
+        """从词书随机取 N 个词条（排除指定 id）。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT id, word, phonetic, meaning, example, source, tags "
+            "FROM words WHERE id != ? ORDER BY RANDOM() LIMIT ?",
+            (exclude_id, max(limit, 1)),
         )
         return [dict(r) for r in await cur.fetchall()]
 
@@ -441,24 +461,39 @@ class WordCoachService(BaseService):
         *,
         total_limit: int = 10,
         new_limit: int = 3,
+        source: str = "",
+        tags: str = "",
+        only_new: bool = False,
     ) -> list[dict[str, Any]]:
         """取该 user_key 的今日词单：到期复习词 + 新词（最多 total_limit 个）。
 
+        source/tags 过滤词条来源与标签；only_new=True 时只取新词不取复习词。
         返回列表项：{id, word, phonetic, meaning, example, box, due_in_days, is_new}
         """
         assert self._db is not None
         now = _now_str()
         new_limit = min(max(new_limit, 0), total_limit)
-        due_limit = total_limit - new_limit
+        due_limit = 0 if only_new else (total_limit - new_limit)
+
+        # 动态拼 WHERE 条件
+        extra_where = []
+        params: list[Any] = []
+        if source:
+            extra_where.append("w.source = ?")
+            params.append(source)
+        if tags:
+            extra_where.append("w.tags LIKE ?")
+            params.append(f"%{tags}%")
+        extra_clause = (" AND " + " AND ".join(extra_where)) if extra_where else ""
 
         due: list[dict[str, Any]] = []
         if due_limit > 0:
             cur = await self._db.execute(
                 "SELECT w.id, w.word, w.phonetic, w.meaning, w.example, p.box "
                 "FROM progress p JOIN words w ON w.id = p.word_id "
-                "WHERE p.user_key = ? AND p.due_at <= ? "
-                "ORDER BY p.due_at LIMIT ?",
-                (user_key, now, due_limit),
+                f"WHERE p.user_key = ? AND p.due_at <= ?{extra_clause} "
+                "ORDER BY RANDOM() LIMIT ?",
+                (user_key, now, *params, due_limit),
             )
             for row in await cur.fetchall():
                 box = int(row["box"])
@@ -483,9 +518,10 @@ class WordCoachService(BaseService):
             cur = await self._db.execute(
                 "SELECT w.id, w.word, w.phonetic, w.meaning, w.example "
                 "FROM words w "
-                "WHERE NOT EXISTS (SELECT 1 FROM progress p WHERE p.word_id = w.id AND p.user_key = ?) "
-                "ORDER BY w.id LIMIT ?",
-                (user_key, take_new),
+                "WHERE NOT EXISTS (SELECT 1 FROM progress p WHERE p.word_id = w.id AND p.user_key = ?)"
+                f"{extra_clause} "
+                "ORDER BY RANDOM() LIMIT ?",
+                (user_key, *params, take_new),
             )
             for row in await cur.fetchall():
                 due.append(
@@ -664,6 +700,123 @@ class WordCoachService(BaseService):
         )
         await self._db.commit()
         return True, "已删除该词进度"
+
+    async def streak(self, user_key: str) -> int:
+        """连续打卡天数：该流 progress 里 due_at 日期去重降序，从今天往回数连续的。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT DISTINCT substr(due_at, 1, 10) AS d "
+            "FROM progress WHERE user_key = ? ORDER BY d DESC",
+            (user_key,),
+        )
+        dates = [str(r["d"]) for r in await cur.fetchall()]
+        if not dates:
+            return 0
+        from datetime import date, timedelta
+
+        today = date.today()
+        streak_count = 0
+        check_date = today
+        date_set = set(dates)
+        while check_date.isoformat() in date_set:
+            streak_count += 1
+            check_date -= timedelta(days=1)
+        return streak_count
+
+    async def get_plan(self, user_key: str, *, fallback_new_count: int = 3) -> dict[str, Any]:
+        """取该流的学习计划信息。
+
+        Returns:
+            daily_new_count, learned, book_size, remaining, estimated_days, streak, box_dist
+        """
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT daily_new_count FROM study_plans WHERE user_key = ?",
+            (user_key,),
+        )
+        row = await cur.fetchone()
+        daily_new = int(row["daily_new_count"]) if row else fallback_new_count
+        book_size = await self.count_words()
+        cur = await self._db.execute(
+            "SELECT COUNT(*) AS c FROM progress WHERE user_key = ?", (user_key,)
+        )
+        row = await cur.fetchone()
+        learned = int(row["c"]) if row else 0
+        remaining = max(book_size - learned, 0)
+        estimated_days = (
+            -(-remaining // daily_new) if daily_new > 0 else 0  # ceil division
+        )
+        # 箱分布
+        cur = await self._db.execute(
+            "SELECT box, COUNT(*) AS c FROM progress WHERE user_key = ? GROUP BY box",
+            (user_key,),
+        )
+        box_dist = {int(r["box"]): int(r["c"]) for r in await cur.fetchall()}
+        return {
+            "daily_new_count": daily_new,
+            "learned": learned,
+            "book_size": book_size,
+            "remaining": remaining,
+            "estimated_days": estimated_days,
+            "streak": await self.streak(user_key),
+            "box_dist": box_dist,
+        }
+
+    async def set_plan(self, user_key: str, daily_new_count: int) -> dict[str, Any]:
+        """设该流每天新词数（upsert）。"""
+        assert self._db is not None
+        daily_new = max(min(daily_new_count, 50), 1)
+        await self._db.execute(
+            "INSERT INTO study_plans (user_key, daily_new_count, updated_at) "
+            "VALUES (?, ?, ?) "
+            "ON CONFLICT(user_key) DO UPDATE SET "
+            "daily_new_count = excluded.daily_new_count, updated_at = excluded.updated_at",
+            (user_key, daily_new, _now_str()),
+        )
+        await self._db.commit()
+        return {"ok": True, "daily_new_count": daily_new, "message": f"已设为每天 {daily_new} 个新词"}
+
+    async def get_setting(self, key: str, default: str = "") -> str:
+        """读取一个 Web UI 设置值（web_settings 表）。"""
+        assert self._db is not None
+        cur = await self._db.execute(
+            "SELECT value FROM web_settings WHERE key = ?", (key,)
+        )
+        row = await cur.fetchone()
+        return str(row["value"]) if row else default
+
+    async def set_setting(self, key: str, value: str) -> None:
+        """写入一个 Web UI 设置值（upsert）。"""
+        assert self._db is not None
+        await self._db.execute(
+            "INSERT INTO web_settings (key, value, updated_at) VALUES (?, ?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+            (key, value, _now_str()),
+        )
+        await self._db.commit()
+
+    async def get_all_settings(self) -> dict[str, str]:
+        """读取全部 Web UI 设置。"""
+        assert self._db is not None
+        cur = await self._db.execute("SELECT key, value FROM web_settings")
+        return {str(r["key"]): str(r["value"]) for r in await cur.fetchall()}
+
+    async def set_settings(self, settings: dict[str, str]) -> None:
+        """批量写入 Web UI 设置。"""
+        for key, value in settings.items():
+            await self.set_setting(key, value)
+
+    async def upcoming_schedule(self, user_key: str, days: int = 30) -> list[dict[str, Any]]:
+        """未来 N 天的复习节奏：每天有多少词到期。"""
+        assert self._db is not None
+        now = _now_str()
+        cur = await self._db.execute(
+            "SELECT substr(due_at, 1, 10) AS d, COUNT(*) AS c "
+            "FROM progress WHERE user_key = ? AND due_at >= ? "
+            "GROUP BY d ORDER BY d LIMIT ?",
+            (user_key, now, days),
+        )
+        return [{"date": str(r["d"]), "count": int(r["c"])} for r in await cur.fetchall()]
 
     async def stats(self, user_key: str) -> dict[str, Any]:
         """该 user_key 的学习统计。"""

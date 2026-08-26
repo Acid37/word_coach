@@ -99,6 +99,63 @@ class QuizSubmitBody(BaseModel):
     correct: bool
 
 
+class PlanBody(BaseModel):
+    """学习计划设置请求体。"""
+
+    daily_new_count: int
+
+
+class QuizJudgeBody(BaseModel):
+    """测验作答判定请求体。"""
+
+    word_id: int
+    answer: str
+    word: str
+    meaning: str
+    example: str = ""
+
+
+class QuizFinishBody(BaseModel):
+    """测验结束推送请求体。"""
+
+    total: int
+    correct: int
+    wrong_words: list[dict[str, Any]] = []
+
+
+def _levenshtein(a: str, b: str) -> int:
+    """计算两字符串的编辑距离。"""
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a):
+        curr = [i + 1]
+        for j, cb in enumerate(b):
+            curr.append(min(
+                prev[j + 1] + 1,
+                curr[j] + 1,
+                prev[j] + (0 if ca == cb else 1),
+            ))
+        prev = curr
+    return prev[-1]
+
+
+def _levenshtein_match(answer: str, target: str, tolerance: int = 2) -> bool:
+    """编辑距离 ≤ tolerance 视为匹配（取 target 的每个分词比较）。"""
+    import re
+
+    target_parts = re.split(r"[;；,，/、\s]+", target)
+    for part in target_parts:
+        part = part.strip()
+        if not part:
+            continue
+        if _levenshtein(answer, part) <= tolerance:
+            return True
+    return False
+
+
 class WordCoachWebRouter(BaseRouter):
     """word_coach 内置 Web UI（仪表盘/词书/导入/测验/进度）。"""
 
@@ -223,15 +280,17 @@ class WordCoachWebRouter(BaseRouter):
 
         @app.get("/api/overview")
         async def overview() -> dict[str, Any]:
-            """仪表盘数据：词书总览 + 各流进度 + 绑定流信息。"""
+            """仪表盘数据：词书总览 + 各流进度 + 绑定流计划。"""
             service = self._service()
             book = await service.book_overview()
             streams = await service.list_progress_streams()
             binding: dict[str, Any] | None = None
             try:
-                stream_id, _platform, _user_id = self._owner_binding()
+                stream_id, platform, user_id = self._owner_binding()
+                label = f"{platform}:{user_id}" if platform and user_id else stream_id
                 stats = await service.stats(stream_id)
-                binding = {"stream_id": stream_id, **stats}
+                plan = await service.get_plan(stream_id)
+                binding = {"stream_id": stream_id, "label": label, **stats, "plan": plan}
             except HTTPException:
                 binding = None
             return {"book": book, "streams": streams, "binding": binding}
@@ -328,6 +387,31 @@ class WordCoachWebRouter(BaseRouter):
                 raise HTTPException(status_code=502, detail=f"下载/解析失败：{exc}") from exc
             return self._import_result_payload(added, existing, errors)
 
+        @app.get("/api/import/builtin")
+        async def builtin_list() -> dict[str, Any]:
+            """列出可用的内置词库。"""
+            builtin_dir = Path(__file__).parent / "sources"
+            builtins: list[dict[str, str]] = []
+            for name, label in [("cet4", "四级"), ("cet6", "六级")]:
+                p = builtin_dir / f"{name}.json"
+                if p.exists():
+                    builtins.append({"name": name, "label": label, "size": f"{p.stat().st_size // 1024} KB"})
+            return {"builtins": builtins}
+
+        @app.post("/api/import/builtin")
+        async def import_builtin(body: dict[str, str]) -> dict[str, Any]:
+            """导入内置词库（cet4/cet6）。"""
+            name = (body.get("name") or "").strip().lower()
+            builtin_dir = Path(__file__).parent / "sources"
+            path = builtin_dir / f"{name}.json"
+            if not path.exists():
+                raise HTTPException(status_code=404, detail=f"没有内置词库「{name}」（可用：cet4, cet6）")
+            entries = parse_word_json_text(path.read_text(encoding="utf-8"))
+            added, existing, errors = await self._service().import_entries(
+                entries, source=f"builtin:{name}"
+            )
+            return self._import_result_payload(added, existing, errors)
+
         @app.post("/api/import/file")
         async def import_file(body: ImportFileBody) -> dict[str, Any]:
             """导入前端上传的词表文本（按扩展名分发解析）。"""
@@ -391,41 +475,210 @@ class WordCoachWebRouter(BaseRouter):
                 raise HTTPException(status_code=404, detail=message)
             return {"ok": True, "message": message}
 
-        # ---------------- 网页测验 ----------------
+        # ---------------- 学习计划 ----------------
 
-        @app.get("/api/quiz/session")
-        async def quiz_session(
-            count: int | None = Query(default=None, ge=1, le=50),
-        ) -> dict[str, Any]:
-            """取一组绑定流的待测词（到期复习优先），由前端逐张出卡。"""
-            cfg = self._config()
+        @app.get("/api/plan")
+        async def get_plan() -> dict[str, Any]:
+            """取绑定流的学习计划。"""
+            service = self._service()
             stream_id, _platform, _user_id = self._owner_binding()
-            total = count or (cfg.web.quiz_count if cfg else 10)
-            new_limit = cfg.web.quiz_new if cfg else 3
-            words = await self._service().due_words(
-                stream_id, total_limit=total, new_limit=min(new_limit, total)
-            )
-            return {"stream_id": stream_id, "words": words}
+            cfg = self._config()
+            fallback = cfg.plugin.daily_new_count if cfg else 3
+            plan = await service.get_plan(stream_id, fallback_new_count=fallback)
+            return {"stream_id": stream_id, **plan}
 
-        @app.post("/api/quiz/submit")
-        async def quiz_submit(body: QuizSubmitBody) -> dict[str, Any]:
-            """提交一次网页作答判定（进度计入绑定流）。"""
+        @app.post("/api/plan")
+        async def set_plan(body: PlanBody) -> dict[str, Any]:
+            """设绑定流每天新词数。"""
+            service = self._service()
+            stream_id, _platform, _user_id = self._owner_binding()
+            return await service.set_plan(stream_id, body.daily_new_count)
+
+        @app.get("/api/plan/detail")
+        async def plan_detail() -> dict[str, Any]:
+            """完整计划详情：推送时间+目标+词量+预计学完+复习节奏。"""
+            service = self._service()
+            cfg = self._config()
+            stream_id, platform, user_id = self._owner_binding()
+            plan = await service.get_plan(
+                stream_id, fallback_new_count=cfg.plugin.daily_new_count if cfg else 3
+            )
+            schedule = await service.upcoming_schedule(stream_id, days=30)
+            label = f"{platform}:{user_id}" if platform and user_id else stream_id
+            from datetime import date, timedelta
+
+            est_date = (
+                date.today() + timedelta(days=plan["estimated_days"])
+                if plan["estimated_days"]
+                else None
+            )
+            return {
+                "stream_id": stream_id,
+                "label": label,
+                "push_time": cfg.plugin.push_time if cfg else "09:00",
+                "daily_word_count": cfg.plugin.daily_word_count if cfg else 10,
+                "daily_new_count": plan["daily_new_count"],
+                "learned": plan["learned"],
+                "book_size": plan["book_size"],
+                "remaining": plan["remaining"],
+                "estimated_days": plan["estimated_days"],
+                "estimated_finish_date": est_date.isoformat() if est_date else None,
+                "streak": plan["streak"],
+                "box_dist": plan["box_dist"],
+                "schedule": schedule,
+            }
+
+        # ---------------- 外观设置 ----------------
+
+        @app.get("/api/settings")
+        async def get_settings() -> dict[str, Any]:
+            """取 Web UI 外观设置（DB 优先，回退 config 默认值）。"""
+            service = self._service()
+            cfg = self._config()
+            defaults = {
+                "theme": cfg.web.theme if cfg else "light",
+                "primary_color": cfg.web.primary_color if cfg else "#5b6cff",
+                "bg_url": cfg.web.bg_url if cfg else "",
+                "bg_opacity": str(cfg.web.bg_opacity if cfg else 0.85),
+            }
+            db_settings = await service.get_all_settings()
+            return {k: db_settings.get(k, v) for k, v in defaults.items()}
+
+        @app.post("/api/settings")
+        async def set_settings(body: dict[str, str]) -> dict[str, Any]:
+            """批量更新 Web UI 外观设置。"""
+            service = self._service()
+            await service.set_settings(body)
+            return {"ok": True, "message": "设置已保存"}
+
+        # ---------------- 网页测验（选择题+拼写题） ----------------
+
+        @app.get("/api/quiz/next")
+        async def quiz_next(
+            count: int | None = Query(default=None, ge=1, le=50),
+            source: str = Query(default=""),
+            tags: str = Query(default=""),
+            only_new: bool = Query(default=False),
+            mode: str = Query(default="mixed"),
+        ) -> dict[str, Any]:
+            """取下一道题：选择题（4选1）或拼写题。"""
+            import random
+
+            cfg = self._config()
+            stream_id, _p, _u = self._owner_binding()
+            service = self._service()
+            plan = await service.get_plan(stream_id)
+            new_limit = 1 if not only_new else 0
+            words = await service.due_words(
+                stream_id, total_limit=1, new_limit=new_limit,
+                source=source, tags=tags, only_new=only_new,
+            )
+            if not words:
+                return {"words": [], "total": 0}
+            w = words[0]
+
+            # 题型：mode=choice 只出选择题，mode=spell 只出拼写题，mixed 随机
+            if mode == "spell":
+                qtype = "spell"
+            elif mode == "choice":
+                qtype = "choice"
+            else:
+                qtype = random.choice(["choice", "spell"])
+
+            result = {
+                "question_type": qtype,
+                "word_id": w["id"],
+                "word": w["word"],
+                "meaning": w.get("meaning", ""),
+                "phonetic": w.get("phonetic", ""),
+                "example": w.get("example", ""),
+                "is_new": w.get("is_new", False),
+                "box": w.get("box", 1),
+            }
+
+            if qtype == "choice":
+                # 从词书随机取 3 个干扰释义
+                distractors = await service.random_words(exclude_id=w["id"], limit=3)
+                options = [w.get("meaning", "")] + [d.get("meaning", "") for d in distractors]
+                random.shuffle(options)
+                correct_index = options.index(w.get("meaning", ""))
+                result["question"] = f"「{w['word']}」的释义是？"
+                result["options"] = options
+                result["correct_index"] = correct_index
+            else:
+                # 拼写题：显示释义，要求拼写英文单词
+                result["question"] = f"拼写这个单词：{w.get('meaning', '?')} {w.get('phonetic', '')}"
+
+            return result
+
+        @app.post("/api/quiz/judge")
+        async def quiz_judge(body: dict[str, Any]) -> dict[str, Any]:
+            """判定用户作答（选择题按 index，拼写题严格字符匹配），推进进度。"""
             service = self._service()
             stream_id, platform, user_id = self._owner_binding()
+
+            word_id = int(body.get("word_id", 0))
+            qtype = body.get("question_type", "choice")
+
+            if qtype == "spell":
+                # 拼写题：严格字符匹配（忽略大小写和首尾空格）
+                answer = str(body.get("answer", "")).strip().lower()
+                word = str(body.get("word", "")).strip().lower()
+                correct = bool(answer) and answer == word
+            else:
+                # 选择题：比较 selected_index
+                selected = int(body.get("selected_index", -1))
+                correct_index = int(body.get("correct_index", -2))
+                correct = selected == correct_index and selected >= 0
+
             result = await service.submit_result(
-                stream_id,
-                body.word_id,
-                body.correct,
-                platform=platform,
-                user_id=user_id,
+                stream_id, word_id, correct, platform=platform, user_id=user_id
             )
             if not result.get("ok"):
                 raise HTTPException(status_code=404, detail=str(result.get("message")))
-            # QQ 侧恰好有同一词的待判定题时顺手清除，避免互相卡住
+            # 清除该流可能的 pending
             pending = service.get_pending(stream_id)
-            if pending is not None and int(pending.get("word_id", -1)) == body.word_id:
+            if pending is not None and int(pending.get("word_id", -1)) == word_id:
                 service.clear_pending(stream_id)
-            return result
+            return {
+                "correct": correct,
+                "word": body.get("word", ""),
+                "meaning": body.get("meaning", ""),
+                "example": body.get("example", ""),
+                "box": result.get("box"),
+                "due_in_days": result.get("due_in_days"),
+            }
+
+        @app.post("/api/quiz/finish")
+        async def quiz_finish(body: QuizFinishBody) -> dict[str, Any]:
+            """测验结束，将结果注入 system reminder，由 LLM 下次对话时自然提起。"""
+            from src.core.prompt import get_system_reminder_store
+
+            service = self._service()
+            stream_id, _p, _u = self._owner_binding()
+            total = body.total
+            correct = body.correct
+            wrong = total - correct
+            acc = round(correct / total * 100) if total else 0
+
+            # 构造结果摘要
+            parts = [f"用户刚在网页背单词测验了 {total} 个词，对了 {correct} 个，错了 {wrong} 个，正确率 {acc}%。"]
+            wrong_words = body.wrong_words or []
+            if wrong_words:
+                wrong_list = "、".join(
+                    f"{w.get('word', '?')}（{w.get('meaning', '?')}）" for w in wrong_words[:10]
+                )
+                parts.append(f"错词：{wrong_list}" + ("…" if len(wrong_words) > 10 else ""))
+            parts.append("请在下次对话时根据语境自然地提起这个结果，可以鼓励或安慰，不要生硬地复述。")
+            content = "\n".join(parts)
+
+            # 注入到 actor reminder 桶，LLM 下次对话时会看到
+            try:
+                store = get_system_reminder_store()
+                store.set("actor", name="背单词测验结果", content=content)
+                return {"ok": True, "message": "结果已注入 Bot 上下文，下次聊天时 Bot 会自然提起"}
+            except Exception as exc:
+                return {"ok": False, "message": f"注入失败：{exc}"}
 
         @app.get("/api/quiz/stats")
         async def quiz_stats() -> dict[str, Any]:

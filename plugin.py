@@ -266,10 +266,13 @@ class WordCoachPlugin(BasePlugin):
             if not stream_id:
                 logger.warning(f"word_coach 推送目标解析失败: {target}")
                 continue
+            plan = await service.get_plan(
+                stream_id, fallback_new_count=cfg.plugin.daily_new_count
+            )
             words = await service.due_words(
                 stream_id,
                 total_limit=cfg.plugin.daily_word_count,
-                new_limit=cfg.plugin.daily_new_count,
+                new_limit=plan["daily_new_count"],
             )
             if not words:
                 continue

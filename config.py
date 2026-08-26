@@ -105,6 +105,26 @@ class WordCoachConfig(BaseConfig):
             description="网页测验每次会话中的新词数量上限",
         )
 
+        theme: str = Field(
+            default="light",
+            description="Web UI 明暗主题（light/dark）",
+        )
+
+        primary_color: str = Field(
+            default="#5b6cff",
+            description="Web UI 主题色（十六进制，如 #5b6cff）",
+        )
+
+        bg_url: str = Field(
+            default="",
+            description="Web UI 背景图 URL（留空=纯色背景，支持任意图片直链）",
+        )
+
+        bg_opacity: float = Field(
+            default=0.85,
+            description="有背景图时内容区的透明度（0.0-1.0）",
+        )
+
     @config_section("source")
     class SourceSection(SectionBase):
         """词库来源配置（自动下载导入）。"""

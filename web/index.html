@@ -149,6 +149,24 @@
 
   .pager { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
   .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  #settings-btn {
+    position: fixed; right: 16px; bottom: 16px; z-index: 20;
+    width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--primary); color: #fff; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  }
+  #settings-panel {
+    position: fixed; right: 16px; bottom: 72px; z-index: 20; display: none;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,.15);
+  }
+  #settings-panel.open { display: block; }
+  #settings-panel label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  #settings-panel input { width: 100%; }
+  .timeline { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; }
+  .timeline-node { min-width: 70px; text-align: center; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); margin: 0 auto 4px; }
+  .timeline-date { font-size: 10px; color: var(--muted); }
+  .timeline-count { font-size: 14px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -158,6 +176,7 @@
   <div class="sub">内置 Web UI · 与聊天流共用同一份词书与进度</div>
   <nav>
     <button data-tab="dashboard" class="active">仪表盘</button>
+    <button data-tab="plan">计划</button>
     <button data-tab="words">词书</button>
     <button data-tab="import">导入词库</button>
     <button data-tab="quiz">测验</button>
@@ -170,10 +189,15 @@
   <!-- ============ 仪表盘 ============ -->
   <section class="tab active" id="tab-dashboard">
     <div class="grid" id="dash-stats"></div>
-    <h2>我的学习（网页绑定的聊天流）</h2>
+    <h2>我的学习 <span class="pill" id="dash-binding-label">加载中…</span></h2>
     <div class="card" id="dash-binding"></div>
     <h2>各聊天流进度</h2>
     <div id="dash-streams"></div>
+  </section>
+
+  <!-- ============ 学习计划 ============ -->
+  <section class="tab" id="tab-plan">
+    <div id="plan-content"><div class="card empty">加载中…</div></div>
   </section>
 
   <!-- ============ 词书 ============ -->
@@ -220,7 +244,15 @@
     </div>
 
     <div class="card">
-      <h2>③ 上传本地词表文件</h2>
+      <h2>③ 内置词库（一键导入）</h2>
+      <div id="builtin-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:10px;">
+        <div class="muted">加载中…</div>
+      </div>
+      <div class="muted" style="margin-top:6px;">内置四级/六级词库，无需下载，点一下直接导入。</div>
+    </div>
+
+    <div class="card">
+      <h2>④ 上传本地词表文件</h2>
       <div class="row">
         <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt">
         <button class="btn" onclick="importFile()">上传导入</button>
@@ -246,9 +278,16 @@
       <p><b>纯文本</b>：每行一个词，后面可跟释义（Tab 或空格分隔），# 开头为注释。</p>
 
       <h4>开源词库字段也能直接用</h4>
-      <p>主流开源词库（如 GitHub 上的 kajiweb/dict、JEPCAM 等）常用的字段名已自动兼容：
+      <p>主流开源词库常用的字段名已自动兼容：
       <code>name/entry → word</code>、<code>trans/definition/chinese → 释义</code>、
-      <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>，下载后直接导入即可。</p>
+      <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>。</p>
+
+      <h4>更多词库怎么找</h4>
+      <p>内置的四六级词库来自 <a href="https://github.com/kajweb/dict" target="_blank">kajweb/dict</a>（3500+ Star），
+      该仓库还有雅思、托福、GRE、SAT 等词库，但都是 zip 打包的 JSON Lines 格式（每行一个 JSON 对象），
+      需要下载解压后用「上传本地文件」导入。另一个大词典项目是
+      <a href="https://github.com/skywind3000/ECDICT" target="_blank">ECDICT</a>（8000+ Star），
+      提供完整英汉词典 CSV（65MB），适合需要大量词条的场景。</p>
 
       <h4>怎么拿到 GitHub 上词库的直链</h4>
       <p>在 GitHub 打开词库文件 → 点右上角「Raw」→ 复制浏览器地址栏的
@@ -257,9 +296,9 @@
       <h4>配置自己的预置词库（让「一键导入」更方便）</h4>
       <p>编辑 <code>config/plugins/word_coach/config.toml</code> 的 <code>[source]</code> 节：</p>
 <pre>[source]
-preset_urls = { cet4 = "https://example.com/cet4.json", kaoyan = "https://example.com/kaoyan.json" }</pre>
+preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://example.com/ielts.json" }</pre>
       <p>保存后重启 Bot，页面「预置词库」下拉框即可一键导入；聊天里也可以直接说
-      「下载词库 cet4」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
+      「下载词库 kaoyan」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
     </details>
   </section>
 
@@ -280,6 +319,24 @@ preset_urls = { cet4 = "https://example.com/cet4.json", kaoyan = "https://exampl
   </section>
 
 </main>
+
+<!-- 设置面板 -->
+<button id="settings-btn" onclick="toggleSettings()">⚙</button>
+<div id="settings-panel">
+  <h3 style="margin:0 0 10px; font-size:15px;">外观设置</h3>
+  <label>背景图 URL</label>
+  <input type="text" id="set-bg-url" placeholder="留空=纯色背景" oninput="debounceApplySettings()">
+  <label>主题色</label>
+  <input type="color" id="set-primary-color" style="height:36px; padding:2px;" oninput="debounceApplySettings()">
+  <label>明暗模式</label>
+  <select id="set-theme" onchange="debounceApplySettings()">
+    <option value="light">浅色</option>
+    <option value="dark">深色</option>
+  </select>
+  <label>内容透明度 <span id="opacity-val"></span></label>
+  <input type="range" id="set-bg-opacity" min="0.3" max="1.0" step="0.05" style="width:100%;" oninput="debounceApplySettings()">
+  <button class="btn" style="width:100%; margin-top:10px;" onclick="saveSettings()">保存</button>
+</div>
 
 <!-- 添加/编辑词条弹窗 -->
 <div id="modal-mask">
@@ -346,8 +403,9 @@ document.querySelectorAll("nav button").forEach((btn) => {
     const name = btn.dataset.tab;
     $("#tab-" + name).classList.add("active");
     if (name === "dashboard") loadDashboard();
+    if (name === "plan") loadPlanDetail();
     if (name === "words") loadWords(0);
-    if (name === "import") loadPresets();
+    if (name === "import") { loadPresets(); loadBuiltins(); }
     if (name === "quiz") quizIntro();
     if (name === "progress") loadProgress();
   });
@@ -373,28 +431,83 @@ async function loadDashboard() {
   // 绑定流卡片
   const b = data.binding;
   if (!b) {
-    $("#dash-binding").innerHTML = `<div class="muted">未配置网页绑定的聊天流。请在配置
-      <code>[web].owner_target</code> 填写 <code>platform:user:ID</code>
-      （如 qq:user:2583090218），网页测验将使用你的私人聊天流进度。</div>`;
+    $("#dash-binding-label").textContent = "未绑定";
+    $("#dash-binding").innerHTML = `<div class="muted">未配置网页绑定的聊天流。请在框架
+      <code>[permissions].owner_list</code> 填写 <code>platform:user_id</code>
+      （如 qq:2750694203），重启后网页测验将自动绑定你的私人聊天流。</div>`;
   } else {
     const acc = b.accuracy || 0;
+    $("#dash-binding-label").textContent = b.label || b.stream_id || "?";
+    const plan = b.plan || {};
+    const learned = plan.learned || 0;
+    const bookSize = plan.book_size || b.book_size || 0;
+    const progressPct = bookSize ? Math.round(learned / bookSize * 100) : 0;
+    const estDays = plan.estimated_days || 0;
+    const streak = plan.streak || 0;
+    const dueNow = b.due_now || 0;
+    const dailyNew = plan.daily_new_count || 3;
+    const boxDist = plan.box_dist || {};
+
+    // 遗忘曲线 SVG 折线图
+    const intervals = [1, 2, 4, 7, 15];
+    const maxBox = Math.max(...Object.values(boxDist), 1);
+    const pts = intervals.map((days, i) => {
+      const count = boxDist[i + 1] || 0;
+      const x = 30 + i * 50;
+      const y = 60 - (count / maxBox) * 48;
+      return { x, y, count, days };
+    });
+    const polyline = pts.map(p => `${p.x},${p.y}`).join(" ");
+    const curveDots = pts.map(p => `
+      <circle cx="${p.x}" cy="${p.y}" r="${3 + p.count / maxBox * 4}" fill="var(--primary)" opacity="${0.4 + p.count / maxBox * 0.6}"/>
+      <text x="${p.x}" y="78" text-anchor="middle" font-size="8" fill="var(--muted)">${p.days}天</text>
+      <text x="${p.x}" y="${p.y - 8}" text-anchor="middle" font-size="8" fill="var(--text)" font-weight="bold">${p.count || ""}</text>
+    `).join("");
+
+    // 左右双栏：左侧进度环+计划，右侧统计+遗忘曲线
+    const hasCurve = pts.some(p => p.count > 0);
     $("#dash-binding").innerHTML = `
-      <div class="ring-wrap">
-        <svg class="ring" viewBox="0 0 36 36">
-          <circle class="bg" cx="18" cy="18" r="15.9"/>
-          <circle class="fg" cx="18" cy="18" r="15.9" stroke-dasharray="${acc} 100"/>
-        </svg>
+      <div style="display:grid; grid-template-columns:280px 1fr; gap:14px; align-items:start;">
+
+        <!-- 左栏：进度环 + 计划 + 快捷开始 -->
         <div>
-          <div class="ring-num">${acc}% 正确率</div>
-          <div class="muted">绑定流：${esc(b.stream_id)}</div>
+          <div class="row" style="justify-content:center; gap:16px;">
+            <svg class="ring" viewBox="0 0 36 36" style="width:90px; height:90px;">
+              <circle class="bg" cx="18" cy="18" r="15.9"/>
+              <circle class="fg" cx="18" cy="18" r="15.9" stroke-dasharray="${progressPct} 100" style="stroke:var(--primary)"/>
+            </svg>
+            <div>
+              <div class="ring-num" style="color:var(--primary); font-size:28px;">${progressPct}%</div>
+              <div class="muted" style="font-size:12px;">${learned}/${bookSize} 词</div>
+            </div>
+          </div>
+          <div class="row" style="justify-content:center; margin-top:14px; gap:8px; flex-wrap:wrap;">
+            <span class="muted" style="font-size:13px;">每天</span>
+            <b style="cursor:pointer; color:var(--primary); font-size:16px;" onclick="editPlan(${dailyNew})">${dailyNew} 个新词</b>
+            <span class="pill gray" style="font-size:11px;">约 ${estDays} 天学完</span>
+          </div>
+          <div style="text-align:center; margin-top:14px;">
+            <button class="btn" onclick="switchTab('quiz')" ${dueNow > 0 ? '' : 'style="opacity:.7;"'}>开始测验${dueNow > 0 ? ` · ${dueNow} 个待复习` : ''}</button>
+          </div>
         </div>
-      </div>
-      <div class="grid" style="margin-top:14px;">
-        <div class="stat"><span class="num">${b.learned}</span><span class="lbl">已学单词</span></div>
-        <div class="stat"><span class="num">${b.total_reviews}</span><span class="lbl">累计复习次数</span></div>
-        <div class="stat"><span class="num" style="color:var(--green)">${b.correct}</span><span class="lbl">答对</span></div>
-        <div class="stat"><span class="num" style="color:var(--red)">${b.wrong}</span><span class="lbl">答错</span></div>
-        <div class="stat"><span class="num" style="color:var(--amber)">${b.due_now}</span><span class="lbl">今日待复习</span></div>
+
+        <!-- 右栏：统计 + 遗忘曲线 -->
+        <div>
+          <div class="grid" style="grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px;">
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${streak}</span><span class="lbl">连续打卡</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="font-size:22px;">${b.total_reviews}</span><span class="lbl">复习次数</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${b.correct}</span><span class="lbl">答对</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--red); font-size:22px;">${b.wrong}</span><span class="lbl">答错</span></div>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:4px; font-size:12px;">遗忘曲线</div>
+            ${hasCurve ? `<svg viewBox="0 0 280 90" style="width:100%;">
+              <polyline points="${polyline}" fill="none" stroke="var(--primary)" stroke-width="1.5" opacity="0.5"/>
+              ${curveDots}
+            </svg>` : '<div class="muted" style="font-size:13px; padding:20px 0; text-align:center;">还没有复习数据，开始测验后这里会显示</div>'}
+          </div>
+        </div>
+
       </div>`;
   }
 
@@ -414,6 +527,26 @@ async function loadDashboard() {
       `<div class="card"><div class="bars">${bars}</div>
        <div class="muted" style="margin-top:8px;">条形为已学词数对比；详情见「进度」页。</div></div>`;
   }
+}
+
+function switchTab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
+  document.querySelector(`nav button[data-tab="${name}"]`).classList.add("active");
+  $("#tab-" + name).classList.add("active");
+  if (name === "quiz") quizIntro();
+}
+
+async function editPlan(current) {
+  const input = prompt(`每天学几个新词？（当前 ${current}）`, current);
+  if (input === null) return;
+  const n = parseInt(input, 10);
+  if (!n || n < 1 || n > 50) { toast("请输入 1-50 的整数", true); return; }
+  try {
+    await api("api/plan", { method: "POST", body: JSON.stringify({ daily_new_count: n }) });
+    toast(`已设为每天 ${n} 个新词`);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ---------------- 词书管理 ---------------- */
@@ -563,6 +696,31 @@ async function importPreset() {
   } catch (e) { toast(e.message, true); }
 }
 
+async function loadBuiltins() {
+  try {
+    const data = await api("api/import/builtin");
+    const list = data.builtins || [];
+    if (!list.length) {
+      $("#builtin-list").innerHTML = '<span class="muted">无内置词库</span>';
+      return;
+    }
+    $("#builtin-list").innerHTML = list.map(b => `
+      <button class="btn ghost" style="text-align:left; padding:12px 14px;" onclick="importBuiltin('${esc(b.name)}')">
+        <div style="font-weight:700; font-size:15px;">${esc(b.label)} <span class="muted" style="font-size:11px; font-weight:400;">${esc(b.size)}</span></div>
+        <div class="muted" style="font-size:11px;">点击导入</div>
+      </button>`).join("");
+  } catch (e) { $("#builtin-list").innerHTML = '<span class="muted">加载失败</span>'; }
+}
+
+async function importBuiltin(name) {
+  toast("正在导入…");
+  try {
+    const data = await api("api/import/builtin", { method: "POST", body: JSON.stringify({ name }) });
+    showImportResult(data);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+}
+
 async function importFile() {
   const input = $("#import-file");
   const file = input.files && input.files[0];
@@ -578,99 +736,345 @@ async function importFile() {
   } catch (e) { toast(e.message, true); }
 }
 
-/* ---------------- 网页测验 ---------------- */
+/* ---------------- 网页测验（选择题+拼写题） ---------------- */
 
-const quiz = { words: [], index: 0, revealed: false, correct: 0, wrong: 0, stream: "" };
+const quiz = { total: 0, correct: 0, wrong: 0, wrongWords: [], current: null, busy: false, qmode: "mixed" };
 
 function quizIntro() {
+  quiz.total = 0; quiz.correct = 0; quiz.wrong = 0; quiz.wrongWords = []; quiz.current = null;
   $("#quiz-panel").innerHTML = `
     <div style="text-align:center; padding:20px 0;">
-      <div style="font-size:42px;">🎴</div>
-      <h2 style="margin-top:8px;">网页背单词测验</h2>
-      <p class="muted">进度计入你的私人聊天流（与 QQ 私聊同一份数据）。<br>
-      到期复习词优先，穿插少量新词。</p>
-      <button class="btn" onclick="quizStart()">开始测验</button>
+      <div style="font-size:42px;">✏️</div>
+      <h2 style="margin-top:8px;">背单词测验</h2>
+      <p class="muted">选择题 4 选 1，拼写题严格匹配。测完结果自动发到 QQ。</p>
+      <div class="row" style="justify-content:center; gap:10px; margin-top:14px;">
+        <select id="quiz-count" style="min-width:100px;">
+          <option value="5">5 题</option>
+          <option value="10" selected>10 题</option>
+          <option value="20">20 题</option>
+        </select>
+        <select id="quiz-qtype" style="min-width:120px;">
+          <option value="mixed" selected>混合（选择+拼写）</option>
+          <option value="choice">只出选择题</option>
+          <option value="spell">只出拼写题</option>
+        </select>
+        <select id="quiz-mode" style="min-width:120px;">
+          <option value="mixed" selected>复习+新词</option>
+          <option value="new">只考新词</option>
+        </select>
+      </div>
+      <button class="btn" style="margin-top:14px;" onclick="quizStart()">开始测验</button>
     </div>`;
 }
 
 async function quizStart() {
-  let data;
-  try { data = await api("api/quiz/session"); }
-  catch (e) { $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
-  quiz.words = data.words || [];
-  quiz.index = 0; quiz.correct = 0; quiz.wrong = 0; quiz.stream = data.stream_id;
-  if (!quiz.words.length) {
-    $("#quiz-panel").innerHTML = `
-      <div class="empty">
-        没有待测单词（今日词单已学完或词书为空）。<br><br>
-        <button class="btn ghost" onclick="quizIntro()">返回</button>
-      </div>`;
-    return;
-  }
-  quizRender();
+  const count = parseInt($("#quiz-count").value, 10);
+  quiz.qmode = $("#quiz-qtype").value;
+  const mode = $("#quiz-mode").value;
+  quiz.total = count; quiz.correct = 0; quiz.wrong = 0; quiz.wrongWords = [];
+  await quizNext(mode);
 }
 
-function quizRender() {
-  const total = quiz.words.length;
-  const w = quiz.words[quiz.index];
-  const pct = Math.round((quiz.index / total) * 100);
+async function quizNext(mode) {
+  const params = new URLSearchParams({ count: "1", mode: quiz.qmode });
+  if (mode === "new") params.set("only_new", "true");
+  quiz.busy = true;
+  quizRenderLoading("出题中…");
+  try {
+    const data = await api("api/quiz/next?" + params);
+    if (!data.word_id) { quizFinish(); return; }
+    quiz.current = data;
+    if (data.question_type === "choice") quizRenderChoice();
+    else quizRenderSpell();
+  } catch (e) {
+    $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`;
+  }
+  quiz.busy = false;
+}
+
+function quizRenderLoading(msg) {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
   $("#quiz-panel").innerHTML = `
     <div class="quiz-progress"><div style="width:${pct}%"></div></div>
-    <div class="muted" style="text-align:center;">
-      第 ${quiz.index + 1} / ${total} 张 · 绑定流 ${esc(quiz.stream)}
-      ${w.is_new ? ' · <span class="pill green">✨ 新词</span>' : ` · <span class="pill">🔁 箱${w.box}</span>`}
-    </div>
-    <div class="quiz-card">
-      <div class="q-word">${esc(w.word)}</div>
-      <div class="q-phonetic">${esc(w.phonetic || "")}</div>
-      ${quiz.revealed ? `
-        <div class="q-answer">
-          <div class="q-meaning">${esc(w.meaning || "（暂无释义）")}</div>
-          ${w.example ? `<div class="q-example">${esc(w.example)}</div>` : ""}
-        </div>
-        <div class="quiz-verdict">
-          <button class="btn green" onclick="quizAnswer(true)">✅ 认识</button>
-          <button class="btn red" onclick="quizAnswer(false)">❌ 不认识</button>
-        </div>`
-      : `
-        <div class="quiz-verdict">
-          <button class="btn" onclick="quizReveal()">看答案</button>
-        </div>
-        <div class="muted" style="margin-top:12px;">先在心里回忆释义，再看答案</div>`}
+    <div class="muted" style="text-align:center; padding:30px 0;">${esc(msg)}</div>`;
+}
+
+function quizProgress() {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
+  const c = quiz.current;
+  return `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="muted" style="text-align:center; margin-bottom:8px;">
+      第 ${done + 1} / ${quiz.total} 题 ·
+      ${c.is_new ? '<span class="pill green">✨ 新词</span>' : `<span class="pill">🔁 箱${c.box}</span>`}
     </div>`;
 }
 
-function quizReveal() { quiz.revealed = true; quizRender(); }
-
-async function quizAnswer(correct) {
-  const w = quiz.words[quiz.index];
-  try {
-    await api("api/quiz/submit", {
-      method: "POST",
-      body: JSON.stringify({ word_id: w.id, correct }),
-    });
-  } catch (e) { toast(e.message, true); return; }
-  if (correct) quiz.correct++; else quiz.wrong++;
-  quiz.index++;
-  quiz.revealed = false;
-  if (quiz.index >= quiz.words.length) return quizFinish();
-  quizRender();
+function quizRenderChoice() {
+  const c = quiz.current;
+  const opts = c.options || [];
+  const optsHtml = opts.map((opt, i) =>
+    `<button class="btn ghost" style="display:block; width:100%; margin-top:8px; text-align:left; padding:10px 14px;"
+       onclick="quizJudgeChoice(${i})">${esc(opt || "（空）")}</button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="q-word" style="font-size:24px; font-weight:700;">${esc(c.word)}</div>
+      <div class="q-phonetic">${esc(c.phonetic || "")}</div>
+    </div>
+    <div style="margin-top:12px;">${optsHtml}</div>`;
 }
 
-function quizFinish() {
-  const total = quiz.words.length;
-  const acc = Math.round((quiz.correct / total) * 100);
+function quizRenderSpell() {
+  const c = quiz.current;
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="q-word" style="font-size:18px; font-weight:600;">${esc(c.question)}</div>
+    </div>
+    <div class="row" style="margin-top:14px; gap:8px;">
+      <input type="text" id="quiz-answer" placeholder="输入英文单词…" style="flex:1; text-transform:lowercase;"
+        onkeydown="if(event.key==='Enter') quizJudgeSpell()">
+      <button class="btn" onclick="quizJudgeSpell()">提交</button>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">按 Enter 提交，严格匹配拼写</div>`;
+  $("#quiz-answer").focus();
+}
+
+async function quizJudgeChoice(selectedIndex) {
+  if (quiz.busy) return;
+  quiz.busy = true;
+  const c = quiz.current;
+  const correct = selectedIndex === c.correct_index;
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: "choice",
+        selected_index: selectedIndex, correct_index: c.correct_index,
+        word: c.word, meaning: c.meaning, example: c.example,
+      }),
+    });
+    if (correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.word, meaning: c.meaning }); }
+    quizRenderJudgeResult(data, c, correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); }
+  quiz.busy = false;
+}
+
+async function quizJudgeSpell() {
+  if (quiz.busy) return;
+  const answer = $("#quiz-answer").value.trim();
+  if (!answer) { toast("请输入答案", true); return; }
+  quiz.busy = true;
+  const c = quiz.current;
+  quizRenderLoading("判定中…");
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: "spell", answer: answer,
+        word: c.word, meaning: c.meaning, example: c.example,
+      }),
+    });
+    if (data.correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.word, meaning: c.meaning }); }
+    quizRenderJudgeResult(data, c, data.correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); quizRenderSpell(); }
+  quiz.busy = false;
+}
+
+function quizRenderJudgeResult(data, c, correct, onContinue) {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
+  // 选择题：显示选项并标色
+  let optsHtml = "";
+  if (c.options) {
+    optsHtml = c.options.map((opt, i) => {
+      let bg = "var(--card)", border = "var(--border)";
+      if (i === c.correct_index) { bg = "#e6f7ee"; border = "var(--green)"; }
+      const btn = document.querySelector(`button[onclick*="${i}"]`);
+      if (i === quiz._lastSelected && !correct) { bg = "#fdeaea"; border = "var(--red)"; }
+      return `<div style="background:${bg}; border:1px solid ${border}; border-radius:8px; padding:10px 14px; margin-top:8px;">${esc(opt || "（空）")}</div>`;
+    }).join("");
+  }
+  $("#quiz-panel").innerHTML = `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="quiz-card">
+      <div style="font-size:28px; margin-bottom:8px;">${correct ? "✅" : "❌"}</div>
+      <div class="q-word" style="font-size:22px; font-weight:700;">${esc(c.word)}</div>
+      <div class="q-phonetic">${esc(c.phonetic || "")}</div>
+      <div class="q-meaning" style="margin-top:8px;">释义：${esc(c.meaning || "（暂无）")}</div>
+      ${c.example ? `<div class="q-example" style="margin-top:4px;">例句：${esc(c.example)}</div>` : ""}
+      ${optsHtml}
+      <div class="muted" style="margin-top:8px;">${correct ? `答对！进入第 ${data.box} 箱，${data.due_in_days} 天后再复习` : `答错，回到第 1 箱明天再见`}</div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="btn" id="quiz-next-btn" onclick="">下一题</button>
+    </div>`;
+  document.getElementById("quiz-next-btn").onclick = onContinue;
+}
+
+async function quizNextContinue() {
+  const done = quiz.correct + quiz.wrong;
+  if (done >= quiz.total) return quizFinish();
+  const mode = $("#quiz-mode") ? $("#quiz-mode").value : "mixed";
+  await quizNext(mode);
+}
+
+async function quizFinish() {
+  const acc = quiz.total ? Math.round(quiz.correct / quiz.total * 100) : 0;
   $("#quiz-panel").innerHTML = `
     <div style="text-align:center; padding:24px 0;">
       <div style="font-size:42px;">🎉</div>
       <h2>本轮完成！</h2>
-      <p>${quiz.correct} 张认识 · ${quiz.wrong} 张不认识 · 正确率 ${acc}%</p>
-      <p class="muted">答对的词已推进复习间隔，答错的回到第 1 箱明天再见。</p>
+      <p>${quiz.correct} 题答对 · ${quiz.wrong} 题答错 · 正确率 ${acc}%</p>
+      <div id="finish-push" class="muted">正在将结果注入 Bot 上下文…</div>
       <div class="row" style="justify-content:center; margin-top:14px;">
         <button class="btn" onclick="quizStart()">再来一轮</button>
         <button class="btn ghost" onclick="quizIntro()">返回</button>
       </div>
     </div>`;
+  try {
+    const data = await api("api/quiz/finish", {
+      method: "POST",
+      body: JSON.stringify({ total: quiz.total, correct: quiz.correct, wrong_words: quiz.wrongWords }),
+    });
+    $("#finish-push").textContent = data.message || "已推送";
+  } catch (e) { $("#finish-push").textContent = "推送失败：" + e.message; }
+}
+
+/* ---------------- 学习计划页 ---------------- */
+
+async function loadPlanDetail() {
+  let d;
+  try { d = await api("api/plan/detail"); }
+  catch (e) { $("#plan-content").innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+
+  const intervals = { 1: "1天", 2: "2天", 3: "4天", 4: "7天", 5: "15天" };
+  const dist = Object.entries(d.box_dist || {}).sort((a, b) => a[0] - b[0]);
+  const distBars = dist.map(([box, count]) =>
+    `<span class="bar-row"><span>箱${box}（${intervals[box] || "?"}）</span><span class="bar-track"><span class="bar-fill" style="width:${Math.min(count * 10, 100)}%"></span></span><span>${count}</span></span>`
+  ).join("");
+
+  const schedule = d.schedule || [];
+  const timeline = schedule.length ? schedule.map(s => `
+    <div class="timeline-node">
+      <div class="timeline-count">${s.count}</div>
+      <div class="timeline-dot" style="${s.count ? "" : "background:var(--border);"}"></div>
+      <div class="timeline-date">${s.date.slice(5)}</div>
+    </div>`).join("") : '<div class="muted">暂无复习节奏数据</div>';
+
+  const estDate = d.estimated_finish_date ? d.estimated_finish_date : "—";
+
+  $("#plan-content").innerHTML = `
+    <div class="card">
+      <h2>📋 学习计划 <span class="pill">${esc(d.label || "?")}</span></h2>
+      <div class="grid" style="margin-top:14px;">
+        <div class="stat"><span class="num">${esc(d.push_time || "09:00")}</span><span class="lbl">每日推送时间</span></div>
+        <div class="stat"><span class="num">${d.daily_word_count}</span><span class="lbl">每次推送词数</span></div>
+        <div class="stat"><span class="num" style="color:var(--primary)">${d.daily_new_count}</span><span class="lbl">每日新词</span></div>
+        <div class="stat"><span class="num">${d.remaining}</span><span class="lbl">剩余未学</span></div>
+        <div class="stat"><span class="num" style="color:var(--amber)">${d.estimated_days}</span><span class="lbl">预计学完（天）</span></div>
+        <div class="stat"><span class="num" style="color:var(--green)">${estDate}</span><span class="lbl">预计完成日期</span></div>
+        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学</span></div>
+        <div class="stat"><span class="num">${d.book_size}</span><span class="lbl">词书总量</span></div>
+      </div>
+      <div class="row" style="margin-top:14px; gap:10px;">
+        <span class="muted">每天</span>
+        <b style="cursor:pointer; color:var(--primary); font-size:16px;" onclick="editPlan(${d.daily_new_count})">${d.daily_new_count} 个新词</b>
+        <span class="muted">·</span>
+        <span class="muted">连续打卡 ${d.streak} 天</span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <h2>箱分布</h2>
+      <div class="bars">${distBars || '<div class="muted">暂无数据</div>'}</div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <h2>复习节奏 · 未来 30 天</h2>
+      <div class="timeline">${timeline}</div>
+      <div class="muted" style="margin-top:8px; font-size:12px;">每个节点是某天到期的复习词数，帮你预判复习压力。</div>
+    </div>`;
+}
+
+/* ---------------- 外观设置 ---------------- */
+
+let settingsTimer = null;
+
+function toggleSettings() { $("#settings-panel").classList.toggle("open"); }
+
+async function loadSettings() {
+  try {
+    const s = await api("api/settings");
+    applySettings(s);
+    $("#set-bg-url").value = s.bg_url || "";
+    $("#set-primary-color").value = s.primary_color || "#5b6cff";
+    $("#set-theme").value = s.theme || "light";
+    $("#set-bg-opacity").value = s.bg_opacity || "0.85";
+    $("#opacity-val").textContent = s.bg_opacity || "0.85";
+  } catch (e) { /* 静默 */ }
+}
+
+function applySettings(s) {
+  const root = document.documentElement;
+  const isDark = s.theme === "dark";
+  if (isDark) {
+    root.style.setProperty("--bg", "#1a1c2e");
+    root.style.setProperty("--card", "#252840");
+    root.style.setProperty("--text", "#e8eaf6");
+    root.style.setProperty("--muted", "#8a92b0");
+    root.style.setProperty("--border", "#363a5c");
+  } else {
+    root.style.setProperty("--bg", "#f6f7fb");
+    root.style.setProperty("--card", "#ffffff");
+    root.style.setProperty("--text", "#23263a");
+    root.style.setProperty("--muted", "#8a8fa8");
+    root.style.setProperty("--border", "#e7e9f2");
+  }
+  if (s.primary_color) root.style.setProperty("--primary", s.primary_color);
+  if (s.bg_url) {
+    document.body.style.backgroundImage = `url("${s.bg_url}")`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundAttachment = "fixed";
+    const op = parseFloat(s.bg_opacity || "0.85");
+    root.style.setProperty("--card-bg", `rgba(${isDark ? "37,40,64" : "255,255,255"}, ${op})`);
+    document.querySelectorAll(".card").forEach(c => {
+      c.style.background = `rgba(${isDark ? "37,40,64" : "255,255,255"}, ${op})`;
+    });
+  } else {
+    document.body.style.backgroundImage = "none";
+  }
+}
+
+function debounceApplySettings() {
+  clearTimeout(settingsTimer);
+  settingsTimer = setTimeout(() => {
+    applySettings({
+      theme: $("#set-theme").value,
+      primary_color: $("#set-primary-color").value,
+      bg_url: $("#set-bg-url").value,
+      bg_opacity: $("#set-bg-opacity").value,
+    });
+    $("#opacity-val").textContent = $("#set-bg-opacity").value;
+  }, 300);
+}
+
+async function saveSettings() {
+  const settings = {
+    theme: $("#set-theme").value,
+    primary_color: $("#set-primary-color").value,
+    bg_url: $("#set-bg-url").value,
+    bg_opacity: $("#set-bg-opacity").value,
+  };
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify(settings) });
+    applySettings(settings);
+    toast("设置已保存");
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ---------------- 进度 ---------------- */
@@ -691,7 +1095,7 @@ async function loadProgress() {
       <td>${s.total_reviews} 次</td>
       <td>${s.accuracy}%</td>
       <td>${s.due_now ? `<span class="pill">${s.due_now}</span>` : "0"}</td>
-      <td><button class="link" onclick="loadStreamDetail(${JSON.stringify(s.user_key)}, ${JSON.stringify(s.label || s.user_key)})">详情</button></td>
+      <td><button class="link" onclick='loadStreamDetail(&quot;${esc(s.user_key)}&quot;, &quot;${esc(s.label || s.user_key)}&quot;)'>详情</button></td>
     </tr>`).join("");
 }
 
@@ -722,9 +1126,12 @@ async function loadStreamDetail(userKey, label) {
 
   $("#progress-detail").innerHTML = `
     <div class="card" style="margin-top:14px;">
-      <h2>📖 ${esc(label)}</h2>
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <h2 style="margin:0;">📖 ${esc(label)}</h2>
+        <button class="link" onclick="closeStreamDetail()">← 返回列表</button>
+      </div>
       <div class="row" style="justify-content:flex-end; margin-bottom:10px;">
-        <button class="btn red" onclick="clearStreamProgress('${esc(userKey)}', ${JSON.stringify(label)})">清空该流进度</button>
+        <button class="btn red" onclick='clearStreamProgress(&quot;${esc(userKey)}&quot;, &quot;${esc(label)}&quot;)'>清空该流进度</button>
       </div>
       <div class="grid" style="margin-bottom:14px;">
         <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学单词</span></div>
@@ -739,6 +1146,10 @@ async function loadStreamDetail(userKey, label) {
         ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th><th style="width:60px;">操作</th></tr></thead><tbody>${dueRows}</tbody></table>`
         : `<div class="muted">没有到期的复习词 🎉</div>`}
     </div>`;
+}
+
+function closeStreamDetail() {
+  $("#progress-detail").innerHTML = "";
 }
 
 async function clearStreamProgress(userKey, label) {
@@ -762,9 +1173,11 @@ async function deleteWordProgress(userKey, wordId, word) {
 
 /* ---------------- 启动 ---------------- */
 
+loadSettings();
 loadDashboard();
 loadWords(0);
 loadPresets();
+loadBuiltins();
 quizIntro();
 </script>
 </body>
