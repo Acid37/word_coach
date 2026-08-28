@@ -630,18 +630,32 @@ class WordCoachWebRouter(BaseRouter):
                 "box": w.get("box", 1),
             }
 
+            meaning = w.get("meaning", "").strip()
+            if qtype == "choice" and not meaning:
+                # 释义为空的选择题无从作答，降级为拼写题
+                qtype = "spell"
+                result["question_type"] = qtype
             if qtype == "choice":
-                # 从词书随机取 3 个干扰释义
-                distractors = await service.random_words(exclude_id=w["id"], limit=3)
-                options = [w.get("meaning", "")] + [d.get("meaning", "") for d in distractors]
+                # 干扰释义按内容去重（多取一些再筛，避免与正确释义撞车导致误判）
+                distractors = await service.random_words(exclude_id=w["id"], limit=12)
+                seen = {meaning}
+                pool: list[str] = []
+                for d in distractors:
+                    dm = d.get("meaning", "").strip()
+                    if dm and dm not in seen:
+                        seen.add(dm)
+                        pool.append(dm)
+                    if len(pool) >= 3:
+                        break
+                options = [meaning] + pool[:3]
                 random.shuffle(options)
-                correct_index = options.index(w.get("meaning", ""))
+                correct_index = options.index(meaning)
                 result["question"] = f"「{w['word']}」的释义是？"
                 result["options"] = options
                 result["correct_index"] = correct_index
             else:
                 # 拼写题：显示释义，要求拼写英文单词
-                result["question"] = f"拼写这个单词：{w.get('meaning', '?')} {w.get('phonetic', '')}"
+                result["question"] = f"拼写这个单词：{meaning or '?'} {w.get('phonetic', '')}"
 
             return result
 
@@ -731,7 +745,7 @@ class WordCoachWebRouter(BaseRouter):
             except Exception as exc:
                 return {"ok": False, "message": f"注入失败（已记录）：{exc}"}
 
-        @app.post("/api/push/preview")
+        @app.get("/api/push/preview")
         async def push_preview() -> dict[str, Any]:
             """手动触发一次今日词单推送预览（不实际发送到 QQ，只返回内容）。"""
             service = self._service()
