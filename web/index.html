@@ -313,20 +313,75 @@
   .empty { color: var(--muted); text-align: center; padding: 30px 0; }
   #settings-btn {
     position: fixed; right: 16px; bottom: 16px; z-index: 20;
-    width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
-    background: var(--grad); color: #fff; font-size: 20px; box-shadow: var(--glow);
+    width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--grad); color: #fff; font-size: 22px; box-shadow: var(--glow);
     transition: transform .2s, box-shadow .2s;
   }
-  #settings-btn:hover { transform: rotate(45deg); box-shadow: 0 4px 14px rgba(var(--primary-rgb), .4); }
-  #settings-panel {
-    position: fixed; right: 16px; bottom: 72px; z-index: 20; display: none;
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px 18px; width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,.18);
-    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+  #settings-btn:hover { transform: rotate(45deg) scale(1.06); box-shadow: 0 6px 22px rgba(var(--primary-rgb), .5); }
+  #drawer-mask {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    background: rgba(60, 30, 60, .35); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
   }
-  #settings-panel.open { display: block; animation: fadeIn .2s ease; }
-  #settings-panel label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
-  #settings-panel input { width: 100%; }
+  #drawer-mask.open { display: block; animation: fadeIn .2s ease; }
+  #settings-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 45;
+    width: 380px; max-width: 100vw; display: flex; flex-direction: column;
+    background: var(--card); border-left: 1px solid var(--border);
+    padding: 18px 20px 20px; overflow-y: auto;
+    box-shadow: -12px 0 48px rgba(60, 30, 60, .25);
+    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+    transform: translateX(105%); transition: transform .28s ease;
+  }
+  #settings-panel.open { transform: none; }
+  #settings-panel h3 { margin: 0; font-size: 16px; }
+  #settings-panel .sec { margin-top: 18px; }
+  #settings-panel .sec > .sec-title { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .seg { display: flex; background: var(--track-bg); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 8px 0; border-radius: 9px;
+    cursor: pointer; color: var(--muted); font-size: 13.5px; transition: background .2s, color .2s;
+  }
+  .seg button.active { background: var(--grad); color: #fff; font-weight: 600; box-shadow: var(--glow); }
+  .swatches { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55); transition: transform .15s, border-color .15s;
+    padding: 0;
+  }
+  .swatch:hover { transform: scale(1.14); }
+  .swatch.active { border-color: var(--text); transform: scale(1.08); }
+  .swatch-custom {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+    background: conic-gradient(#ff7eb3, #f5cf6b, #2ec4a6, #5b6cff, #b28dff, #ff7eb3);
+  }
+  .swatch-custom input[type=color] { position: absolute; inset: -10px; opacity: 0; cursor: pointer; }
+  .bg-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bg-pick {
+    position: relative; height: 76px; border-radius: 12px; cursor: pointer; overflow: hidden;
+    border: 2px solid var(--border-soft); transition: border-color .15s, box-shadow .15s, transform .15s;
+    padding: 0; background: none;
+  }
+  .bg-pick:hover { transform: translateY(-1px); }
+  .bg-pick.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), .25); }
+  .bg-pick img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .bg-pick .bg-spot-preview {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(60px 40px at 80% 0%, rgba(255, 126, 179, .5), transparent 65%),
+      radial-gradient(50px 40px at 0% 60%, rgba(178, 141, 255, .4), transparent 65%),
+      radial-gradient(46px 32px at 55% 110%, rgba(245, 207, 107, .38), transparent 65%),
+      #fff0f6;
+  }
+  .bg-pick .tag {
+    position: absolute; left: 6px; bottom: 6px; font-size: 11px; color: #fff;
+    background: rgba(0, 0, 0, .45); padding: 2px 9px; border-radius: 99px;
+  }
+  .bg-pick .noimg-tip {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    font-size: 11.5px; color: var(--muted); text-align: center; padding: 0 8px; background: var(--track-bg);
+  }
+  .bg-pick.noimg .noimg-tip { display: flex; }
+  .bg-pick.noimg img { display: none; }
   .timeline { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; }
   .timeline-node { min-width: 70px; text-align: center; }
   .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--grad); margin: 0 auto 4px; }
@@ -344,7 +399,7 @@
     .b-wide { grid-column: span 2; }
     table { font-size: 13px; }
     th, td { padding: 6px 4px; }
-    #settings-panel { width: calc(100vw - 32px); right: 16px; }
+    #settings-panel { width: 100vw; }
     .quiz-card { padding: 24px 14px; }
   }
 </style>
@@ -517,20 +572,52 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
 
 <!-- 设置面板 -->
 <button id="settings-btn" onclick="toggleSettings()">⚙</button>
+<div id="drawer-mask" onclick="closeSettings()"></div>
 <div id="settings-panel">
-  <h3 style="margin:0 0 10px; font-size:15px;">外观设置</h3>
-  <label>背景图 URL</label>
-  <input type="text" id="set-bg-url" placeholder="留空=梦幻光斑；填 bg.jpg 用内置背景" oninput="debounceApplySettings()">
-  <label>主题色</label>
-  <input type="color" id="set-primary-color" style="height:36px; padding:2px;" oninput="debounceApplySettings()">
-  <label>明暗模式</label>
-  <select id="set-theme" onchange="debounceApplySettings()">
-    <option value="light">浅色</option>
-    <option value="dark">深色</option>
-  </select>
-  <label>卡片透明度 <span id="opacity-val"></span></label>
-  <input type="range" id="set-bg-opacity" min="0.3" max="1.0" step="0.05" style="width:100%;" oninput="debounceApplySettings()">
-  <button class="btn" style="width:100%; margin-top:10px;" onclick="saveSettings()">保存</button>
+  <div class="row" style="justify-content:space-between; align-items:center;">
+    <h3>✨ 外观设置</h3>
+    <button class="link" onclick="closeSettings()">✕ 关闭</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">明暗模式</div>
+    <div class="seg">
+      <button id="seg-light" onclick="segTheme('light')">☀️ 浅色</button>
+      <button id="seg-dark" onclick="segTheme('dark')">🌙 深色</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">主题色（渐变起点）</div>
+    <div class="swatches" id="swatch-row"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">背景</div>
+    <div class="bg-picks">
+      <button class="bg-pick" id="bg-pick-spot" onclick="pickBg('')">
+        <span class="bg-spot-preview"></span>
+        <span class="tag">梦幻光斑（默认）</span>
+      </button>
+      <button class="bg-pick" id="bg-pick-builtin" onclick="pickBg('bg.jpg')">
+        <img src="bg.jpg" alt="" onerror="this.parentNode.classList.add('noimg')">
+        <span class="noimg-tip">未放置 web/bg.jpg</span>
+        <span class="tag">内置背景</span>
+      </button>
+    </div>
+    <input type="text" id="set-bg-url" placeholder="或粘贴图片 URL（network 图直链）" style="width:100%; margin-top:10px;" oninput="onBgUrlInput()">
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">卡片透明度 <span id="opacity-val" style="color:var(--primary);"></span></div>
+    <input type="range" id="set-bg-opacity" min="0.3" max="1.0" step="0.05" style="width:100%;" oninput="onOpacityInput()">
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">数值越低卡片越透，背景（图/光斑）越明显</div>
+  </div>
+
+  <div style="margin-top:auto; padding-top:18px;">
+    <button class="btn" id="save-settings-btn" style="width:100%;" onclick="saveSettings()">保存设置</button>
+    <div class="muted" style="font-size:11.5px; text-align:center; margin-top:8px;">改动立即预览，保存后对所有浏览器生效</div>
+  </div>
 </div>
 
 <!-- 添加/编辑词条弹窗 -->
@@ -1422,21 +1509,84 @@ async function loadPushPreview() {
   } catch (e) { $("#push-preview-content").innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
 }
 
-/* ---------------- 外观设置 ---------------- */
+/* ---------------- 外观设置（右侧抽屉） ---------------- */
 
-let settingsTimer = null;
+const PRESET_COLORS = ["#ff7eb3", "#ff6b81", "#f59e0b", "#2ec4a6", "#5b6cff", "#8b5cf6"];
+const uiSettings = { theme: "light", primary_color: "#ff7eb3", bg_url: "", bg_opacity: "" };
+let settingsDirty = false;
 
-function toggleSettings() { $("#settings-panel").classList.toggle("open"); }
+function toggleSettings() {
+  const p = $("#settings-panel");
+  if (p.classList.contains("open")) closeSettings();
+  else {
+    $("#drawer-mask").classList.add("open");
+    p.classList.add("open");
+  }
+}
+
+function closeSettings() {
+  if (settingsDirty && !confirm("有未保存的外观更改，确定丢弃？")) return;
+  settingsDirty = false;
+  $("#drawer-mask").classList.remove("open");
+  $("#settings-panel").classList.remove("open");
+}
+
+function markDirty() {
+  settingsDirty = true;
+  applySettings(uiSettings);
+  renderSettingsControls();
+}
+
+function segTheme(mode) { uiSettings.theme = mode; markDirty(); }
+
+function pickColor(hex) { uiSettings.primary_color = hex; markDirty(); }
+
+function pickBg(url) { uiSettings.bg_url = url; markDirty(); }
+
+function onBgUrlInput() { uiSettings.bg_url = $("#set-bg-url").value.trim(); markDirty(); }
+
+function onOpacityInput() {
+  uiSettings.bg_opacity = $("#set-bg-opacity").value;
+  markDirty();
+}
+
+function renderSettingsControls() {
+  // 明暗分段
+  $("#seg-light").classList.toggle("active", uiSettings.theme !== "dark");
+  $("#seg-dark").classList.toggle("active", uiSettings.theme === "dark");
+  // 色板（首次构建）
+  const row = $("#swatch-row");
+  if (!row.dataset.built) {
+    row.innerHTML = PRESET_COLORS.map(c =>
+      `<button class="swatch" style="background:${c};" data-c="${c}" title="${c}" onclick="pickColor('${c}')"></button>`
+    ).join("") +
+    `<span class="swatch swatch-custom" title="自定义颜色">🎨<input type="color" id="set-primary-color" value="${uiSettings.primary_color}" oninput="pickColor(this.value)"></span>`;
+    row.dataset.built = "1";
+  }
+  row.querySelectorAll(".swatch[data-c]").forEach(el =>
+    el.classList.toggle("active", el.dataset.c.toLowerCase() === (uiSettings.primary_color || "").toLowerCase()));
+  const custom = $("#set-primary-color");
+  if (custom && custom.value.toLowerCase() !== (uiSettings.primary_color || "").toLowerCase()) custom.value = uiSettings.primary_color;
+  const customWrap = row.querySelector(".swatch-custom");
+  if (customWrap) customWrap.classList.toggle("active", !PRESET_COLORS.includes((uiSettings.primary_color || "").toLowerCase()));
+  // 背景选中态（选内置时输入框留空避免歧义）
+  const u = uiSettings.bg_url || "";
+  $("#bg-pick-spot").classList.toggle("active", u === "");
+  $("#bg-pick-builtin").classList.toggle("active", u === "bg.jpg");
+  const urlInput = $("#set-bg-url");
+  if (urlInput.value !== (u === "bg.jpg" ? "" : u)) urlInput.value = u === "bg.jpg" ? "" : u;
+  // 透明度
+  const op = uiSettings.bg_opacity || "0.62";
+  $("#set-bg-opacity").value = op;
+  $("#opacity-val").textContent = op;
+}
 
 async function loadSettings() {
   try {
     const s = await api("api/settings");
-    applySettings(s);
-    $("#set-bg-url").value = s.bg_url || "";
-    $("#set-primary-color").value = s.primary_color || "#5b6cff";
-    $("#set-theme").value = s.theme || "light";
-    $("#set-bg-opacity").value = s.bg_opacity || "0.58";
-    $("#opacity-val").textContent = s.bg_opacity || "0.58";
+    Object.assign(uiSettings, s);
+    applySettings(uiSettings);
+    renderSettingsControls();
   } catch (e) { /* 静默 */ }
 }
 
@@ -1506,30 +1656,15 @@ function applySettings(s) {
   if (s.bg_opacity) root.style.setProperty("--card-alpha", String(s.bg_opacity));
 }
 
-function debounceApplySettings() {
-  clearTimeout(settingsTimer);
-  settingsTimer = setTimeout(() => {
-    applySettings({
-      theme: $("#set-theme").value,
-      primary_color: $("#set-primary-color").value,
-      bg_url: $("#set-bg-url").value,
-      bg_opacity: $("#set-bg-opacity").value,
-    });
-    $("#opacity-val").textContent = $("#set-bg-opacity").value;
-  }, 300);
-}
-
 async function saveSettings() {
-  const settings = {
-    theme: $("#set-theme").value,
-    primary_color: $("#set-primary-color").value,
-    bg_url: $("#set-bg-url").value,
-    bg_opacity: $("#set-bg-opacity").value,
-  };
+  const btn = $("#save-settings-btn");
   try {
-    await api("api/settings", { method: "POST", body: JSON.stringify(settings) });
-    applySettings(settings);
-    toast("设置已保存");
+    await api("api/settings", { method: "POST", body: JSON.stringify(uiSettings) });
+    settingsDirty = false;
+    applySettings(uiSettings);
+    btn.textContent = "✓ 已保存";
+    toast("外观已保存");
+    setTimeout(() => { btn.textContent = "保存设置"; }, 1600);
   } catch (e) { toast(e.message, true); }
 }
 
@@ -1651,10 +1786,10 @@ async function deleteWordProgress(userKey, wordId, word) {
 /* ---------------- 键盘快捷键 ---------------- */
 
 document.addEventListener("keydown", (e) => {
-  // Esc 优先：关闭弹窗 / 设置面板
+  // Esc 优先：关闭弹窗 / 设置抽屉
   if (e.key === "Escape") {
     closeWordModal();
-    $("#settings-panel").classList.remove("open");
+    closeSettings();
     return;
   }
   // 测验键盘流：Enter 下一题，1-4 选答案
