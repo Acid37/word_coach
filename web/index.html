@@ -382,6 +382,17 @@
   }
   .bg-pick.noimg .noimg-tip { display: flex; }
   .bg-pick.noimg img { display: none; }
+  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .plan-item {
+    background: var(--track-bg); border: 1px solid var(--border-soft); border-radius: 14px;
+    padding: 14px 12px; text-align: center; cursor: pointer; color: var(--text); font-family: inherit;
+    transition: border-color .15s, transform .15s, box-shadow .25s;
+  }
+  .plan-item:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--glow); }
+  .plan-item .pi-lbl { font-size: 12px; color: var(--muted); }
+  .plan-item .pi-val { font-size: 26px; font-weight: 800; margin: 4px 0; font-variant-numeric: tabular-nums; }
+  .plan-item .pi-desc { font-size: 11px; color: var(--muted); }
+  .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .timeline { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; }
   .timeline-node { min-width: 70px; text-align: center; }
   .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--grad); margin: 0 auto 4px; }
@@ -394,6 +405,8 @@
     nav button { padding: 8px 10px; font-size: 13px; }
     .grid { grid-template-columns: 1fr 1fr !important; }
     .binding-grid { grid-template-columns: 1fr !important; }
+    .plan-grid { grid-template-columns: 1fr; }
+    .import-grid { grid-template-columns: 1fr; }
     .bento { grid-template-columns: 1fr 1fr; gap: 10px; }
     .b-hero { grid-column: span 2; grid-row: auto; }
     .b-wide { grid-column: span 2; }
@@ -410,12 +423,10 @@
   <h1>📚 <span class="grad-title">word_coach · 背单词助手</span></h1>
   <div class="sub">内置 Web UI · 与聊天流共用同一份词书与进度</div>
   <nav>
-    <button data-tab="dashboard" class="active">仪表盘</button>
-    <button data-tab="plan">计划</button>
-    <button data-tab="words">词书</button>
-    <button data-tab="import">导入词库</button>
-    <button data-tab="quiz">测验</button>
-    <button data-tab="progress">进度</button>
+    <button data-tab="dashboard" class="active">📌 学习</button>
+    <button data-tab="quiz">✏️ 测验</button>
+    <button data-tab="words">📖 词书</button>
+    <button data-tab="progress">📊 进度</button>
   </nav>
 </header>
 
@@ -426,17 +437,87 @@
     <div class="bento" id="dash-stats"></div>
     <h2>我的学习 <span class="pill" id="dash-binding-label">加载中…</span></h2>
     <div class="card" id="dash-binding"></div>
+    <div class="card" id="plan-settings-card"><div class="muted">加载中…</div></div>
+    <details class="guide" id="push-preview-details" ontoggle="if(this.open && !this.dataset.loaded){this.dataset.loaded=1; loadPushPreview();}">
+      <summary>🔔 推送预览（看看下次推送会发什么词，不实际发送）</summary>
+      <div id="push-preview-content" style="margin-top:10px;"><span class="muted">展开时加载…</span></div>
+    </details>
     <h2>各聊天流进度</h2>
     <div id="dash-streams"></div>
   </section>
 
-  <!-- ============ 学习计划 ============ -->
-  <section class="tab" id="tab-plan">
-    <div id="plan-content"><div class="card empty">加载中…</div></div>
-  </section>
-
-  <!-- ============ 词书 ============ -->
+  <!-- ============ 词书（含导入） ============ -->
   <section class="tab" id="tab-words">
+    <div class="card" style="margin-bottom:14px;">
+      <details id="import-panel" ontoggle="if(this.open && !this.dataset.loaded){this.dataset.loaded=1; loadPresets(); loadBuiltins();}">
+        <summary style="cursor:pointer; font-weight:600; color:var(--primary); font-size:15px;">📥 导入词库（URL / 预置 / 内置四六级 / 本地文件）</summary>
+        <div class="import-grid" style="margin-top:14px;">
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">🔗 从 URL 下载</div>
+            <input type="text" id="import-url" placeholder="词库直链（.json/.csv/.tsv/.txt）" style="width:100%; margin-bottom:8px;">
+            <button class="btn" id="import-url-btn" onclick="importUrl()" style="width:100%;">下载导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">未知后缀自动嗅探内容</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">⭐ 预置词库</div>
+            <select id="import-preset" style="width:100%; margin-bottom:8px;"></select>
+            <button class="btn" id="import-preset-btn" onclick="importPreset()" style="width:100%;">一键导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;" id="preset-hint">加载中…</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">💿 内置词库</div>
+            <div id="builtin-list" style="display:grid; gap:8px;"><div class="muted">加载中…</div></div>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">四级/六级离线包，点一下直接导入</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">📁 本地文件</div>
+            <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt" style="width:100%; margin-bottom:8px; font-size:12.5px;">
+            <button class="btn" id="import-file-btn" onclick="importFile()" style="width:100%;">上传导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">UTF-8 编码的 json/csv/tsv/txt</div>
+          </div>
+        </div>
+        <div id="import-result" style="margin-top:12px;"></div>
+
+        <details class="guide" style="margin-top:12px;">
+          <summary>📖 词库获取与配置指引（怎么找到自己的词库）</summary>
+
+          <h4>四种支持的词表格式</h4>
+          <p><b>JSON 数组</b>（推荐，字段最全）：</p>
+<pre>[
+  {"word": "apple", "phonetic": "/ˈæpl/", "meaning": "n. 苹果", "example": "an apple a day"},
+  {"word": "give up", "meaning": "放弃"}
+]</pre>
+          <p><b>JSON 字典</b>（最简，只有词和释义）：</p>
+<pre>{"apple": "n. 苹果", "book": "n. 书 v. 预订"}</pre>
+          <p><b>CSV / TSV</b>（Excel 另存为 UTF-8 CSV 即可）：带表头时列名支持中英双语
+          （word/单词、meaning/释义、phonetic/音标、example/例句、tags/标签）；无表头时按此顺序排列。</p>
+          <p><b>纯文本</b>：每行一个词，后面可跟释义（Tab 或空格分隔），# 开头为注释。</p>
+
+          <h4>开源词库字段也能直接用</h4>
+          <p>主流开源词库常用的字段名已自动兼容：
+          <code>name/entry → word</code>、<code>trans/definition/chinese → 释义</code>、
+          <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>。</p>
+
+          <h4>更多词库怎么找</h4>
+          <p>内置的四六级词库来自 <a href="https://github.com/kajweb/dict" target="_blank">kajweb/dict</a>（3500+ Star），
+          该仓库还有雅思、托福、GRE、SAT 等词库，但都是 zip 打包的 JSON Lines 格式（每行一个 JSON 对象），
+          需要下载解压后用「上传本地文件」导入。另一个大词典项目是
+          <a href="https://github.com/skywind3000/ECDICT" target="_blank">ECDICT</a>（8000+ Star），
+          提供完整英汉词典 CSV（65MB），适合需要大量词条的场景。</p>
+
+          <h4>怎么拿到 GitHub 上词库的直链</h4>
+          <p>在 GitHub 打开词库文件 → 点右上角「Raw」→ 复制浏览器地址栏的
+          <code>raw.githubusercontent.com/…</code> 链接，粘贴到上面「从 URL 下载导入」即可。</p>
+
+          <h4>配置自己的预置词库（让「一键导入」更方便）</h4>
+          <p>编辑 <code>config/plugins/word_coach/config.toml</code> 的 <code>[source]</code> 节：</p>
+<pre>[source]
+preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://example.com/ielts.json" }</pre>
+          <p>保存后重启 Bot，页面「预置词库」下拉框即可一键导入；聊天里也可以直接说
+          「下载词库 kaoyan」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
+        </details>
+      </details>
+    </div>
     <div class="row" style="margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <input type="search" id="words-search" placeholder="搜索单词或释义…" style="min-width:160px;">
       <select id="words-source" style="min-width:100px;"><option value="">全部来源</option></select>
@@ -473,84 +554,6 @@
     </div>
   </section>
 
-  <!-- ============ 导入词库 ============ -->
-  <section class="tab" id="tab-import">
-    <div class="card">
-      <h2>① 从 URL 下载导入</h2>
-      <div class="row">
-        <input type="text" id="import-url" placeholder="词库直链（.json/.csv/.tsv/.txt，未知后缀自动识别）" style="flex:1; min-width:280px;">
-        <button class="btn" id="import-url-btn" onclick="importUrl()">下载导入</button>
-      </div>
-      <div class="muted" style="margin-top:6px;">支持 JSON / CSV / TSV / 纯文本词表；未知后缀会自动嗅探内容。</div>
-    </div>
-
-    <div class="card">
-      <h2>② 预置词库一键导入</h2>
-      <div class="row">
-        <select id="import-preset" style="min-width:220px;"></select>
-        <button class="btn" id="import-preset-btn" onclick="importPreset()">导入</button>
-      </div>
-      <div class="muted" style="margin-top:6px;" id="preset-hint">加载中…</div>
-    </div>
-
-    <div class="card">
-      <h2>③ 内置词库（一键导入）</h2>
-      <div id="builtin-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:10px;">
-        <div class="muted">加载中…</div>
-      </div>
-      <div class="muted" style="margin-top:6px;">内置四级/六级词库，无需下载，点一下直接导入。</div>
-    </div>
-
-    <div class="card">
-      <h2>④ 上传本地词表文件</h2>
-      <div class="row">
-        <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt">
-        <button class="btn" id="import-file-btn" onclick="importFile()">上传导入</button>
-      </div>
-      <div class="muted" style="margin-top:6px;">支持 .json / .csv / .tsv / .txt（UTF-8 编码）。</div>
-    </div>
-
-    <div id="import-result"></div>
-
-    <details class="guide">
-      <summary>📖 词库获取与配置指引（怎么找到自己的词库）</summary>
-
-      <h4>四种支持的词表格式</h4>
-      <p><b>JSON 数组</b>（推荐，字段最全）：</p>
-<pre>[
-  {"word": "apple", "phonetic": "/ˈæpl/", "meaning": "n. 苹果", "example": "an apple a day"},
-  {"word": "give up", "meaning": "放弃"}
-]</pre>
-      <p><b>JSON 字典</b>（最简，只有词和释义）：</p>
-<pre>{"apple": "n. 苹果", "book": "n. 书 v. 预订"}</pre>
-      <p><b>CSV / TSV</b>（Excel 另存为 UTF-8 CSV 即可）：带表头时列名支持中英双语
-      （word/单词、meaning/释义、phonetic/音标、example/例句、tags/标签）；无表头时按此顺序排列。</p>
-      <p><b>纯文本</b>：每行一个词，后面可跟释义（Tab 或空格分隔），# 开头为注释。</p>
-
-      <h4>开源词库字段也能直接用</h4>
-      <p>主流开源词库常用的字段名已自动兼容：
-      <code>name/entry → word</code>、<code>trans/definition/chinese → 释义</code>、
-      <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>。</p>
-
-      <h4>更多词库怎么找</h4>
-      <p>内置的四六级词库来自 <a href="https://github.com/kajweb/dict" target="_blank">kajweb/dict</a>（3500+ Star），
-      该仓库还有雅思、托福、GRE、SAT 等词库，但都是 zip 打包的 JSON Lines 格式（每行一个 JSON 对象），
-      需要下载解压后用「上传本地文件」导入。另一个大词典项目是
-      <a href="https://github.com/skywind3000/ECDICT" target="_blank">ECDICT</a>（8000+ Star），
-      提供完整英汉词典 CSV（65MB），适合需要大量词条的场景。</p>
-
-      <h4>怎么拿到 GitHub 上词库的直链</h4>
-      <p>在 GitHub 打开词库文件 → 点右上角「Raw」→ 复制浏览器地址栏的
-      <code>raw.githubusercontent.com/…</code> 链接，粘贴到上面「从 URL 下载导入」即可。</p>
-
-      <h4>配置自己的预置词库（让「一键导入」更方便）</h4>
-      <p>编辑 <code>config/plugins/word_coach/config.toml</code> 的 <code>[source]</code> 节：</p>
-<pre>[source]
-preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://example.com/ielts.json" }</pre>
-      <p>保存后重启 Bot，页面「预置词库」下拉框即可一键导入；聊天里也可以直接说
-      「下载词库 kaoyan」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
-    </details>
-  </section>
 
   <!-- ============ 测验 ============ -->
   <section class="tab" id="tab-quiz">
@@ -685,9 +688,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
     const name = btn.dataset.tab;
     $("#tab-" + name).classList.add("active");
     if (name === "dashboard") loadDashboard();
-    if (name === "plan") loadPlanDetail();
     if (name === "words") loadWords(0);
-    if (name === "import") { loadPresets(); loadBuiltins(); }
     if (name === "quiz") quizIntro();
     if (name === "progress") loadProgress();
   });
@@ -713,6 +714,10 @@ async function loadDashboard() {
       sources.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
     if (sources.includes(current)) sourceSelect.value = current;
   }
+
+  // 计划设置卡数据（未绑定时静默失败）
+  let planDetail = null;
+  try { planDetail = await api("api/plan/detail"); } catch (e) { /* 未绑定 */ }
 
   // 绑定流数据提前解构（hero 卡也要用）
   const b = data.binding;
@@ -822,6 +827,36 @@ async function loadDashboard() {
       `<div class="card"><div class="bars">${bars}</div>
        <div class="muted" style="margin-top:8px;">条形为已学词数对比；详情见「进度」页。</div></div>`;
   }
+
+  renderPlanSettings(planDetail);
+}
+
+function renderPlanSettings(pd) {
+  const el = $("#plan-settings-card");
+  if (!el) return;
+  if (!pd || !pd.label) {
+    el.innerHTML = `<div class="muted">未绑定聊天流，计划设置不可用。绑定后在 <code>[permissions].owner_list</code> 生效。</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <h2 style="margin-top:0;">⚙️ 计划设置</h2>
+    <div class="plan-grid">
+      <button class="plan-item" onclick="editPushTime('${esc(pd.push_time || "09:00")}')">
+        <div class="pi-lbl">每日推送时间</div>
+        <div class="pi-val">${esc(pd.push_time || "09:00")}</div>
+        <div class="pi-desc">每天此时推送词单 · 点击修改</div>
+      </button>
+      <button class="plan-item" onclick="editPlan(${pd.daily_new_count})">
+        <div class="pi-lbl">每日新词数</div>
+        <div class="pi-val" style="color:var(--primary);">${pd.daily_new_count}</div>
+        <div class="pi-desc">推送和测验加入的新词 · 点击修改</div>
+      </button>
+      <button class="plan-item" onclick="editWordCount(${pd.daily_word_count})">
+        <div class="pi-lbl">每次推送词数</div>
+        <div class="pi-val">${pd.daily_word_count}</div>
+        <div class="pi-desc">每日推送总词数 · 点击修改</div>
+      </button>
+    </div>`;
 }
 
 function switchTab(name) {
@@ -840,7 +875,6 @@ async function editPlan(current) {
   try {
     await api("api/plan", { method: "POST", body: JSON.stringify({ daily_new_count: n }) });
     toast(`已设为每天 ${n} 个新词`);
-    loadPlanDetail();
     loadDashboard();
   } catch (e) { toast(e.message, true); }
 }
@@ -853,7 +887,7 @@ async function editPushTime(current) {
   try {
     await api("api/settings", { method: "POST", body: JSON.stringify({ push_time: input.trim() }) });
     toast(`已设为 ${input.trim()} 推送`);
-    loadPlanDetail();
+    loadDashboard();
   } catch (e) { toast(e.message, true); }
 }
 
@@ -865,7 +899,7 @@ async function editWordCount(current) {
   try {
     await api("api/settings", { method: "POST", body: JSON.stringify({ daily_word_count: String(n) }) });
     toast(`已设为每次 ${n} 词`);
-    loadPlanDetail();
+    loadDashboard();
   } catch (e) { toast(e.message, true); }
 }
 
@@ -1071,6 +1105,7 @@ async function importUrl() {
     const data = await api("api/import/url", { method: "POST", body: JSON.stringify({ url }) });
     showImportResult(data);
     $("#import-url").value = "";
+    loadDashboard();
   } catch (e) { toast(e.message, true); $("#import-result").innerHTML = ""; }
   finally { btn.disabled = false; }
 }
@@ -1085,6 +1120,7 @@ async function importPreset() {
   try {
     const data = await api("api/import/preset", { method: "POST", body: JSON.stringify({ name }) });
     showImportResult(data);
+    loadDashboard();
   } catch (e) { toast(e.message, true); }
   finally { btn.disabled = false; }
 }
@@ -1132,6 +1168,7 @@ async function importFile() {
     });
     showImportResult(data);
     input.value = "";
+    loadDashboard();
   } catch (e) { toast(e.message, true); }
   finally { btn.disabled = false; }
 }
@@ -1405,93 +1442,6 @@ async function quizFinish() {
     $("#finish-push").textContent = data.message || "已推送";
     loadDashboard(); // 刷新仪表盘统计
   } catch (e) { $("#finish-push").textContent = "推送失败：" + e.message; }
-}
-
-/* ---------------- 学习计划页 ---------------- */
-
-async function loadPlanDetail() {
-  let d;
-  try { d = await api("api/plan/detail"); }
-  catch (e) { $("#plan-content").innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
-
-  const intervals = { 1: "1天", 2: "2天", 3: "4天", 4: "7天", 5: "15天" };
-  const dist = Object.entries(d.box_dist || {}).sort((a, b) => a[0] - b[0]);
-  const distBars = dist.map(([box, count]) =>
-    `<span class="bar-row"><span>箱${box}（${intervals[box] || "?"}）</span><span class="bar-track"><span class="bar-fill" style="width:${Math.min(count * 10, 100)}%"></span></span><span>${count}</span></span>`
-  ).join("");
-
-  const schedule = d.schedule || [];
-  const timeline = schedule.length ? schedule.map(s => `
-    <div class="timeline-node">
-      <div class="timeline-count">${s.count}</div>
-      <div class="timeline-dot" style="${s.count ? "" : "background:var(--border);"}"></div>
-      <div class="timeline-date">${s.date.slice(5)}</div>
-    </div>`).join("") : '<div class="muted">暂无复习节奏数据</div>';
-
-  const estDate = d.estimated_finish_date ? d.estimated_finish_date : "—";
-
-  $("#plan-content").innerHTML = `
-    <div class="card">
-      <h2>📋 学习计划 <span class="pill">${esc(d.label || "?")}</span></h2>
-      <div class="grid" style="margin-top:14px;">
-        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学</span></div>
-        <div class="stat"><span class="num">${d.book_size}</span><span class="lbl">词书总量</span></div>
-        <div class="stat"><span class="num">${d.remaining}</span><span class="lbl">剩余未学</span></div>
-        <div class="stat"><span class="num" style="color:var(--amber)">${d.estimated_days}</span><span class="lbl">预计学完（天）</span></div>
-        <div class="stat"><span class="num" style="color:var(--green)">${estDate}</span><span class="lbl">预计完成日期</span></div>
-        <div class="stat"><span class="num" style="color:var(--green)">${d.streak}</span><span class="lbl">连续打卡天数</span></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <h2>⚙️ 计划设置</h2>
-      <div style="display:grid; gap:10px; margin-top:10px;">
-        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-weight:600;">每日推送时间</div>
-            <div class="muted" style="font-size:12px;">每天这个时间向你推送今日词单</div>
-          </div>
-          <div class="row" style="gap:8px;">
-            <b style="font-size:18px;">${esc(d.push_time || "09:00")}</b>
-            <button class="btn ghost" onclick="editPushTime('${esc(d.push_time || "09:00")}')">修改</button>
-          </div>
-        </div>
-        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-weight:600;">每日新词数</div>
-            <div class="muted" style="font-size:12px;">每次推送和测验中加入的新词数量</div>
-          </div>
-          <div class="row" style="gap:8px;">
-            <b style="font-size:18px; color:var(--primary);">${d.daily_new_count}</b>
-            <button class="btn ghost" onclick="editPlan(${d.daily_new_count})">修改</button>
-          </div>
-        </div>
-        <div class="row" style="justify-content:space-between; align-items:center; padding:10px 0;">
-          <div>
-            <div style="font-weight:600;">每次推送词数</div>
-            <div class="muted" style="font-size:12px;">每日推送的总词数（含复习+新词）</div>
-          </div>
-          <div class="row" style="gap:8px;">
-            <b style="font-size:18px;">${d.daily_word_count}</b>
-            <button class="btn ghost" onclick="editWordCount(${d.daily_word_count})">修改</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:14px;">
-      <h2>箱分布</h2>
-      <div class="bars">${distBars || '<div class="muted">暂无数据</div>'}</div>
-    </div>
-    <div class="card" style="margin-top:14px;">
-      <h2>复习节奏 · 未来 30 天</h2>
-      <div class="timeline">${timeline}</div>
-      <div class="muted" style="margin-top:8px; font-size:12px;">每个节点是某天到期的复习词数，帮你预判复习压力。</div>
-    </div>
-    <div class="card" style="margin-top:14px;">
-      <h2>推送预览</h2>
-      <div class="muted" style="margin-bottom:8px; font-size:12px;">看看下次推送会发什么词（不实际发送）</div>
-      <div id="push-preview-content"><button class="btn ghost" onclick="loadPushPreview()">加载预览</button></div>
-    </div>`;
 }
 
 async function loadPushPreview() {
