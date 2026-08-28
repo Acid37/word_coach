@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from fastapi import HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 from src.app.plugin_system.api.log_api import get_logger
@@ -275,6 +275,14 @@ class WordCoachWebRouter(BaseRouter):
         async def index() -> HTMLResponse:
             """Web UI 单页前端。"""
             return HTMLResponse(self._load_html())
+
+        @app.get("/bg.jpg")
+        async def builtin_bg():
+            """内置背景图：把图片放到插件 web/bg.jpg 后，在设置里填 bg.jpg 即可启用。"""
+            p = _WEB_DIR / "bg.jpg"
+            if not p.exists():
+                raise HTTPException(status_code=404, detail="未找到内置背景 web/bg.jpg")
+            return FileResponse(p, media_type="image/jpeg")
 
         # ---------------- 总览 ----------------
 

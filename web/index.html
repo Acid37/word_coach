@@ -6,75 +6,101 @@
 <title>word_coach · 背单词助手</title>
 <style>
   :root {
-    --bg: #eef0f8;
+    --bg: #fff0f6;
     --card: rgba(255, 255, 255, var(--card-alpha));
     --card-rgb: 255, 255, 255;
-    --card-alpha: .58;
-    --text: #1d2136;
-    --muted: #7a80a0;
-    --primary: #5b6cff;
-    --primary-rgb: 91, 108, 255;
-    --primary-2: #9b5bff;
-    --primary-dark: #4656e0;
-    --primary-tint: rgba(var(--primary-rgb), .11);
+    --card-alpha: .62;
+    --text: #4a3a52;
+    --muted: #b48aa8;
+    --primary: #ff7eb3;
+    --primary-rgb: 255, 126, 179;
+    --primary-2: #b28dff;
+    --primary-dark: #f05a96;
+    --primary-tint: rgba(var(--primary-rgb), .12);
     --grad: linear-gradient(135deg, var(--primary), var(--primary-2));
-    --green: #18b770;
-    --green-tint: rgba(24, 183, 112, .14);
-    --red: #e5484d;
-    --red-tint: rgba(229, 72, 77, .13);
-    --amber: #f5a623;
-    --border: rgba(255, 255, 255, .62);
-    --border-soft: rgba(29, 33, 54, .08);
-    --radius: 16px;
-    --shadow: 0 8px 32px rgba(31, 38, 90, .10);
-    --glow: 0 6px 24px rgba(var(--primary-rgb), .35);
-    --input-bg: rgba(255, 255, 255, .55);
-    --hover-bg: rgba(255, 255, 255, .48);
-    --stripe-bg: rgba(255, 255, 255, .26);
-    --track-bg: rgba(29, 33, 54, .08);
-    --code-bg: #1d2136;
-    --guide-bg: rgba(255, 255, 255, .38);
+    --green: #2ec4a6;
+    --green-tint: rgba(46, 196, 166, .14);
+    --red: #ff6b81;
+    --red-tint: rgba(255, 107, 129, .13);
+    --amber: #e8a93c;
+    --gold: #f5cf6b;
+    --border: rgba(255, 255, 255, .78);
+    --border-soft: rgba(120, 60, 100, .10);
+    --radius: 18px;
+    --shadow: 0 8px 32px rgba(255, 150, 200, .18);
+    --glow: 0 6px 24px rgba(var(--primary-rgb), .4);
+    --input-bg: rgba(255, 255, 255, .6);
+    --hover-bg: rgba(255, 255, 255, .52);
+    --stripe-bg: rgba(255, 214, 235, .26);
+    --track-bg: rgba(120, 60, 100, .09);
+    --code-bg: #3d2b3e;
+    --guide-bg: rgba(255, 255, 255, .42);
   }
   :root[data-theme="dark"] {
-    --bg: #12142a;
-    --card: rgba(38, 42, 72, var(--card-alpha));
-    --card-rgb: 38, 42, 72;
-    --card-alpha: .5;
-    --text: #e8eaf6;
-    --muted: #8d95bb;
-    --primary: #6c7bff;
-    --primary-rgb: 108, 123, 255;
-    --primary-2: #b46cff;
-    --primary-dark: #5566f0;
+    --bg: #1c1424;
+    --card: rgba(58, 42, 70, var(--card-alpha));
+    --card-rgb: 58, 42, 70;
+    --card-alpha: .55;
+    --text: #f5e8f0;
+    --muted: #b595c0;
+    --primary: #ff9ecb;
+    --primary-rgb: 255, 158, 203;
+    --primary-2: #c39bff;
+    --primary-dark: #f57fb4;
     --primary-tint: rgba(var(--primary-rgb), .16);
-    --green: #35c982;
-    --green-tint: rgba(53, 201, 130, .16);
-    --red: #f0575c;
-    --red-tint: rgba(240, 87, 92, .16);
-    --amber: #ffb14e;
-    --border: rgba(255, 255, 255, .10);
-    --border-soft: rgba(255, 255, 255, .06);
-    --shadow: 0 8px 32px rgba(0, 0, 0, .42);
-    --glow: 0 6px 28px rgba(var(--primary-rgb), .4);
-    --input-bg: rgba(20, 23, 44, .5);
-    --hover-bg: rgba(255, 255, 255, .07);
-    --stripe-bg: rgba(255, 255, 255, .035);
-    --track-bg: rgba(255, 255, 255, .10);
-    --code-bg: #0d0f20;
-    --guide-bg: rgba(255, 255, 255, .045);
+    --green: #4ad6b0;
+    --green-tint: rgba(74, 214, 176, .14);
+    --red: #ff7a8e;
+    --red-tint: rgba(255, 122, 142, .15);
+    --amber: #ffd166;
+    --gold: #ffd98e;
+    --border: rgba(255, 190, 225, .15);
+    --border-soft: rgba(255, 190, 225, .08);
+    --shadow: 0 8px 32px rgba(0, 0, 0, .45);
+    --glow: 0 6px 28px rgba(var(--primary-rgb), .35);
+    --input-bg: rgba(30, 20, 40, .5);
+    --hover-bg: rgba(255, 190, 225, .07);
+    --stripe-bg: rgba(255, 190, 225, .045);
+    --track-bg: rgba(255, 190, 225, .12);
+    --code-bg: #150e1d;
+    --guide-bg: rgba(255, 190, 225, .05);
   }
   * { box-sizing: border-box; }
+  ::selection { background: rgba(var(--primary-rgb), .35); }
+  body::-webkit-scrollbar { width: 10px; }
+  body::-webkit-scrollbar-track { background: transparent; }
+  body::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), .35); border-radius: 99px; }
   body {
     margin: 0; color: var(--text);
     font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
     font-size: 15px;
     background-color: var(--bg);
     background-image:
-      radial-gradient(900px 520px at 85% -10%, rgba(var(--primary-rgb), .20), transparent 62%),
-      radial-gradient(720px 520px at -8% 32%, rgba(155, 91, 255, .14), transparent 62%),
-      radial-gradient(640px 420px at 52% 112%, rgba(24, 183, 112, .10), transparent 62%);
+      radial-gradient(2.2px 2.2px at 12% 22%, rgba(255, 255, 255, .95), transparent 60%),
+      radial-gradient(1.6px 1.6px at 78% 13%, rgba(245, 207, 107, .95), transparent 60%),
+      radial-gradient(2px 2px at 88% 58%, rgba(255, 255, 255, .75), transparent 60%),
+      radial-gradient(1.6px 1.6px at 20% 76%, rgba(255, 182, 220, .95), transparent 60%),
+      radial-gradient(1.4px 1.4px at 55% 7%, rgba(255, 255, 255, .85), transparent 60%),
+      radial-gradient(1.6px 1.6px at 44% 90%, rgba(245, 207, 107, .8), transparent 60%),
+      radial-gradient(1.2px 1.2px at 68% 84%, rgba(255, 255, 255, .7), transparent 60%),
+      radial-gradient(920px 540px at 85% -10%, rgba(var(--primary-rgb), .26), transparent 62%),
+      radial-gradient(740px 540px at -8% 32%, rgba(178, 141, 255, .20), transparent 62%),
+      radial-gradient(660px 440px at 52% 112%, rgba(245, 207, 107, .16), transparent 62%);
     background-attachment: fixed;
     transition: color .3s;
+  }
+  :root[data-theme="dark"] body {
+    background-image:
+      radial-gradient(2.2px 2.2px at 12% 22%, rgba(255, 220, 240, .8), transparent 60%),
+      radial-gradient(1.6px 1.6px at 78% 13%, rgba(255, 217, 142, .85), transparent 60%),
+      radial-gradient(2px 2px at 88% 58%, rgba(255, 220, 240, .55), transparent 60%),
+      radial-gradient(1.6px 1.6px at 20% 76%, rgba(255, 158, 203, .7), transparent 60%),
+      radial-gradient(1.4px 1.4px at 55% 7%, rgba(255, 255, 255, .6), transparent 60%),
+      radial-gradient(1.6px 1.6px at 44% 90%, rgba(255, 217, 142, .6), transparent 60%),
+      radial-gradient(1.2px 1.2px at 68% 84%, rgba(195, 155, 255, .6), transparent 60%),
+      radial-gradient(920px 540px at 85% -10%, rgba(var(--primary-rgb), .18), transparent 62%),
+      radial-gradient(740px 540px at -8% 32%, rgba(195, 155, 255, .14), transparent 62%),
+      radial-gradient(660px 440px at 52% 112%, rgba(255, 217, 142, .08), transparent 62%);
   }
   body[data-bg="1"] {
     background-image: var(--user-bg, none);
@@ -93,6 +119,16 @@
     transition: background .3s, border-color .3s;
   }
   header h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .3px; }
+  header h1 .grad-title {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sparkle {
+    position: absolute; color: var(--gold); pointer-events: none;
+    font-size: 14px; animation: twinkle 2.4s ease-in-out infinite;
+  }
+  .sparkle.s1 { top: 14px; right: 22px; }
+  .sparkle.s2 { top: 40px; right: 46px; font-size: 9px; animation-delay: 1.2s; }
+  @keyframes twinkle { 0%, 100% { opacity: .35; transform: scale(.8) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(18deg); } }
   header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
   nav { display: flex; gap: 6px; flex-wrap: wrap; }
   nav button {
@@ -316,7 +352,7 @@
 <body>
 
 <header>
-  <h1>📚 word_coach · 背单词助手</h1>
+  <h1>📚 <span class="grad-title">word_coach · 背单词助手</span></h1>
   <div class="sub">内置 Web UI · 与聊天流共用同一份词书与进度</div>
   <nav>
     <button data-tab="dashboard" class="active">仪表盘</button>
@@ -484,7 +520,7 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
 <div id="settings-panel">
   <h3 style="margin:0 0 10px; font-size:15px;">外观设置</h3>
   <label>背景图 URL</label>
-  <input type="text" id="set-bg-url" placeholder="留空=纯色背景" oninput="debounceApplySettings()">
+  <input type="text" id="set-bg-url" placeholder="留空=梦幻光斑；填 bg.jpg 用内置背景" oninput="debounceApplySettings()">
   <label>主题色</label>
   <input type="color" id="set-primary-color" style="height:36px; padding:2px;" oninput="debounceApplySettings()">
   <label>明暗模式</label>
@@ -600,6 +636,7 @@ async function loadDashboard() {
   // Bento 网格：渐变 hero 大卡 + 4 张小卡
   $("#dash-stats").innerHTML = `
     <div class="card stat hero b-hero">
+      <span class="sparkle s1">✦</span><span class="sparkle s2">✦</span>
       <span class="lbl" style="color:rgba(255,255,255,.82); font-size:13px;">今日待复习（全部流）</span>
       <span class="num" style="color:#fff;">${dueTotal}</span>
       ${b
