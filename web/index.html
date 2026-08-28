@@ -111,7 +111,7 @@
     -webkit-backdrop-filter: blur(20px) saturate(170%);
   }
   header {
-    background: rgba(var(--card-rgb), .45);
+    background: rgba(var(--card-rgb), .62);
     backdrop-filter: blur(20px) saturate(170%);
     -webkit-backdrop-filter: blur(20px) saturate(170%);
     border-bottom: 1px solid var(--border-soft);
@@ -216,6 +216,7 @@
   button.link:hover { opacity: .75; }
   button.link.danger { color: var(--red); }
 
+  input[type=range], input[type=color], select { accent-color: var(--primary); }
   input[type=text], input[type=search], select, textarea {
     border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 10px;
     font-size: 14px; background: var(--input-bg); color: var(--text);
@@ -238,8 +239,8 @@
   /* 条形图 */
   .bars { display: flex; flex-direction: column; gap: 7px; }
   .bars .bar-row { display: grid; grid-template-columns: 88px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; }
-  .bars .bar-track { background: var(--track-bg); border-radius: 6px; height: 16px; overflow: hidden; }
-  .bars .bar-fill { background: var(--grad); height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s ease; }
+  .bars .bar-track { display: block; background: var(--track-bg); border-radius: 6px; height: 16px; overflow: hidden; }
+  .bars .bar-fill { display: block; background: var(--grad); height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s ease; }
 
   /* SVG 圆环 */
   .ring-wrap { display: flex; align-items: center; gap: 14px; }
@@ -263,11 +264,18 @@
 
   /* 选择题选项 */
   .quiz-option {
-    display: block; width: 100%; margin-top: 10px; text-align: left;
+    display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; text-align: left;
     padding: 12px 16px; font-size: 15px; border-radius: 10px;
     background: var(--card); border: 1.5px solid var(--border); color: var(--text);
     cursor: pointer; transition: border-color .15s, background .15s, transform .1s;
   }
+  .quiz-option .opt-key {
+    flex: none; width: 24px; height: 24px; border-radius: 8px; font-size: 12.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--track-bg); color: var(--muted);
+  }
+  .quiz-option.correct .opt-key { background: var(--green-tint); color: var(--green); }
+  .quiz-option.wrong .opt-key { background: var(--red-tint); color: var(--red); }
   .quiz-option:hover { border-color: var(--primary); background: var(--primary-tint); }
   .quiz-option.correct { background: var(--green-tint); border-color: var(--green); animation: pop .3s ease; }
   .quiz-option.wrong { background: var(--red-tint); border-color: var(--red); animation: shake .35s ease; }
@@ -780,7 +788,7 @@ async function loadDashboard() {
           <div class="row" style="justify-content:center; gap:16px;">
             <svg class="ring" viewBox="0 0 36 36" style="width:92px; height:92px;">
               <circle class="bg" cx="18" cy="18" r="15.9"/>
-              <circle class="fg" cx="18" cy="18" r="15.9" stroke-dasharray="${progressPct} 100" style="stroke:var(--primary)"/>
+              <circle class="fg" id="dash-ring-fg" cx="18" cy="18" r="15.9" style="stroke:var(--primary)"/>
             </svg>
             <div>
               <div class="grad-num" style="font-size:30px; font-weight:800;">${progressPct}%</div>
@@ -809,6 +817,11 @@ async function loadDashboard() {
         </div>
 
       </div>`;
+    // inline style 才能覆盖 CSS 的 stroke-dasharray:0 100 兜底；rAF 触发从 0 生长的过渡
+    requestAnimationFrame(() => {
+      const fg = document.getElementById("dash-ring-fg");
+      if (fg) fg.style.strokeDasharray = `${progressPct} 100`;
+    });
   }
 
   // 各流卡片
@@ -1182,7 +1195,7 @@ function quizIntro() {
   $("#quiz-panel").innerHTML = `
     <div style="text-align:center; padding:20px 0;">
       <div style="font-size:42px;">✏️</div>
-      <h2 style="margin-top:8px;">背单词测验</h2>
+      <h2 style="margin-top:8px; border-left:none; padding-left:0;">背单词测验</h2>
       <p class="muted">选择题 4 选 1，拼写题严格匹配。测完结果会注入 Bot 上下文，由它自然提起。</p>
       <div class="row" style="justify-content:center; gap:10px; margin-top:14px;">
         <select id="quiz-count" style="min-width:100px;">
@@ -1294,7 +1307,7 @@ function quizRenderChoice() {
   const c = quiz.current;
   const opts = c.options || [];
   const optsHtml = opts.map((opt, i) =>
-    `<button class="quiz-option" onclick="quizJudgeChoice(${i}, this)">${esc(opt || "（空）")}</button>`
+    `<button class="quiz-option" onclick="quizJudgeChoice(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
   ).join("");
   $("#quiz-panel").innerHTML = `
     ${quizProgress()}
@@ -1392,8 +1405,8 @@ function quizRenderJudgeResult(data, c, correct, onContinue) {
       const isCorrect = i === c.correct_index;
       const isPicked = i === quiz._lastSelected;
       const cls = isCorrect ? "correct" : (isPicked ? "wrong" : "");
-      const icon = isCorrect ? "✓ " : (isPicked ? "✗ " : "");
-      return `<div class="quiz-option ${cls}" style="cursor:default; margin-top:8px;">${icon}${esc(opt || "（空）")}</div>`;
+      const mark = isCorrect ? "✓" : (isPicked ? "✗" : "");
+      return `<div class="quiz-option ${cls}" style="cursor:default; margin-top:8px;"><span class="opt-key">${mark || i + 1}</span><span>${esc(opt || "（空）")}</span></div>`;
     }).join("");
   }
   $("#quiz-panel").innerHTML = `
@@ -1592,8 +1605,11 @@ function applySettings(s) {
     root.style.setProperty("--primary", s.primary_color);
     const rgb = hexToRgb(s.primary_color);
     if (rgb) root.style.setProperty("--primary-rgb", rgb);
-    const rgb2 = hexShiftHue(s.primary_color, 40);
+    // 樱花粉为默认主题：保留 CSS 的粉→紫渐变，不计算辅色
+    const isDefault = s.primary_color.toLowerCase() === "#ff7eb3";
+    const rgb2 = isDefault ? null : hexShiftHue(s.primary_color, -60);
     if (rgb2) root.style.setProperty("--primary-2", `rgb(${rgb2})`);
+    else if (isDefault) root.style.removeProperty("--primary-2");
   }
   if (s.bg_url) {
     root.style.setProperty("--user-bg", `url("${s.bg_url}")`);
