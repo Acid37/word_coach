@@ -6,79 +6,105 @@
 <title>word_coach · 背单词助手</title>
 <style>
   :root {
-    --bg: #f6f7fb;
-    --card: #ffffff;
+    --bg: #eef0f8;
+    --card: rgba(255, 255, 255, var(--card-alpha));
     --card-rgb: 255, 255, 255;
-    --text: #23263a;
-    --muted: #8a8fa8;
+    --card-alpha: .58;
+    --text: #1d2136;
+    --muted: #7a80a0;
     --primary: #5b6cff;
     --primary-rgb: 91, 108, 255;
+    --primary-2: #9b5bff;
     --primary-dark: #4656e0;
-    --primary-tint: #eef0ff;
-    --green: #2eb872;
-    --green-tint: #e6f7ee;
+    --primary-tint: rgba(var(--primary-rgb), .11);
+    --grad: linear-gradient(135deg, var(--primary), var(--primary-2));
+    --green: #18b770;
+    --green-tint: rgba(24, 183, 112, .14);
     --red: #e5484d;
-    --red-tint: #fdeaea;
+    --red-tint: rgba(229, 72, 77, .13);
     --amber: #f5a623;
-    --border: #e7e9f2;
-    --radius: 12px;
-    --shadow: 0 2px 12px rgba(35, 38, 58, .06);
-    --input-bg: #ffffff;
-    --hover-bg: #fafbff;
-    --stripe-bg: #fbfbfe;
-    --track-bg: #eef0f6;
-    --code-bg: #23263a;
-    --guide-bg: #fafbff;
-    --card-opacity: .85;
+    --border: rgba(255, 255, 255, .62);
+    --border-soft: rgba(29, 33, 54, .08);
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(31, 38, 90, .10);
+    --glow: 0 6px 24px rgba(var(--primary-rgb), .35);
+    --input-bg: rgba(255, 255, 255, .55);
+    --hover-bg: rgba(255, 255, 255, .48);
+    --stripe-bg: rgba(255, 255, 255, .26);
+    --track-bg: rgba(29, 33, 54, .08);
+    --code-bg: #1d2136;
+    --guide-bg: rgba(255, 255, 255, .38);
   }
   :root[data-theme="dark"] {
-    --bg: #17192a;
-    --card: #232640;
-    --card-rgb: 35, 38, 64;
+    --bg: #12142a;
+    --card: rgba(38, 42, 72, var(--card-alpha));
+    --card-rgb: 38, 42, 72;
+    --card-alpha: .5;
     --text: #e8eaf6;
-    --muted: #8a92b8;
+    --muted: #8d95bb;
     --primary: #6c7bff;
     --primary-rgb: 108, 123, 255;
+    --primary-2: #b46cff;
     --primary-dark: #5566f0;
-    --primary-tint: #2a2f55;
+    --primary-tint: rgba(var(--primary-rgb), .16);
     --green: #35c982;
-    --green-tint: #1c3a2e;
+    --green-tint: rgba(53, 201, 130, .16);
     --red: #f0575c;
-    --red-tint: #452325;
+    --red-tint: rgba(240, 87, 92, .16);
     --amber: #ffb14e;
-    --border: #34385c;
-    --shadow: 0 2px 14px rgba(0, 0, 0, .35);
-    --input-bg: #1b1e34;
-    --hover-bg: #2a2e4e;
-    --stripe-bg: #1f223a;
-    --track-bg: #2c3052;
-    --code-bg: #11131f;
-    --guide-bg: #1e2138;
+    --border: rgba(255, 255, 255, .10);
+    --border-soft: rgba(255, 255, 255, .06);
+    --shadow: 0 8px 32px rgba(0, 0, 0, .42);
+    --glow: 0 6px 28px rgba(var(--primary-rgb), .4);
+    --input-bg: rgba(20, 23, 44, .5);
+    --hover-bg: rgba(255, 255, 255, .07);
+    --stripe-bg: rgba(255, 255, 255, .035);
+    --track-bg: rgba(255, 255, 255, .10);
+    --code-bg: #0d0f20;
+    --guide-bg: rgba(255, 255, 255, .045);
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
+    margin: 0; color: var(--text);
     font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
     font-size: 15px;
-    transition: background .3s, color .3s;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(900px 520px at 85% -10%, rgba(var(--primary-rgb), .20), transparent 62%),
+      radial-gradient(720px 520px at -8% 32%, rgba(155, 91, 255, .14), transparent 62%),
+      radial-gradient(640px 420px at 52% 112%, rgba(24, 183, 112, .10), transparent 62%);
+    background-attachment: fixed;
+    transition: color .3s;
   }
-  body[data-bg="1"] .card { background: rgba(var(--card-rgb), var(--card-opacity)); }
+  body[data-bg="1"] {
+    background-image: var(--user-bg, none);
+    background-size: cover; background-position: center; background-attachment: fixed;
+  }
+  body[data-bg="1"] .card, body[data-bg="1"] header {
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+  }
   header {
-    background: var(--card); border-bottom: 1px solid var(--border);
-    padding: 14px 24px 0; position: sticky; top: 0; z-index: 10;
+    background: rgba(var(--card-rgb), .45);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 14px 24px 12px; position: sticky; top: 0; z-index: 10;
     transition: background .3s, border-color .3s;
   }
-  header h1 { margin: 0 0 4px; font-size: 20px; }
-  header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
-  nav { display: flex; gap: 4px; }
+  header h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .3px; }
+  header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
   nav button {
-    border: none; background: none; padding: 10px 16px; cursor: pointer;
-    font-size: 14px; color: var(--muted); border-bottom: 2.5px solid transparent;
-    transition: color .15s, border-color .15s;
+    border: none; background: transparent; padding: 8px 16px; cursor: pointer;
+    font-size: 13.5px; color: var(--muted); border-radius: 11px; font-weight: 500;
+    transition: color .15s, background .2s, box-shadow .2s;
   }
-  nav button:hover { color: var(--text); }
-  nav button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  nav button:hover { color: var(--text); background: var(--hover-bg); }
+  nav button.active {
+    color: #fff; background: var(--grad); font-weight: 600; box-shadow: var(--glow);
+  }
+  main { max-width: 1020px; margin: 0 auto; padding: 22px 16px 60px; }
   section.tab { display: none; }
   section.tab.active { display: block; animation: fadeIn .25s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -86,18 +112,39 @@
   h2:first-child { margin-top: 4px; }
 
   .card {
-    background: var(--card); border: 1px solid var(--border);
+    background: var(--card);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow);
     padding: 16px 18px; margin-bottom: 14px;
-    transition: background .3s, border-color .3s, box-shadow .2s, transform .2s;
+    transition: background .3s, border-color .3s, box-shadow .25s, transform .25s;
   }
-  .card.hero { border-color: var(--primary); box-shadow: 0 4px 18px rgba(var(--primary-rgb), .14); }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(31, 38, 90, .16); }
+  :root[data-theme="dark"] .card:hover { box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+  .card.hero { border: 1.5px solid transparent; background: var(--grad) border-box; position: relative; }
+  .card.hero::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255,255,255,.7), rgba(255,255,255,.05)), var(--grad);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .card.hero > * { position: relative; z-index: 1; }
+  :root[data-theme="dark"] .card.hero { color: #fff; }
   .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .bento { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); }
+  .bento .card { margin-bottom: 0; }
+  .b-hero { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; }
+  .b-wide { grid-column: 1 / -1; }
+  .grad-num {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    color: transparent; font-variant-numeric: tabular-nums;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
   .stat .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .stat .lbl { color: var(--muted); font-size: 12.5px; }
-  .stat.hero .num { font-size: 34px; color: var(--primary); }
+  .stat.hero .num { font-size: clamp(44px, 8vw, 64px); line-height: 1.1; }
   .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .muted { color: var(--muted); font-size: 13px; }
   .pill {
@@ -109,14 +156,18 @@
   .pill.red { background: var(--red-tint); color: var(--red); }
 
   button.btn {
-    border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer;
-    background: var(--primary); color: #fff; font-size: 14px;
-    transition: background .15s, transform .1s, box-shadow .2s, opacity .2s;
+    border: none; border-radius: 10px; padding: 9px 18px; cursor: pointer;
+    background: var(--grad); color: #fff; font-size: 14px; font-weight: 500;
+    transition: filter .15s, transform .15s, box-shadow .25s, opacity .2s;
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), .3);
   }
-  button.btn:hover { background: var(--primary-dark); box-shadow: 0 3px 10px rgba(var(--primary-rgb), .3); }
+  button.btn:hover { filter: brightness(1.1); box-shadow: 0 6px 22px rgba(var(--primary-rgb), .45); transform: translateY(-1px); }
   button.btn:active { transform: scale(.97); }
-  button.btn.ghost { background: var(--primary-tint); color: var(--primary); box-shadow: none; }
-  button.btn.ghost:hover { box-shadow: none; opacity: .85; }
+  button.btn.ghost {
+    background: var(--primary-tint); color: var(--primary);
+    box-shadow: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  button.btn.ghost:hover { filter: none; box-shadow: none; transform: none; opacity: .85; }
   button.btn.green { background: var(--green); }
   button.btn.green:hover { box-shadow: 0 3px 10px rgba(46, 184, 114, .3); }
   button.btn.red { background: var(--red); }
@@ -130,7 +181,7 @@
   button.link.danger { color: var(--red); }
 
   input[type=text], input[type=search], select, textarea {
-    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 10px;
     font-size: 14px; background: var(--input-bg); color: var(--text);
     transition: border-color .15s, background .3s, box-shadow .15s;
   }
@@ -152,7 +203,7 @@
   .bars { display: flex; flex-direction: column; gap: 7px; }
   .bars .bar-row { display: grid; grid-template-columns: 88px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; }
   .bars .bar-track { background: var(--track-bg); border-radius: 6px; height: 16px; overflow: hidden; }
-  .bars .bar-fill { background: var(--primary); height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s ease; }
+  .bars .bar-fill { background: var(--grad); height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s ease; }
 
   /* SVG 圆环 */
   .ring-wrap { display: flex; align-items: center; gap: 14px; }
@@ -170,7 +221,7 @@
   .quiz-card .q-meaning { font-size: 19px; margin-bottom: 6px; }
   .quiz-card .q-example { color: var(--muted); font-size: 14px; font-style: italic; }
   .quiz-progress { height: 8px; background: var(--track-bg); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
-  .quiz-progress > div { height: 100%; background: var(--primary); width: 0; transition: width .4s ease; }
+  .quiz-progress > div { height: 100%; background: var(--grad); width: 0; transition: width .4s ease; }
   .quiz-verdict { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
   .quiz-verdict button { padding: 10px 26px; font-size: 15px; }
 
@@ -214,8 +265,9 @@
   }
   #modal-mask.open { display: flex; animation: fadeIn .2s ease; }
   #modal {
-    background: var(--card); border-radius: var(--radius); width: 460px; max-width: 92vw;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 460px; max-width: 92vw;
     padding: 20px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.18);
+    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
   }
   #modal h3 { margin: 0 0 14px; font-size: 16px; }
   #modal label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
@@ -226,30 +278,34 @@
   #settings-btn {
     position: fixed; right: 16px; bottom: 16px; z-index: 20;
     width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
-    background: var(--primary); color: #fff; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+    background: var(--grad); color: #fff; font-size: 20px; box-shadow: var(--glow);
     transition: transform .2s, box-shadow .2s;
   }
   #settings-btn:hover { transform: rotate(45deg); box-shadow: 0 4px 14px rgba(var(--primary-rgb), .4); }
   #settings-panel {
     position: fixed; right: 16px; bottom: 72px; z-index: 20; display: none;
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px 18px; width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    padding: 16px 18px; width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
   }
   #settings-panel.open { display: block; animation: fadeIn .2s ease; }
   #settings-panel label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
   #settings-panel input { width: 100%; }
   .timeline { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; }
   .timeline-node { min-width: 70px; text-align: center; }
-  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); margin: 0 auto 4px; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--grad); margin: 0 auto 4px; }
   .timeline-date { font-size: 10px; color: var(--muted); }
   .timeline-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
   @media (max-width: 640px) {
     main { padding: 10px 8px 60px; }
-    header { padding: 10px 12px 0; }
+    header { padding: 10px 12px 10px; }
     nav { flex-wrap: wrap; }
     nav button { padding: 8px 10px; font-size: 13px; }
     .grid { grid-template-columns: 1fr 1fr !important; }
     .binding-grid { grid-template-columns: 1fr !important; }
+    .bento { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .b-hero { grid-column: span 2; grid-row: auto; }
+    .b-wide { grid-column: span 2; }
     table { font-size: 13px; }
     th, td { padding: 6px 4px; }
     #settings-panel { width: calc(100vw - 32px); right: 16px; }
@@ -276,7 +332,7 @@
 
   <!-- ============ 仪表盘 ============ -->
   <section class="tab active" id="tab-dashboard">
-    <div class="grid" id="dash-stats"></div>
+    <div class="bento" id="dash-stats"></div>
     <h2>我的学习 <span class="pill" id="dash-binding-label">加载中…</span></h2>
     <div class="card" id="dash-binding"></div>
     <h2>各聊天流进度</h2>
@@ -436,7 +492,7 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
     <option value="light">浅色</option>
     <option value="dark">深色</option>
   </select>
-  <label>内容透明度 <span id="opacity-val"></span></label>
+  <label>卡片透明度 <span id="opacity-val"></span></label>
   <input type="range" id="set-bg-opacity" min="0.3" max="1.0" step="0.05" style="width:100%;" oninput="debounceApplySettings()">
   <button class="btn" style="width:100%; margin-top:10px;" onclick="saveSettings()">保存</button>
 </div>
@@ -535,14 +591,28 @@ async function loadDashboard() {
     if (sources.includes(current)) sourceSelect.value = current;
   }
 
+  // 绑定流数据提前解构（hero 卡也要用）
+  const b = data.binding;
+  const plan = (b && b.plan) || {};
+  const streak = plan.streak || 0;
+  const dueNowBind = (b && b.due_now) || 0;
+
+  // Bento 网格：渐变 hero 大卡 + 4 张小卡
   $("#dash-stats").innerHTML = `
-    <div class="card stat hero"><span class="num">${dueTotal}</span><span class="lbl">今日待复习（全部流）</span></div>
-    <div class="card stat"><span class="num">${book.total}</span><span class="lbl">词书总词数</span></div>
-    <div class="card stat"><span class="num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
-    <div class="card stat"><span class="num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>`;
+    <div class="card stat hero b-hero">
+      <span class="lbl" style="color:rgba(255,255,255,.82); font-size:13px;">今日待复习（全部流）</span>
+      <span class="num" style="color:#fff;">${dueTotal}</span>
+      ${b
+        ? `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:2px;">连续打卡 ${streak} 天 · 答对 ${b.correct || 0} / 答错 ${b.wrong || 0}</div>
+      <button class="btn" style="margin-top:auto; align-self:flex-start; background:rgba(255,255,255,.22); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:none; font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.22)'" onclick="switchTab('quiz')">开始测验${dueNowBind > 0 ? ` · ${dueNowBind} 词` : ""}</button>`
+        : `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:6px;">未绑定聊天流，配置 owner_list 后自动绑定</div>`}
+    </div>
+    <div class="card stat"><span class="num grad-num">${book.total}</span><span class="lbl">词书总词数</span></div>
+    <div class="card stat"><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
+    <div class="card stat"><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
+    <div class="card stat"><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
 
   // 绑定流卡片
-  const b = data.binding;
   if (!b) {
     $("#dash-binding-label").textContent = "未绑定";
     $("#dash-binding").innerHTML = `<div class="muted">未配置网页绑定的聊天流。请在框架
@@ -551,13 +621,10 @@ async function loadDashboard() {
   } else {
     const acc = b.accuracy || 0;
     $("#dash-binding-label").textContent = b.label || b.stream_id || "?";
-    const plan = b.plan || {};
     const learned = plan.learned || 0;
     const bookSize = plan.book_size || b.book_size || 0;
     const progressPct = bookSize ? Math.round(learned / bookSize * 100) : 0;
     const estDays = plan.estimated_days || 0;
-    const streak = plan.streak || 0;
-    const dueNow = b.due_now || 0;
     const dailyNew = plan.daily_new_count || 3;
     const boxDist = plan.box_dist || {};
 
@@ -569,7 +636,7 @@ async function loadDashboard() {
       const pct = Math.round(count / maxBox * 100);
       return `<div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:40px;">
         <div style="font-size:13px; font-weight:700; margin-bottom:4px;">${count || "0"}</div>
-        <div style="width:60%; min-height:4px; max-height:80px; height:${Math.max(pct, count > 0 ? 8 : 4)}px; background:var(--primary); opacity:${0.35 + count / maxBox * 0.65}; border-radius:4px 4px 0 0;"></div>
+        <div style="width:60%; min-height:4px; max-height:80px; height:${Math.max(pct, count > 0 ? 8 : 4)}px; background:var(--grad); box-shadow:0 2px 8px rgba(var(--primary-rgb), .35); opacity:${0.45 + count / maxBox * 0.55}; border-radius:4px 4px 0 0;"></div>
         <div style="font-size:10px; color:var(--muted); margin-top:4px;">${days}天</div>
       </div>`;
     }).join("");
@@ -577,17 +644,17 @@ async function loadDashboard() {
     // 左右双栏：左侧进度环+计划，右侧统计+遗忘曲线
     const hasCurve = Object.values(boxDist).some(v => v > 0);
     $("#dash-binding").innerHTML = `
-      <div class="binding-grid" style="display:grid; grid-template-columns:280px 1fr; gap:14px; align-items:start;">
+      <div class="binding-grid" style="display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:center;">
 
-        <!-- 左栏：进度环 + 计划 + 快捷开始 -->
-        <div>
+        <!-- 左栏：进度环 + 计划 -->
+        <div style="text-align:center;">
           <div class="row" style="justify-content:center; gap:16px;">
-            <svg class="ring" viewBox="0 0 36 36" style="width:90px; height:90px;">
+            <svg class="ring" viewBox="0 0 36 36" style="width:92px; height:92px;">
               <circle class="bg" cx="18" cy="18" r="15.9"/>
               <circle class="fg" cx="18" cy="18" r="15.9" stroke-dasharray="${progressPct} 100" style="stroke:var(--primary)"/>
             </svg>
             <div>
-              <div class="ring-num" style="color:var(--primary); font-size:28px;">${progressPct}%</div>
+              <div class="grad-num" style="font-size:30px; font-weight:800;">${progressPct}%</div>
               <div class="muted" style="font-size:12px;">${learned}/${bookSize} 词</div>
             </div>
           </div>
@@ -596,18 +663,15 @@ async function loadDashboard() {
             <b style="cursor:pointer; color:var(--primary); font-size:16px;" onclick="editPlan(${dailyNew})">${dailyNew} 个新词</b>
             <span class="pill gray" style="font-size:11px;">约 ${estDays} 天学完</span>
           </div>
-          <div style="text-align:center; margin-top:14px;">
-            <button class="btn" onclick="switchTab('quiz')" ${dueNow > 0 ? '' : 'style="opacity:.7;"'}>开始测验${dueNow > 0 ? ` · ${dueNow} 个待复习` : ''}</button>
-          </div>
         </div>
 
         <!-- 右栏：统计 + 遗忘曲线 -->
         <div>
           <div class="grid" style="grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px;">
-            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${streak}</span><span class="lbl">连续打卡</span></div>
-            <div class="stat" style="text-align:center;"><span class="num" style="font-size:22px;">${b.total_reviews}</span><span class="lbl">复习次数</span></div>
+            <div class="stat" style="text-align:center;"><span class="num grad-num" style="font-size:22px;">${b.total_reviews}</span><span class="lbl">复习次数</span></div>
             <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${b.correct}</span><span class="lbl">答对</span></div>
             <div class="stat" style="text-align:center;"><span class="num" style="color:var(--red); font-size:22px;">${b.wrong}</span><span class="lbl">答错</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--amber); font-size:22px;">${acc}%</span><span class="lbl">正确率</span></div>
           </div>
             <div>
               <div class="muted" style="margin-bottom:4px; font-size:12px;">遗忘曲线</div>
@@ -1334,8 +1398,8 @@ async function loadSettings() {
     $("#set-bg-url").value = s.bg_url || "";
     $("#set-primary-color").value = s.primary_color || "#5b6cff";
     $("#set-theme").value = s.theme || "light";
-    $("#set-bg-opacity").value = s.bg_opacity || "0.85";
-    $("#opacity-val").textContent = s.bg_opacity || "0.85";
+    $("#set-bg-opacity").value = s.bg_opacity || "0.58";
+    $("#opacity-val").textContent = s.bg_opacity || "0.58";
   } catch (e) { /* 静默 */ }
 }
 
@@ -1346,6 +1410,44 @@ function hexToRgb(hex) {
   return `${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}`;
 }
 
+function hexShiftHue(hex, deg) {
+  // 色相偏移 deg 度，返回 "r, g, b"（用于主色渐变的辅色）
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return null;
+  const v = parseInt(m[1], 16);
+  const r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, sat = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  h = (h + deg / 360 + 1) % 1;
+  const hue2 = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  let r2, g2, b2;
+  if (sat === 0) { r2 = g2 = b2 = l; }
+  else {
+    const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat;
+    const p = 2 * l - q;
+    r2 = hue2(p, q, h + 1 / 3);
+    g2 = hue2(p, q, h);
+    b2 = hue2(p, q, h - 1 / 3);
+  }
+  const to = (x) => Math.round(x * 255);
+  return `${to(r2)}, ${to(g2)}, ${to(b2)}`;
+}
+
 function applySettings(s) {
   const root = document.documentElement;
   root.dataset.theme = s.theme === "dark" ? "dark" : "light";
@@ -1353,17 +1455,18 @@ function applySettings(s) {
     root.style.setProperty("--primary", s.primary_color);
     const rgb = hexToRgb(s.primary_color);
     if (rgb) root.style.setProperty("--primary-rgb", rgb);
+    const rgb2 = hexShiftHue(s.primary_color, 40);
+    if (rgb2) root.style.setProperty("--primary-2", `rgb(${rgb2})`);
   }
   if (s.bg_url) {
-    document.body.style.backgroundImage = `url("${s.bg_url}")`;
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundAttachment = "fixed";
+    root.style.setProperty("--user-bg", `url("${s.bg_url}")`);
     document.body.dataset.bg = "1";
-    root.style.setProperty("--card-opacity", String(s.bg_opacity || 0.85));
   } else {
-    document.body.style.backgroundImage = "none";
+    root.style.removeProperty("--user-bg");
     delete document.body.dataset.bg;
   }
+  // 透明度滑块直接控制玻璃卡片 alpha（深浅模式各有默认值）
+  if (s.bg_opacity) root.style.setProperty("--card-alpha", String(s.bg_opacity));
 }
 
 function debounceApplySettings() {
