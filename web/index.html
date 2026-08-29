@@ -406,6 +406,59 @@
   .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--grad); margin: 0 auto 4px; }
   .timeline-date { font-size: 10px; color: var(--muted); }
   .timeline-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ---- 「生命感」动效：飘落花瓣 / 卡片错落入场 / hero 渐变流动 ---- */
+  @keyframes popIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes petal-fall {
+    0% { transform: translate3d(0, -6vh, 0) rotate(0deg); }
+    100% { transform: translate3d(var(--drift, 6vw), 106vh, 0) rotate(var(--spin, 320deg)); }
+  }
+  @keyframes petal-sway {
+    from { transform: translateX(calc(var(--sway, 14px) * -1)) rotate(-14deg); }
+    to { transform: translateX(var(--sway, 14px)) rotate(14deg); }
+  }
+  #petal-layer { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+  #petal-layer.off { display: none; }
+  #petal-layer.paused .petal { animation-play-state: paused; }
+  .petal {
+    position: absolute; top: 0; left: var(--x, 50vw); will-change: transform;
+    animation: petal-fall var(--dur, 12s) linear var(--delay, 0s) infinite;
+  }
+  .petal i {
+    display: block; width: var(--s, 12px); height: var(--s, 12px);
+    background: linear-gradient(135deg, rgba(255, 158, 203, .85), rgba(255, 126, 179, .5));
+    border-radius: 150% 6% 150% 6%;
+    box-shadow: 0 1px 4px rgba(255, 126, 179, .22);
+    animation: petal-sway var(--sway-dur, 2.6s) ease-in-out var(--delay, 0s) infinite alternate;
+  }
+  :root[data-theme="dark"] .petal i {
+    background: linear-gradient(135deg, rgba(255, 158, 203, .48), rgba(195, 155, 255, .32));
+    box-shadow: 0 1px 4px rgba(255, 158, 203, .16);
+  }
+  /* hero 渐变流动：双倍尺寸渐变缓慢平移 */
+  .card.hero {
+    background: linear-gradient(120deg, var(--primary), var(--primary-2) 45%, var(--primary) 80%, var(--primary-2)) border-box;
+    background-size: 280% 280%;
+    animation: heroFlow 16s ease-in-out infinite;
+  }
+  @keyframes heroFlow { 0% { background-position: 0% 30%; } 50% { background-position: 100% 70%; } 100% { background-position: 0% 30%; } }
+
+  /* 抽屉里的氛围开关 */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; padding: 6px 2px; cursor: pointer; }
+  .switch-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch-ui { flex: none; width: 42px; height: 24px; border-radius: 999px; background: var(--track-bg); position: relative; transition: background .2s; }
+  .switch-ui::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); transition: transform .2s;
+  }
+  .switch-row input:checked + .switch-ui { background: var(--grad); }
+  .switch-row input:checked + .switch-ui::after { transform: translateX(18px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #petal-layer { display: none; }
+    .card.hero, .petal, .petal i { animation: none !important; }
+    .quiz-option.correct, .quiz-option.wrong, .quiz-result-icon { animation: none !important; }
+  }
   @media (max-width: 640px) {
     main { padding: 10px 8px 60px; }
     header { padding: 10px 12px 10px; }
@@ -625,6 +678,15 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
     <div class="muted" style="font-size:11.5px; margin-top:4px;">数值越低卡片越透，背景（图/光斑）越明显</div>
   </div>
 
+  <div class="sec">
+    <div class="sec-title">氛围</div>
+    <label class="switch-row">🌸 飘落花瓣
+      <input type="checkbox" id="set-petals" onchange="onPetalsToggle(this.checked)">
+      <span class="switch-ui"></span>
+    </label>
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">樱花瓣缓缓飘落，关掉即恢复安静背景</div>
+  </div>
+
   <div style="margin-top:auto; padding-top:18px;">
     <button class="btn" id="save-settings-btn" style="width:100%;" onclick="saveSettings()">保存设置</button>
     <div class="muted" style="font-size:11.5px; text-align:center; margin-top:8px;">改动立即预览，保存后对所有浏览器生效</div>
@@ -699,6 +761,46 @@ async function api(path, opts = {}) {
   return body;
 }
 
+/* ---------------- 「生命感」动效工具 ---------------- */
+
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)");
+
+// 卡片错落入场：给容器内目标元素按序加 popIn 动画，结束后清掉内联样式，
+// 让 .card:hover 的 transform 过渡不受 animation fill 影响
+function staggerIn(root, selector = ".card", step = 70, cap = 480) {
+  if (!root || REDUCED_MOTION.matches) return;
+  root.querySelectorAll(selector).forEach((el, i) => {
+    el.style.animation = "popIn .5s cubic-bezier(.22,.9,.36,1) backwards";
+    el.style.animationDelay = `${Math.min(i * step, cap)}ms`;
+    el.addEventListener("animationend", () => {
+      el.style.animation = "";
+      el.style.animationDelay = "";
+    }, { once: true });
+  });
+}
+
+// 数字滚动：从 0 用 rAF 缓动滚到模板里的最终值（兼容千分位与 % 后缀）
+function countUpIn(root) {
+  if (!root || REDUCED_MOTION.matches) return;
+  const DUR = 900;
+  const fmt = (n) => String(n);
+  root.querySelectorAll(".num, .grad-num").forEach((el) => {
+    const m = /^([\d,]+)(.*)$/.exec(el.textContent.trim());
+    if (!m) return;
+    const target = parseInt(m[1].replace(/,/g, ""), 10);
+    if (!Number.isFinite(target) || target === 0) return;
+    const suffix = m[2] || "";
+    const t0 = performance.now();
+    const tick = (t) => {
+      const p = Math.min((t - t0) / DUR, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(target * eased)) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
 /* ---------------- Tab 切换 ---------------- */
 
 document.querySelectorAll("nav button").forEach((btn) => {
@@ -761,6 +863,9 @@ async function loadDashboard() {
     <div class="card stat"><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
     <div class="card stat"><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
     <div class="card stat"><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
+
+  staggerIn($("#dash-stats"), ".card", 90, 450);
+  countUpIn($("#dash-stats"));
 
   // 绑定流卡片
   if (!b) {
@@ -835,6 +940,8 @@ async function loadDashboard() {
       const fg = document.getElementById("dash-ring-fg");
       if (fg) fg.style.strokeDasharray = `${progressPct} 100`;
     });
+    staggerIn($("#dash-binding"));
+    countUpIn($("#dash-binding"));
   }
 
   // 各流卡片
@@ -852,6 +959,7 @@ async function loadDashboard() {
     $("#dash-streams").innerHTML =
       `<div class="card"><div class="bars">${bars}</div>
        <div class="muted" style="margin-top:8px;">条形为已学词数对比；详情见「进度」页。</div></div>`;
+    staggerIn($("#dash-streams"));
   }
 
   renderPlanSettings(planDetail);
@@ -883,6 +991,7 @@ function renderPlanSettings(pd) {
         <div class="pi-desc">每日推送总词数 · 点击修改</div>
       </button>
     </div>`;
+  staggerIn(el, ".plan-item", 90, 360);
 }
 
 function switchTab(name) {
@@ -1258,6 +1367,7 @@ function quizIntro() {
       <div class="muted" style="margin-top:10px; font-size:12px;">键盘党：选择题按 1-4 选答案，判定后按 Enter 下一题</div>
       <div style="margin-top:6px;"><button class="link" onclick="loadQuizHistory()">查看测验历史</button></div>
     </div>`;
+  staggerIn($("#quiz-panel"));
 }
 
 async function loadQuizHistory() {
@@ -1516,7 +1626,7 @@ async function loadPushPreview() {
 /* ---------------- 外观设置（右侧抽屉） ---------------- */
 
 const PRESET_COLORS = ["#ff7eb3", "#ff6b81", "#f59e0b", "#2ec4a6", "#5b6cff", "#8b5cf6"];
-const uiSettings = { theme: "light", primary_color: "#ff7eb3", bg_url: "", bg_opacity: "" };
+const uiSettings = { theme: "light", primary_color: "#ff7eb3", bg_url: "", bg_opacity: "", petals: "1" };
 let settingsDirty = false;
 
 function toggleSettings() {
@@ -1554,6 +1664,53 @@ function onOpacityInput() {
   markDirty();
 }
 
+function onPetalsToggle(checked) {
+  uiSettings.petals = checked ? "1" : "0";
+  markDirty();
+}
+
+/* ---------------- 氛围：飘落花瓣 ---------------- */
+
+const PETAL_COUNT = 14;
+let petalLayer = null;
+
+function buildPetals() {
+  if (petalLayer) return;
+  petalLayer = document.createElement("div");
+  petalLayer.id = "petal-layer";
+  for (let i = 0; i < PETAL_COUNT; i++) {
+    const p = document.createElement("span");
+    p.className = "petal";
+    const dur = 9 + Math.random() * 9;
+    // 负 delay 让花瓣加载时已经散落在半空，而不是齐刷刷从顶上出发
+    p.style.cssText =
+      `--x:${(Math.random() * 100).toFixed(1)}vw;` +
+      `--s:${(8 + Math.random() * 8).toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${(-Math.random() * dur).toFixed(1)}s;` +
+      `--drift:${(Math.random() * 16 - 8).toFixed(1)}vw;` +
+      `--spin:${Math.round(240 + Math.random() * 240)}deg;` +
+      `--sway:${Math.round(8 + Math.random() * 14)}px;` +
+      `--sway-dur:${(1.8 + Math.random() * 1.6).toFixed(1)}s;`;
+    p.appendChild(document.createElement("i"));
+    petalLayer.appendChild(p);
+  }
+  document.body.appendChild(petalLayer);
+  // 页面切到后台时暂停，回来继续，省电不抢帧
+  document.addEventListener("visibilitychange", () => {
+    if (petalLayer) petalLayer.classList.toggle("paused", document.hidden);
+  });
+}
+
+function applyPetals(on) {
+  if (on) {
+    buildPetals();
+    petalLayer.classList.remove("off");
+  } else if (petalLayer) {
+    petalLayer.classList.add("off");
+  }
+}
+
 function renderSettingsControls() {
   // 明暗分段
   $("#seg-light").classList.toggle("active", uiSettings.theme !== "dark");
@@ -1583,6 +1740,9 @@ function renderSettingsControls() {
   const op = uiSettings.bg_opacity || "0.62";
   $("#set-bg-opacity").value = op;
   $("#opacity-val").textContent = op;
+  // 氛围开关
+  const petalsCb = $("#set-petals");
+  if (petalsCb) petalsCb.checked = uiSettings.petals !== "0";
 }
 
 async function loadSettings() {
@@ -1661,6 +1821,8 @@ function applySettings(s) {
   }
   // 透明度滑块直接控制玻璃卡片 alpha（深浅模式各有默认值）
   if (s.bg_opacity) root.style.setProperty("--card-alpha", String(s.bg_opacity));
+  // 氛围：飘落花瓣（prefers-reduced-motion 下 CSS 已隐藏花瓣层）
+  applyPetals(s.petals !== "0" && !REDUCED_MOTION.matches);
 }
 
 async function saveSettings() {
@@ -1756,6 +1918,8 @@ async function loadStreamDetail(userKey, label) {
         ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th><th style="width:60px;">操作</th></tr></thead><tbody>${dueRows}</tbody></table>`
         : `<div class="muted">没有到期的复习词 🎉</div>`}
     </div>`;
+  staggerIn($("#progress-detail"));
+  countUpIn($("#progress-detail"));
 }
 
 function closeStreamDetail() {

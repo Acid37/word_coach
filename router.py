@@ -582,6 +582,7 @@ class WordCoachWebRouter(BaseRouter):
                 "primary_color": cfg.web.primary_color if cfg else "#5b6cff",
                 "bg_url": cfg.web.bg_url if cfg else "",
                 "bg_opacity": str(cfg.web.bg_opacity if cfg else 0.85),
+                "petals": "1",
             }
             db_settings = await service.get_all_settings()
             return {k: db_settings.get(k, v) for k, v in defaults.items()}
