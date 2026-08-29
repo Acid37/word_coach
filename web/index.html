@@ -546,6 +546,8 @@
   }
   [data-style="scifi"] body {
     background-color: #04070f;
+    /* background-size:auto 抵消自定义背景的 cover，防止星空被拉成色块 */
+    background-size: auto;
     background-image:
       radial-gradient(1.4px 1.4px at 12% 22%, rgba(170, 240, 255, .9), transparent 55%),
       radial-gradient(1.1px 1.1px at 78% 13%, rgba(170, 240, 255, .65), transparent 55%),
@@ -643,7 +645,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     #petal-layer { display: none; }
-    #dream-layer .blob, .stat.hero .num, .curve-bar, .bars .bar-fill { animation: none !important; }
+    #dream-layer .blob, #dream-layer .grid-floor, #dream-layer .scan, #dream-layer .stream,
+    .stat.hero .num, .curve-bar, .bars .bar-fill { animation: none !important; }
     .mascot { animation: none !important; }
     button.btn::after { transition: none !important; }
     .card.hero, .petal, .petal i { animation: none !important; }
