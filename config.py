@@ -125,6 +125,20 @@ class WordCoachConfig(BaseConfig):
             description="有背景图时内容区的透明度（0.0-1.0）",
         )
 
+        lan_enabled: bool = Field(
+            default=True,
+            description=(
+                "局域网直连：插件自己额外监听 0.0.0.0:lan_port，"
+                "手机/平板在同一局域网直接输 http://<本机IP>:lan_port/ 即可用 Web UI。"
+                "只开插件自己的端口，核心 [http_router] 的 127.0.0.1 绑定不受影响。"
+            ),
+        )
+
+        lan_port: int = Field(
+            default=8900,
+            description="局域网直连端口（1024-65535，默认 8900）",
+        )
+
     @config_section("source")
     class SourceSection(SectionBase):
         """词库来源配置（自动下载导入）。"""

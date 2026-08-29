@@ -5,7 +5,9 @@
 - 每日定时推送：按 [plugin].push_time（默认 09:00）向白名单目标流推送今日词单，
   用一次性调度 + 每次触发后重排下一次（调度器只支持 interval/delay 触发，
   不支持 cron，因此用「到点重排」模式对齐墙钟时间）
-- Web UI：挂载到框架统一的内嵌 HTTP 服务器（见 router.py），启动时打印实际地址
+- Web UI：挂载到框架统一的内嵌 HTTP 服务器（见 router.py），启动时打印实际地址；
+  另提供局域网直连（lan_server.py，插件自己监听 0.0.0.0:lan_port，手机输网址直接用，
+  不动核心 [http_router] 的绑定）
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from src.kernel.concurrency import get_task_manager
 from .command import WordCommand
 from .config import WordCoachConfig
 from .gate import WordStreamGate
+from .lan_server import LanServer
 from .reminder import WordPendingReminder
 from .router import WordCoachWebRouter
 from .service import WordCoachService, resolve_stream_id
@@ -58,7 +61,7 @@ class WordCoachPlugin(BasePlugin):
 
     plugin_name = "word_coach"
     plugin_description = "背单词助手：词书 + Leitner 复习 + 每日推送 + 对话测验"
-    plugin_version = "0.9.0"
+    plugin_version = "0.9.1"
 
     configs: list[type] = [WordCoachConfig]
     dependent_components: list[str] = []
@@ -68,6 +71,7 @@ class WordCoachPlugin(BasePlugin):
         self._service: WordCoachService | None = None
         self._schedule_ids: list[str] = []
         self._register_task_id: str | None = None
+        self._lan_server: LanServer | None = None
 
     # ------------------------------------------------------------------
     # 组件注册
@@ -129,6 +133,33 @@ class WordCoachPlugin(BasePlugin):
                 )
 
         self._log_web_ui_url()
+        self._start_lan_server()
+
+    def _start_lan_server(self) -> None:
+        """按 [web].lan_enabled/lan_port 启动局域网直连（插件自己的端口，不动核心绑定）。"""
+        cfg = self.config
+        if not isinstance(cfg, WordCoachConfig) or not cfg.web.lan_enabled:
+            return
+        port = cfg.web.lan_port
+        if not (1024 <= port <= 65535):
+            logger.warning(f"word_coach 局域网直连端口非法: {port}（需 1024-65535），已跳过")
+            return
+        # 专用路由实例：与核心挂载的那份互不影响，端点共用同一个服务实例
+        self._lan_server = LanServer(WordCoachWebRouter(self).app, port=port)
+        tm = get_task_manager()
+        tm.create_task(self._lan_start_job(), name="word_coach_lan_server", daemon=True)
+
+    async def _lan_start_job(self) -> None:
+        if self._lan_server is None:
+            return
+        try:
+            await self._lan_server.start()
+            logger.info(
+                f"word_coach 局域网直连已就绪: {self._lan_server.url}"
+                "（同一局域网的手机/平板直接输网址即可用）"
+            )
+        except Exception as exc:
+            logger.warning(f"word_coach 局域网直连启动失败（不影响本机访问）: {exc}")
 
     def _log_web_ui_url(self) -> None:
         """打印 Web UI 实际访问地址（读框架 HTTP 服务器单例的 host:port，不假设 8000）。"""
@@ -175,6 +206,13 @@ class WordCoachPlugin(BasePlugin):
     async def on_plugin_unloaded(self) -> None:
         """清理调度与数据库连接。"""
         from src.kernel.scheduler import get_unified_scheduler
+
+        if self._lan_server is not None:
+            try:
+                await self._lan_server.stop()
+            except Exception:
+                pass
+            self._lan_server = None
 
         scheduler = get_unified_scheduler()
         for schedule_id in list(self._schedule_ids):
