@@ -139,6 +139,18 @@
   }
   .mascot svg { display: block; width: 100%; height: auto; }
   @keyframes mascotBob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(4deg); } }
+  .mascot .mbody { fill: url(#mascot-g); stroke: url(#mascot-g); stroke-width: 14; stroke-linejoin: round; }
+  .mascot .mface { fill: none; stroke: #6b5570; stroke-width: 2.4; stroke-linecap: round; }
+  .mascot .mblush { fill: #ff9ecb; opacity: .55; }
+  .mascot .mspark { fill: #f5cf6b; opacity: .9; }
+  .mascot .mspark2 { fill: #ff9ecb; opacity: .8; }
+  /* 科幻形态：深空机体 + 霓虹描边 + 青色面部辉光 */
+  [data-style="scifi"] .mascot .mbody { fill: url(#mascot-cyber-body); stroke: url(#mascot-cyber); }
+  [data-style="scifi"] .mascot .mface { stroke: #7cf9ff; filter: drop-shadow(0 0 3px rgba(0, 229, 255, .8)); }
+  [data-style="scifi"] .mascot .mblush { fill: #7cf9ff; opacity: .4; }
+  [data-style="scifi"] .mascot .mspark { fill: #00e5ff; }
+  [data-style="scifi"] .mascot .mspark2 { fill: #7cf9ff; }
+  [data-style="scifi"] .card.hero > .mascot { filter: drop-shadow(0 0 10px rgba(0, 229, 255, .45)); }
   header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
   nav { display: flex; gap: 6px; flex-wrap: wrap; }
   nav button {
@@ -644,10 +656,67 @@
     animation: barGrow .8s cubic-bezier(.34, 1.56, .64, 1) backwards;
   }
 
+  /* 进度环旋转虚线轨道（仅科幻） */
+  .ring .orbit { display: none; }
+  [data-style="scifi"] .ring .orbit {
+    display: block; stroke: rgba(0, 229, 255, .45);
+    transform-box: view-box; transform-origin: center;
+    animation: orbitSpin 9s linear infinite;
+  }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+
+  /* ---- 科幻彻底化：HUD 边框 / 描边按钮 / 排印 ---- */
+  /* 屏幕四角 HUD 括号 */
+  [data-style="scifi"] body::before {
+    content: ""; position: fixed; inset: 8px; pointer-events: none; z-index: 60; opacity: .55;
+    --hud: rgba(0, 229, 255, .8);
+    background:
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud));
+    background-repeat: no-repeat;
+    background-size: 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px;
+    background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+  }
+  /* 按钮改 HUD 描边式 */
+  [data-style="scifi"] button.btn {
+    background: rgba(0, 229, 255, .08);
+    border: 1px solid rgba(0, 229, 255, .55);
+    color: #bfefff;
+    box-shadow: 0 0 12px rgba(0, 229, 255, .18), inset 0 0 8px rgba(0, 229, 255, .06);
+  }
+  [data-style="scifi"] button.btn:hover {
+    background: rgba(0, 229, 255, .16); filter: none;
+    box-shadow: 0 0 20px rgba(0, 229, 255, .35), inset 0 0 10px rgba(0, 229, 255, .1);
+  }
+  [data-style="scifi"] button.btn.ghost { background: transparent; border-color: rgba(0, 229, 255, .3); box-shadow: none; }
+  [data-style="scifi"] button.btn.green { background: rgba(62, 240, 200, .08); border-color: rgba(62, 240, 200, .6); color: #d8fff4; box-shadow: 0 0 10px rgba(62, 240, 200, .15); }
+  [data-style="scifi"] button.btn.red { background: rgba(255, 93, 126, .08); border-color: rgba(255, 93, 126, .6); color: #ffe3ea; box-shadow: 0 0 10px rgba(255, 93, 126, .15); }
+  /* 排印：标题大写宽字距, 小节加 // 前缀, 导航/副标题拉字距 */
+  [data-style="scifi"] h1 .grad-title { text-transform: uppercase; letter-spacing: .14em; }
+  [data-style="scifi"] header .sub { letter-spacing: .1em; }
+  [data-style="scifi"] nav button { letter-spacing: .12em; }
+  [data-style="scifi"] h2::before { content: "// "; color: var(--primary); }
+  [data-style="scifi"] h2 { letter-spacing: .04em; }
+  /* emoji 图标去彩色（保留语义色的 ✅❌ 除外） */
+  [data-style="scifi"] .stat-ico { filter: grayscale(1) brightness(1.6); }
+  /* 测验进度条条纹流动 */
+  [data-style="scifi"] .quiz-progress > div {
+    background: repeating-linear-gradient(90deg, rgba(0, 229, 255, .9) 0 8px, rgba(0, 229, 255, .4) 8px 16px);
+    animation: barFlow 1.2s linear infinite;
+  }
+  /* toast 霓虹化 */
+  [data-style="scifi"] #toast {
+    background: rgba(6, 13, 24, .92);
+    border: 1px solid rgba(0, 229, 255, .4);
+    box-shadow: 0 0 16px rgba(0, 229, 255, .25);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #petal-layer { display: none; }
     #dream-layer .blob, #dream-layer .grid-floor, #dream-layer .scan, #dream-layer .stream,
-    .stat.hero .num, .curve-bar, .curve-num, .bars .bar-fill { animation: none !important; }
+    .stat.hero .num, .curve-bar, .curve-num, .bars .bar-fill, .ring .orbit { animation: none !important; }
     .mascot { animation: none !important; }
     button.btn::after { transition: none !important; }
     .card.hero, .petal, .petal i { animation: none !important; }
@@ -1083,16 +1152,23 @@ async function loadDashboard() {
             <stop offset="0%" stop-color="#fffdf8"/>
             <stop offset="100%" stop-color="#ffeaf4"/>
           </linearGradient>
+          <linearGradient id="mascot-cyber" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#00e5ff"/>
+            <stop offset="100%" stop-color="#7c6bff"/>
+          </linearGradient>
+          <linearGradient id="mascot-cyber-body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0e2040"/>
+            <stop offset="100%" stop-color="#0a1424"/>
+          </linearGradient>
         </defs>
-        <path d="M50 18 L58.8 39.9 L82.3 41.5 L64.3 56.6 L70 79.5 L50 67 L30 79.5 L35.7 56.6 L17.7 41.5 L41.2 39.9 Z"
-              fill="url(#mascot-g)" stroke="url(#mascot-g)" stroke-width="14" stroke-linejoin="round"/>
-        <path d="M39 52 q3.5 -4.5 7 0" fill="none" stroke="#6b5570" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M56 52 q3.5 -4.5 7 0" fill="none" stroke="#6b5570" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M47.5 60.5 q3 3.4 6 0" fill="none" stroke="#6b5570" stroke-width="2.2" stroke-linecap="round"/>
-        <ellipse cx="35" cy="58" rx="4.4" ry="2.7" fill="#ff9ecb" opacity=".55"/>
-        <ellipse cx="66" cy="58" rx="4.4" ry="2.7" fill="#ff9ecb" opacity=".55"/>
-        <path d="M88 22 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z" fill="#f5cf6b" opacity=".9"/>
-        <path d="M12 34 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3 z" fill="#ff9ecb" opacity=".8"/>
+        <path class="mbody" d="M50 18 L58.8 39.9 L82.3 41.5 L64.3 56.6 L70 79.5 L50 67 L30 79.5 L35.7 56.6 L17.7 41.5 L41.2 39.9 Z"/>
+        <path class="mface" d="M39 52 q3.5 -4.5 7 0"/>
+        <path class="mface" d="M56 52 q3.5 -4.5 7 0"/>
+        <path class="mface" d="M47.5 60.5 q3 3.4 6 0"/>
+        <ellipse class="mblush" cx="35" cy="58" rx="4.4" ry="2.7"/>
+        <ellipse class="mblush" cx="66" cy="58" rx="4.4" ry="2.7"/>
+        <path class="mspark" d="M88 22 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z"/>
+        <path class="mspark mspark2" d="M12 34 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3 z"/>
       </svg></span>
       <span class="lbl" style="color:rgba(255,255,255,.82); font-size:13px;">今日待复习（全部流）</span>
       <span class="num" style="color:#fff;">${dueTotal}</span>
@@ -1155,6 +1231,7 @@ async function loadDashboard() {
                 </linearGradient>
               </defs>
               <circle class="bg" cx="18" cy="18" r="15.9"/>
+              <circle class="orbit" cx="18" cy="18" r="17.4" fill="none" stroke-width="1" stroke-dasharray="2 3.4"/>
               <circle class="fg" id="dash-ring-fg" cx="18" cy="18" r="15.9" style="stroke:url(#ring-grad); filter:drop-shadow(0 0 5px rgba(var(--primary-rgb), .5));"/>
             </svg>
             <div>
