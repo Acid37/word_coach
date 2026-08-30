@@ -144,13 +144,20 @@
   .mascot .mblush { fill: #ff9ecb; opacity: .55; }
   .mascot .mspark { fill: #f5cf6b; opacity: .9; }
   .mascot .mspark2 { fill: #ff9ecb; opacity: .8; }
-  /* 科幻形态：深空机体 + 霓虹描边 + 青色面部辉光 */
-  [data-style="scifi"] .mascot .mbody { fill: url(#mascot-cyber-body); stroke: url(#mascot-cyber); }
-  [data-style="scifi"] .mascot .mface { stroke: #7cf9ff; filter: drop-shadow(0 0 3px rgba(0, 229, 255, .8)); }
-  [data-style="scifi"] .mascot .mblush { fill: #7cf9ff; opacity: .4; }
-  [data-style="scifi"] .mascot .mspark { fill: #00e5ff; }
-  [data-style="scifi"] .mascot .mspark2 { fill: #7cf9ff; }
-  [data-style="scifi"] .card.hero > .mascot { filter: drop-shadow(0 0 10px rgba(0, 229, 255, .45)); }
+  /* 硬核形态：MOSS 式瞄准环（醒目但不卖萌） */
+  .mascot .m-scifi { display: none; }
+  [data-style="scifi"] .mascot .m-dream { display: none; }
+  [data-style="scifi"] .mascot .m-scifi { display: block; }
+  [data-style="scifi"] .mascot .ap-ticks {
+    transform-box: view-box; transform-origin: center;
+    animation: orbitSpin 14s linear infinite;
+  }
+  [data-style="scifi"] .mascot .ap-core { animation: corePulse 2.6s ease-in-out infinite; }
+  @keyframes corePulse {
+    0%, 100% { opacity: .75; filter: drop-shadow(0 0 3px rgba(255, 106, 61, .6)); }
+    50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255, 106, 61, .95)); }
+  }
+  [data-style="scifi"] .card.hero > .mascot { animation: none; filter: drop-shadow(0 0 8px rgba(255, 140, 60, .3)); }
   header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
   nav { display: flex; gap: 6px; flex-wrap: wrap; }
   nav button {
@@ -531,76 +538,76 @@
   @keyframes drift3 { to { transform: translate(7vw, -9vh) scale(1.12); } }
   :root[data-theme="dark"] #dream-layer .blob { opacity: .55; }
 
-  /* ================= 科幻模式（数据流 / HUD / 深空） ================= */
+  /* ================= 硬核科幻（流浪地球式工业风） ================= */
   :root[data-style="scifi"] {
-    --bg: #04070f;
-    --card: rgba(10, 22, 38, .58);
-    --card-rgb: 10, 22, 38;
-    --card-alpha: .6;
-    --text: #d9f6ff;
-    --muted: #6f93b8;
-    --primary: #00e5ff;
-    --primary-rgb: 0, 229, 255;
-    --primary-2: #7c6bff;
-    --primary-dark: #19c9e6;
-    --primary-tint: rgba(0, 229, 255, .12);
-    --green: #3ef0c8; --green-tint: rgba(62, 240, 200, .13);
-    --red: #ff5d7e; --red-tint: rgba(255, 93, 126, .14);
-    --amber: #5ad1ff; --gold: #7cf9ff;
-    --border: rgba(0, 229, 255, .22);
-    --border-soft: rgba(0, 229, 255, .10);
-    --shadow: 0 8px 32px rgba(0, 0, 0, .55);
-    --glow: 0 6px 26px rgba(0, 229, 255, .35);
-    --input-bg: rgba(4, 12, 24, .6);
-    --hover-bg: rgba(0, 229, 255, .07);
-    --stripe-bg: rgba(0, 229, 255, .045);
-    --track-bg: rgba(0, 229, 255, .11);
-    --code-bg: #060d18;
-    --guide-bg: rgba(0, 229, 255, .05);
+    --bg: #0a0c0e;
+    --card: rgba(22, 26, 32, .8);
+    --card-rgb: 22, 26, 32;
+    --card-alpha: .8;
+    --text: #e8e4da;
+    --muted: #8a94a2;
+    --primary: #ffb454;
+    --primary-rgb: 255, 180, 84;
+    --primary-2: #ff7847;
+    --primary-dark: #e8931f;
+    --primary-tint: rgba(255, 180, 84, .12);
+    --green: #5ec269; --green-tint: rgba(94, 194, 105, .13);
+    --red: #ff5d5d; --red-tint: rgba(255, 93, 93, .14);
+    --amber: #ffb454; --gold: #ffd08a;
+    --border: rgba(255, 180, 84, .26);
+    --border-soft: rgba(255, 180, 84, .12);
+    --shadow: 0 4px 14px rgba(0, 0, 0, .5);
+    --glow: 0 0 14px rgba(255, 180, 84, .22);
+    --input-bg: rgba(10, 13, 16, .72);
+    --hover-bg: rgba(255, 180, 84, .07);
+    --stripe-bg: rgba(255, 180, 84, .05);
+    --track-bg: rgba(255, 180, 84, .12);
+    --code-bg: #0d1117;
+    --guide-bg: rgba(255, 180, 84, .05);
+    --radius: 4px;
   }
   [data-style="scifi"] body {
-    background-color: #04070f;
+    background-color: #0a0c0e;
     /* background-size:auto 抵消自定义背景的 cover，防止星空被拉成色块 */
     background-size: auto;
     background-image:
-      radial-gradient(1.4px 1.4px at 12% 22%, rgba(170, 240, 255, .9), transparent 55%),
-      radial-gradient(1.1px 1.1px at 78% 13%, rgba(170, 240, 255, .65), transparent 55%),
-      radial-gradient(1.3px 1.3px at 88% 58%, rgba(200, 220, 255, .55), transparent 55%),
-      radial-gradient(1px 1px at 20% 76%, rgba(0, 229, 255, .7), transparent 55%),
-      radial-gradient(1.2px 1.2px at 55% 7%, rgba(255, 255, 255, .6), transparent 55%),
-      radial-gradient(1px 1px at 44% 90%, rgba(124, 107, 255, .65), transparent 55%),
-      radial-gradient(1px 1px at 68% 84%, rgba(170, 240, 255, .5), transparent 55%),
-      radial-gradient(900px 520px at 85% -10%, rgba(0, 229, 255, .13), transparent 62%),
-      radial-gradient(720px 520px at -8% 32%, rgba(124, 107, 255, .12), transparent 62%);
+      radial-gradient(1.3px 1.3px at 12% 22%, rgba(255, 220, 170, .55), transparent 55%),
+      radial-gradient(1px 1px at 78% 13%, rgba(255, 220, 170, .4), transparent 55%),
+      radial-gradient(1.2px 1.2px at 88% 58%, rgba(220, 230, 240, .4), transparent 55%),
+      radial-gradient(1px 1px at 20% 76%, rgba(255, 180, 84, .45), transparent 55%),
+      radial-gradient(1px 1px at 55% 7%, rgba(255, 255, 255, .38), transparent 55%),
+      radial-gradient(1px 1px at 44% 90%, rgba(255, 150, 80, .4), transparent 55%),
+      radial-gradient(900px 520px at 85% -10%, rgba(255, 150, 60, .07), transparent 62%),
+      radial-gradient(720px 520px at -8% 32%, rgba(255, 120, 71, .06), transparent 62%);
   }
-  /* 光斑变青紫幽光 */
-  [data-style="scifi"] .blob-1 { background: radial-gradient(circle, rgba(0, 229, 255, .16), rgba(0, 229, 255, 0) 62%); }
-  [data-style="scifi"] .blob-2 { background: radial-gradient(circle, rgba(124, 107, 255, .15), rgba(124, 107, 255, 0) 62%); }
-  [data-style="scifi"] .blob-3 { background: radial-gradient(circle, rgba(0, 229, 255, .10), rgba(0, 229, 255, 0) 62%); }
-  /* Tron 网格地面 */
+  /* 光斑 → 极淡琥珀地雾 */
+  [data-style="scifi"] .blob-1 { background: radial-gradient(circle, rgba(255, 150, 60, .07), rgba(255, 150, 60, 0) 62%); }
+  [data-style="scifi"] .blob-2 { background: radial-gradient(circle, rgba(255, 120, 71, .06), rgba(255, 120, 71, 0) 62%); }
+  [data-style="scifi"] .blob-3 { background: radial-gradient(circle, rgba(255, 180, 84, .05), rgba(255, 180, 84, 0) 62%); }
+  /* 工业网格地面 */
   [data-style="scifi"] #dream-layer .grid-floor {
     position: absolute; left: -6vw; right: -6vw; bottom: -12vh; height: 46vh; display: block;
     background:
-      repeating-linear-gradient(90deg, rgba(0, 229, 255, .11) 0 1px, transparent 1px 64px),
-      repeating-linear-gradient(0deg, rgba(0, 229, 255, .09) 0 1px, transparent 1px 36px);
+      repeating-linear-gradient(90deg, rgba(255, 180, 84, .10) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(0deg, rgba(255, 180, 84, .08) 0 1px, transparent 1px 36px);
     transform: perspective(430px) rotateX(57deg);
     transform-origin: top center;
     -webkit-mask-image: linear-gradient(180deg, transparent, #000 34%);
     mask-image: linear-gradient(180deg, transparent, #000 34%);
-    animation: gridMove 2.6s linear infinite;
+    animation: gridMove 3.2s linear infinite;
   }
   @keyframes gridMove { to { background-position: 64px 0, 0 36px; } }
-  /* 扫描线 */
+  /* 扫描线（细、慢、克制） */
   [data-style="scifi"] #dream-layer .scan {
-    position: absolute; left: 0; right: 0; top: 0; height: 2px; display: block; opacity: .5;
-    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, .55) 30%, rgba(124, 107, 255, .55) 70%, transparent);
-    animation: scanSweep 8.5s linear infinite;
+    position: absolute; left: 0; right: 0; top: 0; height: 1.5px; display: block; opacity: .35;
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 84, .6) 30%, rgba(255, 120, 71, .6) 70%, transparent);
+    animation: scanSweep 11s linear infinite;
   }
   @keyframes scanSweep { from { transform: translateY(-3vh); } to { transform: translateY(104vh); } }
-  /* 数据流光 */
+  /* 数据流光（琥珀） */
   [data-style="scifi"] #dream-layer .stream {
-    position: absolute; display: block; height: 1.5px; width: 34vw; opacity: .8;
-    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, .85), transparent);
+    position: absolute; display: block; height: 1px; width: 34vw; opacity: .7;
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 84, .8), transparent);
     background-size: 250% 100%;
     animation: streamFlow 3.6s linear infinite;
   }
@@ -608,16 +615,16 @@
   [data-style="scifi"] #dream-layer .stream.s2 { top: 47vh; left: 40vw; animation-duration: 4.8s; animation-delay: -2.2s; transform: rotate(7deg); }
   [data-style="scifi"] #dream-layer .stream.s3 { top: 76vh; left: 12vw; animation-duration: 4.2s; animation-delay: -1.1s; transform: rotate(-4deg); }
   @keyframes streamFlow { from { background-position: 250% 0; } to { background-position: -150% 0; } }
-  /* 樱花瓣 → 数据雨碎片 */
+  /* 樱花瓣 → 琥珀数据雨碎片 */
   [data-style="scifi"] .petal i {
-    background: linear-gradient(135deg, rgba(0, 229, 255, .95), rgba(124, 107, 255, .55));
-    border-radius: 1.5px;
-    box-shadow: 0 0 7px rgba(0, 229, 255, .6);
+    background: linear-gradient(135deg, rgba(255, 180, 84, .9), rgba(255, 120, 71, .55));
+    border-radius: 1px;
+    box-shadow: 0 0 5px rgba(255, 160, 70, .5);
   }
-  [data-style="scifi"] .sparkle { color: #7cf9ff; }
-  /* HUD 卡片：四角括号 */
+  [data-style="scifi"] .sparkle { color: #ffd08a; }
+  /* HUD 卡片：面板化（低圆角、细琥珀框、四角刻线） */
   [data-style="scifi"] .card {
-    --sci: rgba(0, 229, 255, .7);
+    --sci: rgba(255, 180, 84, .55);
     background-image:
       linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
       linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
@@ -626,50 +633,55 @@
     background-repeat: no-repeat;
     background-size: 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px;
     background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
-    box-shadow: var(--shadow), inset 0 1px 0 rgba(160, 240, 255, .10);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .04);
   }
   [data-style="scifi"] .card:hover {
-    border-color: rgba(0, 229, 255, .6);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, .5), 0 0 20px rgba(0, 229, 255, .18), inset 0 1px 0 rgba(160, 240, 255, .2);
+    border-color: rgba(255, 180, 84, .55);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 220, 170, .12);
   }
-  /* hero：深空面板 + 呼吸辉光 */
+  /* hero：主机面板 + 顶部危险条纹 + 克制呼吸 */
   [data-style="scifi"] .card.hero {
-    background: linear-gradient(135deg, rgba(0, 229, 255, .13), rgba(124, 107, 255, .10) 55%, rgba(0, 229, 255, .05));
-    border: 1px solid rgba(0, 229, 255, .4);
-    animation: heroPulse 5s ease-in-out infinite;
+    background: linear-gradient(135deg, rgba(255, 180, 84, .09), rgba(255, 120, 71, .05) 55%, rgba(255, 180, 84, .03));
+    border: 1px solid rgba(255, 180, 84, .4);
+    animation: heroPulse 6s ease-in-out infinite;
+  }
+  [data-style="scifi"] .card.hero::after {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: repeating-linear-gradient(-45deg, rgba(255, 180, 84, .8) 0 9px, rgba(12, 10, 8, .92) 9px 18px);
+    border-radius: 3px 3px 0 0;
   }
   [data-style="scifi"] .card.hero::before { display: none; }
   @keyframes heroPulse {
-    0%, 100% { box-shadow: 0 0 22px rgba(0, 229, 255, .14), inset 0 1px 0 rgba(160, 240, 255, .12); }
-    50% { box-shadow: 0 0 40px rgba(0, 229, 255, .30), inset 0 1px 0 rgba(160, 240, 255, .2); }
+    0%, 100% { box-shadow: 0 0 14px rgba(255, 150, 60, .08), inset 0 1px 0 rgba(255, 220, 170, .08); }
+    50% { box-shadow: 0 0 26px rgba(255, 150, 60, .18), inset 0 1px 0 rgba(255, 220, 170, .14); }
   }
-  /* 数字辉光更强 */
-  [data-style="scifi"] .grad-num { filter: drop-shadow(0 0 8px rgba(0, 229, 255, .5)); }
-  /* 条形图内条纹流动 */
+  /* 数字辉光收敛（硬核=锐利不发糖） */
+  [data-style="scifi"] .grad-num { filter: drop-shadow(0 1px 5px rgba(255, 180, 84, .3)); }
+  /* 条形图/曲线柱：琥珀条纹 */
   [data-style="scifi"] .bars .bar-fill {
-    background: repeating-linear-gradient(90deg, rgba(0, 229, 255, .9) 0 8px, rgba(0, 229, 255, .4) 8px 16px);
+    background: repeating-linear-gradient(90deg, rgba(255, 180, 84, .9) 0 8px, rgba(255, 180, 84, .38) 8px 16px);
     animation: fillGrow .8s cubic-bezier(.22, .9, .36, 1) backwards, barFlow 1.2s linear infinite;
   }
   @keyframes barFlow { to { background-position: 16px 0; } }
   [data-style="scifi"] .curve-bar {
-    background: linear-gradient(180deg, rgba(124, 249, 255, .95), rgba(0, 229, 255, .30) 60%, rgba(124, 107, 255, .40));
+    background: linear-gradient(180deg, rgba(255, 210, 138, .95), rgba(255, 180, 84, .3) 62%, rgba(255, 120, 71, .4));
     animation: barGrow .8s cubic-bezier(.34, 1.56, .64, 1) backwards;
   }
 
   /* 进度环旋转虚线轨道（仅科幻） */
   .ring .orbit { display: none; }
   [data-style="scifi"] .ring .orbit {
-    display: block; stroke: rgba(0, 229, 255, .45);
+    display: block; stroke: rgba(255, 180, 84, .5);
     transform-box: view-box; transform-origin: center;
     animation: orbitSpin 9s linear infinite;
   }
   @keyframes orbitSpin { to { transform: rotate(360deg); } }
 
-  /* ---- 科幻彻底化：HUD 边框 / 描边按钮 / 排印 ---- */
-  /* 屏幕四角 HUD 括号 */
+  /* ---- 硬核科幻：工业 HUD 边框 / 描边按钮 / 等宽排印 ---- */
+  /* 屏幕四角工业括号 */
   [data-style="scifi"] body::before {
-    content: ""; position: fixed; inset: 8px; pointer-events: none; z-index: 60; opacity: .55;
-    --hud: rgba(0, 229, 255, .8);
+    content: ""; position: fixed; inset: 8px; pointer-events: none; z-index: 60; opacity: .5;
+    --hud: rgba(255, 180, 84, .75);
     background:
       linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
       linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
@@ -679,44 +691,68 @@
     background-size: 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px;
     background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
   }
-  /* 按钮改 HUD 描边式 */
+  /* 硬边直角 */
+  [data-style="scifi"] button.btn, [data-style="scifi"] .quiz-option,
+  [data-style="scifi"] input[type=text], [data-style="scifi"] input[type=search],
+  [data-style="scifi"] select, [data-style="scifi"] textarea,
+  [data-style="scifi"] .plan-item, [data-style="scifi"] .pill, [data-style="scifi"] .seg,
+  [data-style="scifi"] details.guide, [data-style="scifi"] #modal, [data-style="scifi"] #edit-modal {
+    border-radius: 3px;
+  }
+  /* 按钮改控制台按键：琥珀描边 */
   [data-style="scifi"] button.btn {
-    background: rgba(0, 229, 255, .08);
-    border: 1px solid rgba(0, 229, 255, .55);
-    color: #bfefff;
-    box-shadow: 0 0 12px rgba(0, 229, 255, .18), inset 0 0 8px rgba(0, 229, 255, .06);
+    background: rgba(255, 180, 84, .08);
+    border: 1px solid rgba(255, 180, 84, .55);
+    color: #ffe8c8;
+    box-shadow: inset 0 0 8px rgba(255, 180, 84, .06);
   }
   [data-style="scifi"] button.btn:hover {
-    background: rgba(0, 229, 255, .16); filter: none;
-    box-shadow: 0 0 20px rgba(0, 229, 255, .35), inset 0 0 10px rgba(0, 229, 255, .1);
+    background: rgba(255, 180, 84, .16); filter: none;
+    box-shadow: 0 0 14px rgba(255, 180, 84, .25), inset 0 0 10px rgba(255, 180, 84, .1);
   }
-  [data-style="scifi"] button.btn.ghost { background: transparent; border-color: rgba(0, 229, 255, .3); box-shadow: none; }
-  [data-style="scifi"] button.btn.green { background: rgba(62, 240, 200, .08); border-color: rgba(62, 240, 200, .6); color: #d8fff4; box-shadow: 0 0 10px rgba(62, 240, 200, .15); }
-  [data-style="scifi"] button.btn.red { background: rgba(255, 93, 126, .08); border-color: rgba(255, 93, 126, .6); color: #ffe3ea; box-shadow: 0 0 10px rgba(255, 93, 126, .15); }
-  /* 排印：标题大写宽字距, 小节加 // 前缀, 导航/副标题拉字距 */
+  [data-style="scifi"] button.btn.ghost { background: transparent; border-color: rgba(255, 180, 84, .3); box-shadow: none; }
+  [data-style="scifi"] button.btn.green { background: rgba(94, 194, 105, .08); border-color: rgba(94, 194, 105, .6); color: #d9f2d9; box-shadow: none; }
+  [data-style="scifi"] button.btn.red { background: rgba(255, 93, 93, .08); border-color: rgba(255, 93, 93, .6); color: #ffdcdc; box-shadow: none; }
+  /* 排印：等宽字体 + 大写宽字距 + // 前缀 */
+  [data-style="scifi"] body, [data-style="scifi"] .num, [data-style="scifi"] .grad-num,
+  [data-style="scifi"] .ring-num, [data-style="scifi"] .pi-val, [data-style="scifi"] .timeline-count,
+  [data-style="scifi"] h1 .grad-title, [data-style="scifi"] .q-word {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  }
   [data-style="scifi"] h1 .grad-title { text-transform: uppercase; letter-spacing: .14em; }
   [data-style="scifi"] header .sub { letter-spacing: .1em; }
   [data-style="scifi"] nav button { letter-spacing: .12em; }
   [data-style="scifi"] h2::before { content: "// "; color: var(--primary); }
   [data-style="scifi"] h2 { letter-spacing: .04em; }
-  /* emoji 图标去彩色（保留语义色的 ✅❌ 除外） */
-  [data-style="scifi"] .stat-ico { filter: grayscale(1) brightness(1.6); }
-  /* 测验进度条条纹流动 */
+  /* bento 图标 chip → 工位代号牌（DB/SRC/CHN/STR） */
+  [data-style="scifi"] .stat-ico {
+    font-size: 0;
+    border: 1px solid rgba(255, 180, 84, .45);
+    border-radius: 3px;
+    background: rgba(255, 180, 84, .07);
+  }
+  [data-style="scifi"] .stat-ico::before {
+    content: attr(data-code);
+    font-size: 12px; font-weight: 700; letter-spacing: .14em;
+    color: var(--primary);
+  }
+  /* 测验进度条琥珀条纹流动 */
   [data-style="scifi"] .quiz-progress > div {
-    background: repeating-linear-gradient(90deg, rgba(0, 229, 255, .9) 0 8px, rgba(0, 229, 255, .4) 8px 16px);
+    background: repeating-linear-gradient(90deg, rgba(255, 180, 84, .9) 0 8px, rgba(255, 180, 84, .4) 8px 16px);
     animation: barFlow 1.2s linear infinite;
   }
-  /* toast 霓虹化 */
+  /* 控制台提示条 */
   [data-style="scifi"] #toast {
-    background: rgba(6, 13, 24, .92);
-    border: 1px solid rgba(0, 229, 255, .4);
-    box-shadow: 0 0 16px rgba(0, 229, 255, .25);
+    background: rgba(13, 17, 23, .94);
+    border: 1px solid rgba(255, 180, 84, .45);
+    box-shadow: 0 0 12px rgba(255, 180, 84, .18);
   }
 
   @media (prefers-reduced-motion: reduce) {
     #petal-layer { display: none; }
     #dream-layer .blob, #dream-layer .grid-floor, #dream-layer .scan, #dream-layer .stream,
-    .stat.hero .num, .curve-bar, .curve-num, .bars .bar-fill, .ring .orbit { animation: none !important; }
+    .stat.hero .num, .curve-bar, .curve-num, .bars .bar-fill, .ring .orbit,
+    .mascot .ap-ticks, .mascot .ap-core { animation: none !important; }
     .mascot { animation: none !important; }
     button.btn::after { transition: none !important; }
     .card.hero, .petal, .petal i { animation: none !important; }
@@ -921,9 +957,9 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
     <div class="sec-title">风格</div>
     <div class="seg">
       <button id="seg-dream" onclick="segStyle('dream')">✨ 梦幻</button>
-      <button id="seg-scifi" onclick="segStyle('scifi')">⚡ 科幻</button>
+      <button id="seg-scifi" onclick="segStyle('scifi')">🛰 硬核</button>
     </div>
-    <div class="muted" style="font-size:11.5px; margin-top:4px;">科幻：星空网格 + 数据流 + 全息 HUD 质感，数字解码翻滚</div>
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">硬核：琥珀色工业控制台 + 网格地面 + 数据流 + 等宽字体，数字解码翻滚</div>
   </div>
 
   <div class="sec">
@@ -1146,30 +1182,33 @@ async function loadDashboard() {
   $("#dash-stats").innerHTML = `
     <div class="card stat hero b-hero">
       <span class="sparkle s1">✦</span><span class="sparkle s2">✦</span>
-      <span class="mascot" aria-hidden="true"><svg viewBox="0 0 100 100">
-        <defs>
-          <linearGradient id="mascot-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#fffdf8"/>
-            <stop offset="100%" stop-color="#ffeaf4"/>
-          </linearGradient>
-          <linearGradient id="mascot-cyber" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#00e5ff"/>
-            <stop offset="100%" stop-color="#7c6bff"/>
-          </linearGradient>
-          <linearGradient id="mascot-cyber-body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0e2040"/>
-            <stop offset="100%" stop-color="#0a1424"/>
-          </linearGradient>
-        </defs>
-        <path class="mbody" d="M50 18 L58.8 39.9 L82.3 41.5 L64.3 56.6 L70 79.5 L50 67 L30 79.5 L35.7 56.6 L17.7 41.5 L41.2 39.9 Z"/>
-        <path class="mface" d="M39 52 q3.5 -4.5 7 0"/>
-        <path class="mface" d="M56 52 q3.5 -4.5 7 0"/>
-        <path class="mface" d="M47.5 60.5 q3 3.4 6 0"/>
-        <ellipse class="mblush" cx="35" cy="58" rx="4.4" ry="2.7"/>
-        <ellipse class="mblush" cx="66" cy="58" rx="4.4" ry="2.7"/>
-        <path class="mspark" d="M88 22 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z"/>
-        <path class="mspark mspark2" d="M12 34 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3 z"/>
-      </svg></span>
+      <span class="mascot" aria-hidden="true">
+        <svg class="m-dream" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="mascot-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fffdf8"/>
+              <stop offset="100%" stop-color="#ffeaf4"/>
+            </linearGradient>
+          </defs>
+          <path class="mbody" d="M50 18 L58.8 39.9 L82.3 41.5 L64.3 56.6 L70 79.5 L50 67 L30 79.5 L35.7 56.6 L17.7 41.5 L41.2 39.9 Z"/>
+          <path class="mface" d="M39 52 q3.5 -4.5 7 0"/>
+          <path class="mface" d="M56 52 q3.5 -4.5 7 0"/>
+          <path class="mface" d="M47.5 60.5 q3 3.4 6 0"/>
+          <ellipse class="mblush" cx="35" cy="58" rx="4.4" ry="2.7"/>
+          <ellipse class="mblush" cx="66" cy="58" rx="4.4" ry="2.7"/>
+          <path class="mspark" d="M88 22 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z"/>
+          <path class="mspark mspark2" d="M12 34 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3 z"/>
+        </svg>
+        <svg class="m-scifi" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 180, 84, .5)" stroke-width="1.5"/>
+          <circle class="ap-ticks" cx="50" cy="50" r="34" fill="none" stroke="rgba(255, 180, 84, .8)" stroke-width="2.5" stroke-dasharray="5 9"/>
+          <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255, 180, 84, .35)" stroke-width="1"/>
+          <line x1="50" y1="6" x2="50" y2="94" stroke="rgba(255, 180, 84, .16)" stroke-width="1"/>
+          <line x1="6" y1="50" x2="94" y2="50" stroke="rgba(255, 180, 84, .16)" stroke-width="1"/>
+          <circle class="ap-core" cx="50" cy="50" r="11" fill="#ff6a3d"/>
+          <circle cx="50" cy="50" r="15.5" fill="none" stroke="#ff6a3d" stroke-width="1" opacity=".55"/>
+        </svg>
+      </span>
       <span class="lbl" style="color:rgba(255,255,255,.82); font-size:13px;">今日待复习（全部流）</span>
       <span class="num" style="color:#fff;">${dueTotal}</span>
       ${b
@@ -1177,10 +1216,10 @@ async function loadDashboard() {
       <button class="btn" style="margin-top:auto; align-self:flex-start; background:rgba(255,255,255,.22); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:none; font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.22)'" onclick="switchTab('quiz')">开始测验${dueNowBind > 0 ? ` · ${dueNowBind} 词` : ""}</button>`
         : `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:6px;">未绑定聊天流，配置 owner_list 后自动绑定</div>`}
     </div>
-    <div class="card stat"><span class="stat-ico">📚</span><span class="num grad-num">${book.total}</span><span class="lbl">词书总词数</span></div>
-    <div class="card stat"><span class="stat-ico">🗂️</span><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
-    <div class="card stat"><span class="stat-ico">💬</span><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
-    <div class="card stat"><span class="stat-ico">🔥</span><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
+    <div class="card stat"><span class="stat-ico" data-code="DB">📚</span><span class="num grad-num">${book.total}</span><span class="lbl">词书总词数</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="SRC">🗂️</span><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="CHN">💬</span><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="STR">🔥</span><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
 
   staggerIn($("#dash-stats"), ".card", 90, 450);
   countUpIn($("#dash-stats"));
