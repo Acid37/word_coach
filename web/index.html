@@ -582,6 +582,12 @@
       radial-gradient(900px 520px at 85% -10%, rgba(255, 150, 60, .07), transparent 62%),
       radial-gradient(720px 520px at -8% 32%, rgba(255, 120, 71, .06), transparent 62%);
   }
+  /* 硬核模式下用户自定义背景仍然生效（星空让位，HUD 层保留） */
+  [data-style="scifi"] body[data-bg="1"] {
+    background-image: var(--user-bg, none);
+    background-size: cover;
+    background-position: center;
+  }
   /* 光斑 → 极淡琥珀地雾 */
   [data-style="scifi"] .blob-1 { background: radial-gradient(circle, rgba(255, 150, 60, .07), rgba(255, 150, 60, 0) 62%); }
   [data-style="scifi"] .blob-2 { background: radial-gradient(circle, rgba(255, 120, 71, .06), rgba(255, 120, 71, 0) 62%); }
