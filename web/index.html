@@ -823,7 +823,7 @@
 
 <header>
   <h1>📚 <span class="grad-title">word_coach · 背单词助手</span></h1>
-  <div class="sub">内置 Web UI · 与聊天流共用同一份词书与进度</div>
+  <div class="sub">内置 Web UI · 多卡组学习平台 · 与聊天流共用同一份进度</div>
   <nav>
     <button data-tab="dashboard" class="active">📌 学习</button>
     <button data-tab="quiz">✏️ 测验</button>
@@ -922,6 +922,7 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
     </div>
     <div class="row" style="margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <input type="search" id="words-search" placeholder="搜索单词或释义…" style="min-width:160px;">
+      <select id="words-deck" style="min-width:130px;" onchange="loadWords(0)"><option value="">全部卡组</option></select>
       <select id="words-source" style="min-width:100px;"><option value="">全部来源</option></select>
       <select id="words-sort" style="min-width:100px;">
         <option value="word">按字母</option>
@@ -959,6 +960,7 @@ preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://exa
 
   <!-- ============ 测验 ============ -->
   <section class="tab" id="tab-quiz">
+    <div class="card" id="bot-notebook" style="margin-bottom:14px;"><div class="muted">加载中…</div></div>
     <div class="card" id="quiz-panel"></div>
   </section>
 
@@ -1181,7 +1183,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
     $("#tab-" + name).classList.add("active");
     if (name === "dashboard") loadDashboard();
     if (name === "words") loadWords(0);
-    if (name === "quiz") quizIntro();
+    if (name === "quiz") { loadBotNotebook(); quizIntro(); }
     if (name === "progress") loadProgress();
   });
 });
@@ -1205,6 +1207,16 @@ async function loadDashboard() {
     sourceSelect.innerHTML = '<option value="">全部来源</option>' +
       sources.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
     if (sources.includes(current)) sourceSelect.value = current;
+  }
+
+  // 加载卡组并填充词书页卡组下拉
+  await loadDecks();
+  const deckSelect = $("#words-deck");
+  if (deckSelect) {
+    const curDeck = deckSelect.value;
+    deckSelect.innerHTML = '<option value="">全部卡组</option>' +
+      deckState.decks.map(d => `<option value="${d.id}">${esc(d.name)}（${d.item_count || 0}）</option>`).join("");
+    if (curDeck !== "" && [...deckSelect.options].some(o => o.value === curDeck)) deckSelect.value = curDeck;
   }
 
   // 计划设置卡数据（未绑定时静默失败）
@@ -1255,7 +1267,7 @@ async function loadDashboard() {
       <button class="btn" style="margin-top:auto; align-self:flex-start; background:rgba(255,255,255,.22); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:none; font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.22)'" onclick="switchTab('quiz')">开始测验${dueNowBind > 0 ? ` · ${dueNowBind} 词` : ""}</button>`
         : `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:6px;">未绑定聊天流，配置 owner_list 后自动绑定</div>`}
     </div>
-    <div class="card stat"><span class="stat-ico" data-code="DB">📚</span><span class="num grad-num">${book.total}</span><span class="lbl">词书总词数</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="DB">📚</span><span class="num grad-num">${book.total}</span><span class="lbl">条目总数</span></div>
     <div class="card stat"><span class="stat-ico" data-code="SRC">🗂️</span><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
     <div class="card stat"><span class="stat-ico" data-code="CHN">💬</span><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
     <div class="card stat"><span class="stat-ico" data-code="STR">🔥</span><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
@@ -1403,7 +1415,7 @@ function switchTab(name) {
   document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
   document.querySelector(`nav button[data-tab="${name}"]`).classList.add("active");
   $("#tab-" + name).classList.add("active");
-  if (name === "quiz") quizIntro();
+  if (name === "quiz") { loadBotNotebook(); quizIntro(); }
 }
 
 // 自定义输入弹窗（Promise 化）；原生 prompt 在部分浏览器/内嵌环境会被静默拦截
@@ -1477,12 +1489,14 @@ let wordsState = { q: "", offset: 0, limit: 50, total: 0, source: "", sort: "wor
 async function loadWords(offset) {
   if (offset !== undefined) wordsState.offset = offset;
   wordsState.q = $("#words-search").value;
+  wordsState.deck = $("#words-deck") ? $("#words-deck").value : "";
   wordsState.source = $("#words-source") ? $("#words-source").value : "";
   wordsState.sort = $("#words-sort") ? $("#words-sort").value : "word";
   const p = new URLSearchParams({
     q: wordsState.q, offset: wordsState.offset, limit: wordsState.limit,
     source: wordsState.source, sort: wordsState.sort,
   });
+  if (wordsState.deck) p.set("deck_id", wordsState.deck);
   let data;
   try { data = await api("api/words?" + p); } catch (e) { toast(e.message, true); return; }
   wordsState.total = data.total;
@@ -1491,7 +1505,7 @@ async function loadWords(offset) {
   const rows = data.words.map((w) => `
     <tr>
       <td><input type="checkbox" class="word-checkbox" value="${w.id}"></td>
-      <td><span class="word">${esc(w.word)}</span></td>
+      <td><span class="word">${esc(w.word)}</span>${w.qtype && w.qtype !== "vocab" ? ` <span class="pill">${qtypeLabel(w.qtype)}</span>` : ""}</td>
       <td class="muted">${esc(w.phonetic || "")}</td>
       <td>${esc(w.meaning || "（待补充）")}
         ${w.example ? `<div class="muted">${esc(w.example)}</div>` : ""}</td>
@@ -1502,12 +1516,12 @@ async function loadWords(offset) {
       </td>
     </tr>`).join("");
   $("#words-body").innerHTML =
-    rows || `<tr><td colspan="6" class="empty">没有匹配的词条</td></tr>`;
+    rows || `<tr><td colspan="6" class="empty">没有匹配的内容</td></tr>`;
 
   const page = Math.floor(wordsState.offset / wordsState.limit) + 1;
   const pages = Math.max(1, Math.ceil(wordsState.total / wordsState.limit));
   $("#words-pageinfo").textContent =
-    wordsState.total ? `共 ${wordsState.total} 词 · 第 ${page}/${pages} 页` : "共 0 词";
+    wordsState.total ? `共 ${wordsState.total} 条 · 第 ${page}/${pages} 页` : "共 0 条";
   $("#words-prev").disabled = wordsState.offset <= 0;
   $("#words-next").disabled = wordsState.offset + wordsState.limit >= wordsState.total;
   updateSelectedCount();
@@ -1742,36 +1756,149 @@ async function importFile() {
 
 /* ---------------- 网页测验（选择题+拼写题） ---------------- */
 
+const deckState = { decks: [], current: null };
+
+async function loadDecks() {
+  try {
+    const data = await api("api/decks");
+    deckState.decks = data.decks || [];
+  } catch (e) { deckState.decks = []; }
+  if ((deckState.current == null || !deckState.decks.some(d => d.id === deckState.current)) && deckState.decks.length) {
+    deckState.current = deckState.decks[0].id;
+  }
+}
+
+function qtypeLabel(q) {
+  return ({ vocab: "单词", judge: "判断", single: "单选", multi: "多选" })[q] || q;
+}
+
+/* ---------------- Bot 笔记本（Bot 空闲攒题） ---------------- */
+
+async function loadBotNotebook() {
+  const el = $("#bot-notebook");
+  if (!el) return;
+  await loadDecks();
+  const botDecks = deckState.decks.filter(d => d.origin === "bot");
+  const stateLabel = { building: "攒题中", paused: "已暂停", ready: "已就绪" };
+  const rows = botDecks.map(d => {
+    const target = d.target_count || 0;
+    const built = d.built_count || 0;
+    const pct = target ? Math.min(100, Math.round(built / target * 100)) : 0;
+    const state = stateLabel[d.build_state] || "待启动";
+    return `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--track-bg); flex-wrap:wrap;">
+      <span style="font-weight:600; min-width:120px;">${esc(d.name)}</span>
+      <span class="pill ${d.build_state === "building" ? "green" : "gray"}">${state}</span>
+      <div style="flex:1; min-width:100px; height:8px; background:var(--track-bg); border-radius:4px; overflow:hidden;">
+        <div style="height:100%; width:${pct}%; background:var(--grad, var(--primary)); transition:width .5s;"></div>
+      </div>
+      <span class="muted" style="font-size:12px; min-width:70px; text-align:right;">${built}/${target || "?"} 题</span>
+      ${d.build_state === "building" ? `<button class="link" onclick="botDeckBuild(${d.id}, 'pause')">暂停</button>` : ""}
+      ${d.build_state === "paused" ? `<button class="link" onclick="botDeckBuild(${d.id}, 'resume')">继续</button>` : ""}
+      ${d.build_state !== "ready" ? `<button class="link" onclick="botTickNow(${d.id})">立即攒一批</button>` : ""}
+      <button class="link danger" onclick="deleteBotDeck(${d.id}, '${esc(d.name).replace(/'/g, "\\'")}')">删除</button>
+    </div>`;
+  }).join("");
+  el.innerHTML = `
+    <div style="font-weight:700; margin-bottom:6px;">🤖 Bot 笔记本 <span class="pill gray">Bot 攒的题单独放这里，不混进正式卡组</span></div>
+    ${rows || '<div class="muted" style="padding:6px 0;">Bot 还没攒过题。给它一个主题，它会在聊天空闲时一批批攒出整个题库。</div>'}
+    <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
+      <input type="text" id="bot-topic" placeholder="想让 Bot 攒什么题？如：驾考科目一 / 唐诗鉴赏 / 高数极限" style="flex:1; min-width:180px;">
+      <select id="bot-target" style="min-width:110px;">
+        <option value="30">攒 30 题</option>
+        <option value="50" selected>攒 50 题</option>
+        <option value="100">攒 100 题</option>
+        <option value="200">攒 200 题</option>
+      </select>
+      <button class="btn" onclick="botStartBuild()">开工！</button>
+    </div>`;
+}
+
+async function botStartBuild() {
+  const topicEl = $("#bot-topic");
+  const topic = topicEl ? topicEl.value.trim() : "";
+  if (!topic) { toast("先告诉 Bot 攒什么主题", true); return; }
+  const target = parseInt(($("#bot-target") || {}).value, 10) || 50;
+  try {
+    const data = await api("api/decks/build", { method: "POST", body: JSON.stringify({ topic, target_count: target }) });
+    toast(data.message || "Bot 已开工");
+    if (topicEl) topicEl.value = "";
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function botDeckBuild(deckId, action) {
+  try {
+    const data = await api(`api/decks/${deckId}/build`, { method: "POST", body: JSON.stringify({ action }) });
+    toast(data.message || "OK");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function botTickNow(deckId) {
+  toast("Bot 正在攒题，请稍等十几秒…");
+  try {
+    const data = await api(`api/decks/${deckId}/tick`, { method: "POST", body: "{}" });
+    toast(data.message || "完成");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteBotDeck(deckId, name) {
+  if (!confirm(`删除「${name}」及其所有题目？`)) return;
+  try {
+    await api(`api/decks/${deckId}`, { method: "DELETE" });
+    toast("已删除");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
 const quiz = { total: 0, correct: 0, wrong: 0, wrongWords: [], current: null, busy: false, qmode: "mixed", count: 10, onlyNew: false };
 
 function quizIntro() {
   quiz.total = 0; quiz.correct = 0; quiz.wrong = 0; quiz.wrongWords = []; quiz.current = null;
+  const deckOptions = deckState.decks.map(d =>
+    `<option value="${d.id}" ${deckState.current === d.id ? "selected" : ""}>${esc(d.name)}（${d.item_count || 0}）</option>`
+  ).join("");
   $("#quiz-panel").innerHTML = `
     <div style="text-align:center; padding:20px 0;">
       <div style="font-size:42px;">✏️</div>
-      <h2 style="margin-top:8px; border-left:none; padding-left:0;">背单词测验</h2>
-      <p class="muted">选择题 4 选 1，拼写题严格匹配。测完结果会注入 Bot 上下文，由它自然提起。</p>
-      <div class="row" style="justify-content:center; gap:10px; margin-top:14px;">
+      <h2 style="margin-top:8px; border-left:none; padding-left:0;">刷题测验</h2>
+      <p class="muted">按卡组出题：单词卡组有选择/拼写，题库卡组有判断/单选/多选。测完结果会注入 Bot 上下文，由它自然提起。</p>
+      <div class="row" style="justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap;">
+        <select id="quiz-deck" style="min-width:150px;" onchange="quizDeckChanged()">${deckOptions || '<option value="">暂无卡组</option>'}</select>
         <select id="quiz-count" style="min-width:100px;">
           <option value="5">5 题</option>
           <option value="10" selected>10 题</option>
           <option value="20">20 题</option>
         </select>
-        <select id="quiz-qtype" style="min-width:120px;">
+        <select id="quiz-qtype" style="min-width:130px;">
           <option value="mixed" selected>混合（选择+拼写）</option>
           <option value="choice">只出选择题</option>
           <option value="spell">只出拼写题</option>
         </select>
         <select id="quiz-mode" style="min-width:120px;">
-          <option value="mixed" selected>复习+新词</option>
-          <option value="new">只考新词</option>
+          <option value="mixed" selected>复习+新内容</option>
+          <option value="new">只考新内容</option>
         </select>
       </div>
       <button class="btn" style="margin-top:14px;" onclick="quizStart()">开始测验</button>
-      <div class="muted" style="margin-top:10px; font-size:12px;">键盘党：选择题按 1-4 选答案，判定后按 Enter 下一题</div>
+      <div class="muted" style="margin-top:10px; font-size:12px;">键盘党：选择/判断按 1-4 选答案，多选按数字切换后按 Enter 提交，判定后按 Enter 下一题</div>
       <div style="margin-top:6px;"><button class="link" onclick="loadQuizHistory()">查看测验历史</button></div>
     </div>`;
+  syncQuizQtypeVisibility();
   staggerIn($("#quiz-panel"));
+}
+
+function quizDeckChanged() {
+  const el = $("#quiz-deck");
+  if (el) deckState.current = parseInt(el.value, 10) || null;
+  syncQuizQtypeVisibility();
+}
+
+function syncQuizQtypeVisibility() {
+  const deck = deckState.decks.find(d => d.id === deckState.current);
+  const qtypeSel = $("#quiz-qtype");
+  if (qtypeSel) qtypeSel.parentElement.style.display = (deck && deck.kind === "vocab") ? "" : "none";
 }
 
 async function loadQuizHistory() {
@@ -1811,9 +1938,11 @@ async function loadQuizHistory() {
 
 async function quizStart() {
   // 配置元素可能已被结果页替换，读不到就用上次的 quiz 状态
+  const deckEl = $("#quiz-deck");
   const countEl = $("#quiz-count");
   const qtypeEl = $("#quiz-qtype");
   const modeEl = $("#quiz-mode");
+  if (deckEl) deckState.current = parseInt(deckEl.value, 10) || null;
   if (countEl) quiz.count = parseInt(countEl.value, 10) || 10;
   if (qtypeEl) quiz.qmode = qtypeEl.value;
   if (modeEl) quiz.onlyNew = modeEl.value === "new";
@@ -1824,14 +1953,18 @@ async function quizStart() {
 async function quizNext() {
   const params = new URLSearchParams({ count: "1", mode: quiz.qmode });
   if (quiz.onlyNew) params.set("only_new", "true");
+  if (deckState.current != null) params.set("deck_id", deckState.current);
   quiz.busy = true;
   quizRenderLoading("出题中…");
   try {
     const data = await api("api/quiz/next?" + params);
     if (!data.word_id) { quizFinish(); return; }
     quiz.current = data;
-    if (data.question_type === "choice") quizRenderChoice();
-    else quizRenderSpell();
+    const qt = data.question_type;
+    if (qt === "choice") quizRenderChoice();
+    else if (qt === "spell") quizRenderSpell();
+    else if (qt === "multi") quizRenderMulti();
+    else quizRenderFixed();
   } catch (e) {
     $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`;
   }
@@ -1854,7 +1987,7 @@ function quizProgress() {
     <div class="quiz-progress"><div style="width:${pct}%"></div></div>
     <div class="muted" style="text-align:center; margin-bottom:8px;">
       第 ${done + 1} / ${quiz.total} 题 ·
-      ${c.is_new ? '<span class="pill green">✨ 新词</span>' : `<span class="pill">🔁 箱${c.box}</span>`}
+      ${c.is_new ? '<span class="pill green">✨ 新</span>' : `<span class="pill">🔁 箱${c.box}</span>`}
     </div>`;
 }
 
@@ -1891,6 +2024,79 @@ function quizRenderSpell() {
   $("#quiz-answer").focus();
 }
 
+function quizRenderFixed() {
+  const c = quiz.current;
+  const isJudge = c.question_type === "judge";
+  const optsHtml = c.options.map((opt, i) =>
+    `<button class="quiz-option" onclick="quizJudgeChoice(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">${isJudge ? "判断题" : "单选题"}</div>
+      <div class="q-word" style="font-size:clamp(16px,4vw,22px); line-height:1.6;">${esc(c.stem || c.word)}</div>
+    </div>
+    <div style="margin-top:12px; max-width:560px; margin-left:auto; margin-right:auto;">${optsHtml}</div>`;
+}
+
+function quizRenderMulti() {
+  const c = quiz.current;
+  quiz._multiSelected = new Set();
+  const optsHtml = c.options.map((opt, i) =>
+    `<button class="quiz-option" onclick="quizToggleMulti(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">多选题 · 可选多个答案</div>
+      <div class="q-word" style="font-size:clamp(16px,4vw,22px); line-height:1.6;">${esc(c.stem || c.word)}</div>
+    </div>
+    <div style="margin-top:12px; max-width:560px; margin-left:auto; margin-right:auto;">${optsHtml}</div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="btn" id="quiz-multi-submit" onclick="quizJudgeMulti()">提交答案</button>
+    </div>`;
+}
+
+function quizToggleMulti(i, el) {
+  if (quiz.busy) return;
+  const sel = quiz._multiSelected || (quiz._multiSelected = new Set());
+  if (sel.has(i)) { sel.delete(i); el.classList.remove("selected"); }
+  else { sel.add(i); el.classList.add("selected"); }
+}
+
+async function quizJudgeMulti() {
+  if (quiz.busy) return;
+  const sel = quiz._multiSelected;
+  if (!sel || !sel.size) { toast("请至少选择一个答案", true); return; }
+  quiz.busy = true;
+  const c = quiz.current;
+  const selected = [...sel].sort((a, b) => a - b);
+  const expected = (c.correct_indices || []).slice().sort((a, b) => a - b);
+  const correct = selected.length === expected.length && selected.every((v, i) => v === expected[i]);
+  quiz._lastSelectedMulti = selected;
+  document.querySelectorAll(".quiz-option").forEach((btn, i) => {
+    btn.disabled = true;
+    if (expected.includes(i)) btn.classList.add("correct");
+    else if (selected.includes(i)) btn.classList.add("wrong");
+    btn.classList.remove("selected");
+  });
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: "multi",
+        selected_indices: selected, correct_indices: expected,
+        word: c.stem || c.word, meaning: c.meaning, example: c.example, explanation: c.explanation || "",
+      }),
+    });
+    if (correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.stem || c.word, meaning: c.meaning }); }
+    await new Promise(r => setTimeout(r, correct ? 400 : 700));
+    quizRenderJudgeResult(data, c, correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); }
+  quiz.busy = false;
+}
+
 async function quizJudgeChoice(selectedIndex, el) {
   if (quiz.busy) return;
   quiz.busy = true;
@@ -1907,9 +2113,9 @@ async function quizJudgeChoice(selectedIndex, el) {
     const data = await api("api/quiz/judge", {
       method: "POST",
       body: JSON.stringify({
-        word_id: c.word_id, question_type: "choice",
+        word_id: c.word_id, question_type: c.question_type || "choice",
         selected_index: selectedIndex, correct_index: c.correct_index,
-        word: c.word, meaning: c.meaning, example: c.example,
+        word: c.stem || c.word, meaning: c.meaning, example: c.example, explanation: c.explanation || "",
       }),
     });
     if (correct) { quiz.correct++; }
@@ -1953,26 +2159,34 @@ async function quizJudgeSpell() {
 function quizRenderJudgeResult(data, c, correct, onContinue) {
   const done = quiz.correct + quiz.wrong;
   const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
-  // 选择题：选项列表带标色
+  const isMulti = c.question_type === "multi";
+  const isVocab = !c.question_type || c.question_type === "choice" || c.question_type === "spell";
+  const correctSet = isMulti ? (c.correct_indices || []) : (c.correct_index == null ? [] : [c.correct_index]);
+  const pickedSet = isMulti
+    ? (quiz._lastSelectedMulti || [])
+    : (quiz._lastSelected == null ? [] : [quiz._lastSelected]);
+  // 选项列表带标色回放（拼写题无选项）
   let optsHtml = "";
   if (c.options) {
     optsHtml = c.options.map((opt, i) => {
-      const isCorrect = i === c.correct_index;
-      const isPicked = i === quiz._lastSelected;
+      const isCorrect = correctSet.includes(i);
+      const isPicked = pickedSet.includes(i);
       const cls = isCorrect ? "correct" : (isPicked ? "wrong" : "");
       const mark = isCorrect ? "✓" : (isPicked ? "✗" : "");
       return `<div class="quiz-option ${cls}" style="cursor:default; margin-top:8px;"><span class="opt-key">${mark || i + 1}</span><span>${esc(opt || "（空）")}</span></div>`;
     }).join("");
   }
+  const explanation = data.explanation || c.explanation || "";
   $("#quiz-panel").innerHTML = `
     <div class="quiz-progress"><div style="width:${pct}%"></div></div>
     <div class="quiz-card">
       <div class="quiz-result-icon">${correct ? "✅" : "❌"}</div>
-      <div class="q-word" style="font-size:clamp(22px,5vw,32px); margin-top:8px;">${esc(c.word)}</div>
-      <div class="q-phonetic">${esc(c.phonetic || "")}</div>
-      <div class="q-meaning" style="margin-top:10px;">释义：${esc(c.meaning || "（暂无）")}</div>
+      <div class="q-word" style="margin-top:8px; font-size:${isVocab ? "clamp(22px,5vw,32px)" : "clamp(16px,4vw,22px)"}; ${isVocab ? "" : "line-height:1.6;"}">${esc(c.stem || c.word)}</div>
+      ${isVocab && c.phonetic ? `<div class="q-phonetic">${esc(c.phonetic)}</div>` : ""}
+      ${c.meaning ? `<div class="q-meaning" style="margin-top:10px;">${isVocab ? "释义" : "正确答案"}：${esc(c.meaning)}</div>` : ""}
       ${c.example ? `<div class="q-example" style="margin-top:4px;">例句：${esc(c.example)}</div>` : ""}
       ${optsHtml}
+      ${explanation ? `<div style="margin-top:10px; padding:10px 12px; background:var(--primary-tint); border-radius:10px; font-size:13.5px; line-height:1.6;">💡 ${esc(explanation)}</div>` : ""}
       <div class="muted" style="margin-top:10px;">${correct ? `答对！进入第 ${data.box} 箱，${data.due_in_days} 天后再复习` : `答错，回到第 1 箱明天再见`}</div>
     </div>
     <div style="text-align:center; margin-top:14px;">
@@ -2391,6 +2605,13 @@ document.addEventListener("keydown", (e) => {
       nextBtn.click();
       return;
     }
+  }
+  // 多选题：Enter 提交（数字键切换选中）
+  const multiBtn = document.getElementById("quiz-multi-submit");
+  if (multiBtn && !multiBtn.disabled && e.key === "Enter") {
+    e.preventDefault();
+    multiBtn.click();
+    return;
   }
   const tag = (e.target.tagName || "").toLowerCase();
   if (tag === "input" || tag === "textarea" || tag === "select") return;

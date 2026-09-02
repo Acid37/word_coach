@@ -26,10 +26,12 @@ from pydantic import BaseModel
 from src.app.plugin_system.api.log_api import get_logger
 from src.app.plugin_system.base import BaseRouter
 
+from .author import run_authoring_tick
 from .config import WordCoachConfig
 from .service import WordCoachService, resolve_stream_id
 from .sources import (
     parse_csv_tsv_text,
+    parse_deck_json_text,
     parse_word_json_text,
     parse_word_txt,
 )
@@ -90,6 +92,22 @@ class ImportFileBody(BaseModel):
 
     filename: str
     content: str
+
+
+class DeckBody(BaseModel):
+    """创建卡组请求体。"""
+
+    name: str
+    kind: str = "quiz"
+    description: str = ""
+
+
+class ImportDeckBody(BaseModel):
+    """题库卡组导入请求体（上传 JSON 文本）。"""
+
+    filename: str = "deck.json"
+    content: str
+    deck_name: str = ""
 
 
 class QuizSubmitBody(BaseModel):
@@ -154,6 +172,35 @@ def _levenshtein_match(answer: str, target: str, tolerance: int = 2) -> bool:
         if _levenshtein(answer, part) <= tolerance:
             return True
     return False
+
+
+def _judge_answer(qtype: str, body: dict[str, Any]) -> bool:
+    """按题型判定一次作答是否正确。
+
+    choice/judge/single 比较下标；multi 比较下标集合；spell 严格字符匹配
+    （忽略大小写与首尾空格）。body 字段缺失时一律判错。
+    """
+    if qtype == "spell":
+        answer = str(body.get("answer", "")).strip().lower()
+        word = str(body.get("word", "")).strip().lower()
+        return bool(answer) and answer == word
+    if qtype == "multi":
+        try:
+            selected = sorted({int(i) for i in body.get("selected_indices", [])})
+        except (TypeError, ValueError):
+            return False
+        try:
+            expected = sorted({int(i) for i in body.get("correct_indices", [])})
+        except (TypeError, ValueError):
+            return False
+        return bool(selected) and selected == expected
+    # choice / judge / single：比较 selected_index
+    try:
+        selected = int(body.get("selected_index", -1))
+        correct_index = int(body.get("correct_index", -2))
+    except (TypeError, ValueError):
+        return False
+    return selected == correct_index and selected >= 0
 
 
 class WordCoachWebRouter(BaseRouter):
@@ -456,10 +503,27 @@ class WordCoachWebRouter(BaseRouter):
 
         @app.post("/api/import/file")
         async def import_file(body: ImportFileBody) -> dict[str, Any]:
-            """导入前端上传的词表文本（按扩展名分发解析）。"""
+            """导入前端上传的文本（题库 JSON 自动按卡组导入，其余按词表解析）。"""
             suffix = Path(body.filename).suffix.lower()
             try:
                 if suffix == ".json":
+                    try:
+                        deck_data = parse_deck_json_text(body.content)
+                    except ValueError:
+                        deck_data = None
+                    if deck_data and deck_data.get("items"):
+                        deck_name = (
+                            body.deck_name.strip()
+                            or str(deck_data.get("deck") or "").strip()
+                            or "导入卡组"
+                        )
+                        added, existing, errors = await self._service().import_deck_items(
+                            deck_name,
+                            deck_data["items"],
+                            description=str(deck_data.get("description") or ""),
+                            source="upload",
+                        )
+                        return self._import_result_payload(added, existing, errors)
                     entries = parse_word_json_text(body.content)
                 elif suffix in (".csv", ".tsv"):
                     entries = parse_csv_tsv_text(body.content.lstrip("\ufeff"))
@@ -478,6 +542,117 @@ class WordCoachWebRouter(BaseRouter):
                 entries, source="upload"
             )
             return self._import_result_payload(added, existing, errors)
+
+        @app.post("/api/import/deck")
+        async def import_deck(body: ImportDeckBody) -> dict[str, Any]:
+            """导入题库卡组 JSON（自动建卡组，条目为判断/单选/多选题）。"""
+            suffix = Path(body.filename).suffix.lower()
+            if suffix and suffix != ".json":
+                raise HTTPException(
+                    status_code=400, detail=f"题库导入支持 .json（收到 {suffix}）"
+                )
+            try:
+                deck_data = parse_deck_json_text(body.content)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=f"解析失败：{exc}") from exc
+            deck_name = (
+                body.deck_name.strip()
+                or str(deck_data.get("deck") or "").strip()
+                or "导入卡组"
+            )
+            added, existing, errors = await self._service().import_deck_items(
+                deck_name,
+                deck_data["items"],
+                description=str(deck_data.get("description") or ""),
+                source="upload",
+            )
+            return self._import_result_payload(added, existing, errors)
+
+        # ---------------- 卡组管理 ----------------
+
+        @app.get("/api/decks")
+        async def list_decks() -> dict[str, Any]:
+            """全部卡组（含条目数与 Bot 攒题进度字段）。"""
+            return {"decks": await self._service().list_decks()}
+
+        @app.post("/api/decks")
+        async def create_deck(body: DeckBody) -> dict[str, Any]:
+            """创建卡组。"""
+            ok, deck_id, message = await self._service().create_deck(
+                body.name, kind=body.kind, description=body.description
+            )
+            if not ok:
+                raise HTTPException(status_code=409, detail=message)
+            return {"ok": True, "deck_id": deck_id, "message": message}
+
+        @app.delete("/api/decks/{deck_id}")
+        async def delete_deck(deck_id: int) -> dict[str, Any]:
+            """删除卡组（连带条目与进度；默认卡组不可删）。"""
+            ok, message = await self._service().delete_deck(deck_id)
+            if not ok:
+                raise HTTPException(status_code=409, detail=message)
+            return {"ok": True, "message": message}
+
+        @app.post("/api/decks/build")
+        async def start_deck_build(body: dict[str, Any]) -> dict[str, Any]:
+            """发起 Bot 攒题任务：建 origin='bot' 卡组并进入 building 状态。"""
+            topic = str(body.get("topic") or "").strip()
+            if not topic:
+                raise HTTPException(status_code=400, detail="需要 topic（攒题主题）")
+            target = max(int(body.get("target_count") or 50), 1)
+            service = self._service()
+            ok, deck_id, message = await service.create_deck(
+                topic, kind="quiz", origin="bot", description="Bot 自主攒题"
+            )
+            if not ok:
+                raise HTTPException(status_code=409, detail=message)
+            await service.update_deck_build(
+                deck_id, build_state="building", target_count=target, built_count=0
+            )
+            return {
+                "ok": True,
+                "deck_id": deck_id,
+                "message": f"Bot 已开工：「{topic}」目标 {target} 题，将在聊天空闲时分批攒出",
+            }
+
+        @app.post("/api/decks/{deck_id}/build")
+        async def control_deck_build(deck_id: int, body: dict[str, Any]) -> dict[str, Any]:
+            """暂停/继续 Bot 攒题（action: pause|resume）。"""
+            action = str(body.get("action") or "").strip()
+            if action not in ("pause", "resume"):
+                raise HTTPException(status_code=400, detail="action 只支持 pause/resume")
+            deck = await self._service().get_deck(deck_id)
+            if deck is None:
+                raise HTTPException(status_code=404, detail=f"卡组 id={deck_id} 不存在")
+            await self._service().update_deck_build(
+                deck_id, build_state="paused" if action == "pause" else "building"
+            )
+            word = "暂停" if action == "pause" else "继续"
+            return {"ok": True, "message": f"「{deck['name']}」已{word}攒题"}
+
+        @app.post("/api/decks/{deck_id}/tick")
+        async def tick_deck_build(deck_id: int) -> dict[str, Any]:
+            """立即为该卡组攒一批题（同步等待 LLM 生成，约十几秒）。"""
+            cfg = self._config()
+            if not (cfg and cfg.author.enabled):
+                raise HTTPException(status_code=403, detail="Bot 攒题未启用（[author].enabled）")
+            try:
+                summary = await run_authoring_tick(
+                    self._service(),
+                    model_name=cfg.author.model,
+                    batch_size=cfg.author.batch_size,
+                    deck_id=deck_id,
+                )
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"攒题失败：{exc}") from exc
+            if not summary.get("ok"):
+                raise HTTPException(status_code=409, detail=str(summary.get("message")))
+            message = (
+                f"「{summary['deck']}」新攒 {summary['added']} 题"
+                f"（{summary['built']}/{summary['target']}）"
+                + ("，已攒够！" if summary.get("done") else "")
+            )
+            return {"ok": True, "summary": summary, "message": message}
 
         # ---------------- 进度 ----------------
 
@@ -604,8 +779,13 @@ class WordCoachWebRouter(BaseRouter):
             tags: str = Query(default=""),
             only_new: bool = Query(default=False),
             mode: str = Query(default="mixed"),
+            deck_id: int | None = Query(default=None),
         ) -> dict[str, Any]:
-            """取下一道题：选择题（4选1）或拼写题。"""
+            """取下一道题：按条目题型分支。
+
+            vocab → 选择题（同卡组干扰项）或拼写题（mode 可指定）；
+            judge/single/multi → 使用条目自带 options 与 answer。
+            """
             import random
 
             cfg = self._config()
@@ -615,39 +795,58 @@ class WordCoachWebRouter(BaseRouter):
             new_limit = 1 if not only_new else 0
             words = await service.due_words(
                 stream_id, total_limit=1, new_limit=new_limit,
-                source=source, tags=tags, only_new=only_new,
+                source=source, tags=tags, only_new=only_new, deck_id=deck_id,
             )
             if not words:
                 return {"words": [], "total": 0}
             w = words[0]
+            item_qtype = w.get("qtype") or "vocab"
 
-            # 题型：mode=choice 只出选择题，mode=spell 只出拼写题，mixed 随机
+            result: dict[str, Any] = {
+                "question_type": item_qtype,
+                "word_id": w["id"],
+                "word": w["word"],
+                "stem": w["word"],
+                "meaning": w.get("meaning", ""),
+                "phonetic": w.get("phonetic", ""),
+                "example": w.get("example", ""),
+                "explanation": w.get("explanation", ""),
+                "options": w.get("options") or [],
+                "answer": w.get("answer") or [],
+                "is_new": w.get("is_new", False),
+                "box": w.get("box", 1),
+            }
+
+            # ---- 题库题型：判断/单选/多选，使用条目自带选项 ----
+            if item_qtype in ("judge", "single", "multi"):
+                if not result["options"] or not result["answer"]:
+                    # 缺选项/答案的坏数据：返回空让本题跳过，避免必错死循环
+                    logger.warning(f"word_coach 条目 id={w['id']} 缺选项/答案，跳过")
+                    return {"words": [], "total": 0}
+                if item_qtype == "multi":
+                    result["correct_indices"] = [int(i) for i in result["answer"]]
+                else:
+                    result["correct_index"] = int(result["answer"][0])
+                return result
+
+            # ---- vocab：选择题 or 拼写题 ----
+            meaning = w.get("meaning", "").strip()
             if mode == "spell":
                 qtype = "spell"
             elif mode == "choice":
                 qtype = "choice"
             else:
                 qtype = random.choice(["choice", "spell"])
-
-            result = {
-                "question_type": qtype,
-                "word_id": w["id"],
-                "word": w["word"],
-                "meaning": w.get("meaning", ""),
-                "phonetic": w.get("phonetic", ""),
-                "example": w.get("example", ""),
-                "is_new": w.get("is_new", False),
-                "box": w.get("box", 1),
-            }
-
-            meaning = w.get("meaning", "").strip()
+            result["question_type"] = qtype
             if qtype == "choice" and not meaning:
                 # 释义为空的选择题无从作答，降级为拼写题
                 qtype = "spell"
                 result["question_type"] = qtype
             if qtype == "choice":
                 # 干扰释义按内容去重（多取一些再筛，避免与正确释义撞车导致误判）
-                distractors = await service.random_words(exclude_id=w["id"], limit=12)
+                distractors = await service.random_words(
+                    exclude_id=w["id"], limit=12, deck_id=deck_id
+                )
                 seen = {meaning}
                 pool: list[str] = []
                 for d in distractors:
@@ -671,23 +870,13 @@ class WordCoachWebRouter(BaseRouter):
 
         @app.post("/api/quiz/judge")
         async def quiz_judge(body: dict[str, Any]) -> dict[str, Any]:
-            """判定用户作答（选择题按 index，拼写题严格字符匹配），推进进度。"""
+            """判定用户作答并推进进度（按题型分支，见 _judge_answer）。"""
             service = self._service()
             stream_id, platform, user_id = self._owner_binding()
 
             word_id = int(body.get("word_id", 0))
             qtype = body.get("question_type", "choice")
-
-            if qtype == "spell":
-                # 拼写题：严格字符匹配（忽略大小写和首尾空格）
-                answer = str(body.get("answer", "")).strip().lower()
-                word = str(body.get("word", "")).strip().lower()
-                correct = bool(answer) and answer == word
-            else:
-                # 选择题：比较 selected_index
-                selected = int(body.get("selected_index", -1))
-                correct_index = int(body.get("correct_index", -2))
-                correct = selected == correct_index and selected >= 0
+            correct = _judge_answer(qtype, body)
 
             result = await service.submit_result(
                 stream_id, word_id, correct, platform=platform, user_id=user_id
@@ -703,6 +892,7 @@ class WordCoachWebRouter(BaseRouter):
                 "word": body.get("word", ""),
                 "meaning": body.get("meaning", ""),
                 "example": body.get("example", ""),
+                "explanation": str(body.get("explanation", "")),
                 "box": result.get("box"),
                 "due_in_days": result.get("due_in_days"),
             }

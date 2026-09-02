@@ -167,7 +167,40 @@ class WordCoachConfig(BaseConfig):
             ),
         )
 
+    @config_section("author")
+    class AuthorSection(SectionBase):
+        """Bot 自主攒题配置（空闲时间为 Bot 笔记本卡组批量生成题目）。"""
+
+        enabled: bool = Field(
+            default=True,
+            description="是否启用 Bot 空闲攒题（Bot 笔记本）",
+        )
+
+        model: str = Field(
+            default="deepseek-v4-flash",
+            description=(
+                "攒题使用的模型名（config/model.toml 中 models 列表的 name）；"
+                "建议选廉价快速模型，攒题分批进行成本很低"
+            ),
+        )
+
+        idle_threshold_minutes: int = Field(
+            default=30,
+            description="最近一条消息距今超过该分钟数才视为空闲并开始攒题",
+        )
+
+        interval_minutes: int = Field(
+            default=10,
+            description="攒题检查间隔（分钟）；到点且空闲时攒一批",
+        )
+
+        batch_size: int = Field(
+            default=10,
+            description="每批生成的题目数量",
+        )
+
     plugin: PluginSection = Field(default_factory=PluginSection)
     scope: ScopeSection = Field(default_factory=ScopeSection)
     web: WebSection = Field(default_factory=WebSection)
     source: SourceSection = Field(default_factory=SourceSection)
+    author: AuthorSection = Field(default_factory=AuthorSection)
