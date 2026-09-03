@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- TOKEN -->
 <title>word_coach · 背单词助手</title>
 <style>
   /* Quicksand (OFL) - 圆体展示字体，仅拉丁/数字，中文回退系统字体 */
@@ -1099,9 +1100,13 @@ function toast(msg, isErr = false) {
   toastTimer = setTimeout(() => { el.className = ""; }, 2600);
 }
 
+const TOKEN = (document.querySelector('meta[name="api-token"]') || {}).getAttribute?.('content') || '';
+
 async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (TOKEN) headers["Authorization"] = "Bearer " + TOKEN;
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...opts,
   });
   let body = null;

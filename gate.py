@@ -1,14 +1,7 @@
 """word_coach 工具可见性门控。
 
-历史机制：监听 BEFORE_TOOL_FILTER 事件，每轮 LLM 调用前按 stream_id
+监听 BEFORE_TOOL_FILTER 事件，每轮 LLM 调用前按 stream_id
 把 word_coach 工具从非白名单聊天流中剔除。
-
-rc.2 适配说明：rc.2 移除了 BEFORE_TOOL_FILTER 事件，工具可见性改由
-chatter 的 modify_llm_usables 钩子 + chatter_allow 白名单控制。
-本处理器保留为字符串订阅（init_subscribe 支持 EventType | str），
-在 rc.2 上不再被触发（no-op），但保持模块可加载、配置项可读、
-不阻断插件其余组件（Web UI / 测验 / 命令 / 推送）。
-如需在 rc.2 上恢复工具门控，应迁移到 chatter.modify_llm_usables。
 
 配置项（config/plugins/word_coach/config.toml [scope]）：
 - allowed_targets: ["platform:user:ID" | "platform:group:ID", ...] —— 白名单流
@@ -28,10 +21,6 @@ from src.core.models.stream import ChatStream
 from .config import WordCoachConfig
 
 _PLUGIN_NAME = "word_coach"
-
-# rc.2 不再有 EventType.BEFORE_TOOL_FILTER 枚举成员，改用字符串订阅
-# （init_subscribe 类型为 list[EventType | str]，字符串合法）
-_BEFORE_TOOL_FILTER = "before_tool_filter"
 
 
 def _resolve_target_stream_id(target: str) -> tuple[str | None, bool]:
@@ -77,7 +66,7 @@ class WordStreamGate(BaseEventHandler):
     handler_description = "按聊天流白名单过滤 word_coach 工具（默认 fail-closed）"
     weight = 0
     intercept_message = False
-    init_subscribe = [_BEFORE_TOOL_FILTER]
+    init_subscribe = [EventType.BEFORE_TOOL_FILTER]
 
     async def execute(
         self,

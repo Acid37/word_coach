@@ -19,8 +19,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from fastapi import HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from src.app.plugin_system.api.log_api import get_logger
@@ -232,6 +232,11 @@ class WordCoachWebRouter(BaseRouter):
         cfg = getattr(self.plugin, "config", None)
         return cfg if isinstance(cfg, WordCoachConfig) else None
 
+    def _api_token(self) -> str:
+        """取 Web UI 鉴权令牌（配置 [web].token，空字符串=不鉴权）。"""
+        cfg = self._config()
+        return cfg.web.token.strip() if cfg and cfg.web.token.strip() else ""
+
     def _owner_binding(self) -> tuple[str, str, str]:
         """解析网页测验绑定的主人聊天流。
 
@@ -317,11 +322,37 @@ class WordCoachWebRouter(BaseRouter):
     def register_endpoints(self) -> None:
         """注册 Web UI 页面与全部数据端点。"""
         app = self.app
+        token = self._api_token()
+
+        # ---- 鉴权中间件：配置了 token 时所有 /api/* 请求需携带 Bearer token ----
+        if token:
+            @app.middleware("http")
+            async def _auth_middleware(request: Request, call_next):
+                if request.url.path.startswith("/api/"):
+                    auth = request.headers.get("Authorization", "")
+                    if auth != f"Bearer {token}":
+                        return JSONResponse(
+                            status_code=401,
+                            content={
+                                "detail": (
+                                    "未授权。请在 word_coach 配置 [web].token 中设置鉴权令牌，"
+                                    "并刷新页面重试。"
+                                ),
+                            },
+                        )
+                return await call_next(request)
 
         @app.get("/", response_class=HTMLResponse)
         async def index() -> HTMLResponse:
             """Web UI 单页前端。"""
-            return HTMLResponse(self._load_html())
+            html = self._load_html()
+            if token:
+                html = html.replace(
+                    "<!-- TOKEN -->",
+                    f'<meta name="api-token" content="{token}">',
+                    1,
+                )
+            return HTMLResponse(html)
 
         @app.get("/bg.jpg")
         async def builtin_bg():

@@ -85,6 +85,16 @@ class WordCoachConfig(BaseConfig):
     class WebSection(SectionBase):
         """内置 Web UI 配置。"""
 
+        token: str = Field(
+            default="",
+            description=(
+                "Web UI 鉴权令牌（留空=不鉴权）。设置后访问所有 API 端点"
+                "需在请求头携带 Authorization: Bearer <token>；"
+                "前端页面自动从注入的 meta 标签读取并附带。"
+                "建议启用局域网直连时设置此值，避免内网设备未授权访问。"
+            ),
+        )
+
         owner_target: str = Field(
             default="",
             description=(

@@ -70,7 +70,7 @@ class WordCoachPlugin(BasePlugin):
 
     plugin_name = "word_coach"
     plugin_description = "多卡组学习平台：背单词 + 任意题库卡组 + Leitner 复习 + 每日推送 + Bot 空闲自主攒题"
-    plugin_version = "0.10.0"
+    plugin_version = "0.10.1"
 
     configs: list[type] = [WordCoachConfig]
     dependent_components: list[str] = []

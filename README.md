@@ -1,26 +1,36 @@
 # word_coach 背单词助手
 
-Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每日定时推送、LLM 对话式测验与自然语言词库管理。
+Neo-MoFox 插件的多卡组背单词助手：词库导入、Leitner 间隔复习、每日定时推送、LLM 对话式测验与自然语言词库管理、
+**Bot 空闲自主攒题**、**内置全功能 Web UI**。
 
-- 词库来源：内置起步词表 / 文件导入（JSON/CSV/TSV/TXT）/ 远程 URL 下载 / 启动自动导入
+- 词库来源：内置起步词表 / 文件导入（JSON/CSV/TSV/TXT）/ 远程 URL 下载 / 启动自动导入 / 预置词库一键导入
 - 复习算法：Leitner 五箱间隔复习（1/2/4/7/15 天递进）
-- 交互方式：自然语言为主（LLM 工具），命令为辅（主人状态查询）
+- 交互方式：自然语言为主（LLM 工具），Web UI 为辅（手动管理），命令辅助（主人状态查询）
 - 进度模型：按聊天流（session）独立维护，互不干扰
+- **Bot 攒题**：支持配置 LLM 在聊天空闲时自动生成题目，按卡组维度积累题库
+- **Web UI**：零构建单页前端，挂载于框架 HTTP 服务器，手机/平板局域网直连
 
 > 规划中的进阶方向（句子本 / 每日句子推送 / 例句联想 / 短语支持 / 发音编排）见文末「路线图」。
+
+## 作者与致谢
+
+- **作者**：[Acid37](https://github.com/Acid37)
+- **特别感谢**：[中生 (XIEYUANSHEN)](https://github.com/XIEYUANSHEN) 贡献了 v0.9.0 Web UI 全功能前端与路由、v0.10.0 Bot 攒题引擎
 
 ## 组件清单
 
 | 组件 | 类型 | 说明 |
 |---|---|---|
-| `word_coach` | service | 词书 CRUD、Leitner 调度、进度统计、文件/URL 导入入库 |
-| `word_quiz` | tool | 对话式测验：取题（next）/ 提交判定（submit）/ 待复习数（due_count） |
+| `word_coach` | service | 词书 CRUD、卡组管理、Leitner 调度、进度统计、文件/URL/词源导入入库 |
+| `word_quiz` | tool | 对话式测验：取题（next）/ 提交判定（submit）/ 关闭待判定（cancel）/ 待复习数（due_count） |
 | `word_lookup` | tool | 查词：释义 / 音标 / 例句 |
-| `word_import` | tool | 词库管理：状态（status）/ 下载导入（download）/ 扫描目录（sync） |
+| `word_import` | tool | 词库管理：状态（status）/ 下载导入（download / url / preset）/ 扫描目录（sync） |
+| `deck_build` | action | Bot 空闲攒题——调用 LLM 按卡组维度自动生成题目，严格 JSON Schema 校验 + 题干去重 |
+| `word_activity_tracker` | event_handler | 追踪聊天活动时间，为攒题引擎判断聊天空闲提供依据 |
 | `背单词` | command | 主人查询命令（进度总览 / 单流详情 / 词库总览） |
 | `word_stream_gate` | event_handler | 工具可见性门控（BEFORE_TOOL_FILTER，按聊天流白名单动态注入/剔除） |
-| `word_pending_reminder` | event_handler | 待判定题提醒（ON_MESSAGE_RECEIVED 注入 system-reminder） |
-| `word_coach_web` | router | 内置 Web UI（仪表盘/词书/导入/测验/进度），挂载于框架 HTTP 服务器 |
+| `word_pending_reminder` | event_handler | 待判定题提醒（ON_MESSAGE_RECEIVED 注入 actor system-reminder） |
+| `word_coach_web` | router | 内置 Web UI（仪表盘/卡组/导入/测验/进度），挂载于框架 HTTP 服务器 |
 | `config` | config | 配置组件，映射到 `config/plugins/word_coach/config.toml` |
 
 ## 安装与启用
@@ -57,17 +67,35 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 |---|---|---|
 | `auto_import_urls` | `[]` | 词书为空时启动自动下载的词库 URL 列表（按顺序尝试，成功即停） |
 | `auto_import_if_empty` | `true` | 是否启用上述自动导入（URL 列表为空时不触发网络请求） |
-| `preset_urls` | `{}` | 预置词库（名字 → 直链），供 `word_import` 的 `preset` 参数使用 |
+| `preset_urls` | `{}` | 预置词库（名字 → 直链），供 `word_import` 的 `preset` 参数或 Web UI 使用 |
 
-### [web]（0.9.0 新增）
+### [web]
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
+| `token` | `""` | Web UI 鉴权令牌（留空=不鉴权）；设置后 API 端点需 `Authorization: Bearer <token>` |
 | `owner_target` | `""` | 网页测验/进度绑定的主人聊天流，格式 `platform:user:ID`；留空回退 `[scope].allowed_targets` 第一项 |
 | `quiz_count` | `10` | 网页测验每次会话取词总数（到期复习优先） |
 | `quiz_new` | `3` | 网页测验每次会话的新词数量上限 |
+| `theme` | `"light"` | Web UI 明暗主题（light / dark） |
+| `primary_color` | `"#5b6cff"` | Web UI 主题色（十六进制） |
+| `bg_url` | `""` | Web UI 背景图 URL（留空=纯色背景） |
+| `bg_opacity` | `0.85` | 背景图透明度（0-1） |
+| `lan_enabled` | `false` | 是否启用局域网直连（手机/平板同局域网访问） |
+| `lan_port` | `9280` | 局域网直连端口（1024-65535；插件自己监听，不动核心绑定） |
 
-## Web UI（0.9.0 新增）
+### [author]（v0.10.0 新增）
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `enabled` | `false` | Bot 空闲攒题总开关 |
+| `model` | `""` | 攒题专用 LLM 模型名（留空回退框架默认模型） |
+| `interval_minutes` | `10` | 攒题周期检查间隔（分钟） |
+| `idle_threshold_minutes` | `5` | 聊天空闲判断阈值（分钟，无对话超过此值视为空闲） |
+| `batch_size` | `5` | 每次攒题最大生成题数 |
+| `max_words` | `500` | 单卡组最大词数上限（防止无限膨胀） |
+
+## 内置 Web UI
 
 插件内置全功能网页界面，**无需任何额外安装**：通过框架统一的内嵌 HTTP 服务器
 （FastAPI + uvicorn）挂载，不自己监听端口；前端为随插件分发的单文件 `web/index.html`
@@ -75,18 +103,22 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 
 ### 访问地址
 
-- 地址 = 框架核心配置 `[http_router]` 的 `host:port` + `/word-coach/`（默认 `http://127.0.0.1:8000/word-coach/`）。
-- 插件启动时自动读取框架 HTTP 服务器单例打印实际地址（**不假设 8000**）——多个 Bot 实例各自改了端口也互不冲突。
-- 前置条件：核心配置 `[http_router].enable_http_router = true`（默认开启）。
-- 仅建议本机访问（默认绑定 127.0.0.1），未做鉴权。
+- **本机访问**：`http://127.0.0.1:8000/word-coach/`（端口随框架 `[http_router]` 配置，插件启动时自动打印实际地址）
+- **局域网直连**：配置 `[web].lan_enabled = true`，手机/平板在同局域网输 `http://电脑IP:9280` 即可使用（端口 `lan_port` 可自定义）
+- 前置条件：核心配置 `[http_router].enable_http_router = true`（默认开启）
+
+### 鉴权
+
+配置 `[web].token` 后，所有 API 端点需携带 `Authorization: Bearer <token>` 请求头；
+前端页面自动从注入的 meta 标签读取并附带令牌。建议启用局域网直连时设置此值。
 
 ### 功能
 
 | 页面 | 能力 |
 |---|---|
 | 仪表盘 | 词书规模、来源分布、各聊天流进度条形图、绑定流的正确率圆环与今日待复习 |
-| 词书 | 搜索分页 + 添加/编辑/删除单词（补齐自然语言外的手动管理入口） |
-| 导入词库 | ① 粘贴 URL 一键下载 ② 预置词库下拉一键导入 ③ 上传本地词表文件 ④ 内置获取指引（格式示例、GitHub raw 直链获取、`preset_urls` 配置方法） |
+| 词书 | 搜索分页 + 添加/编辑/删除单词 |
+| 导入词库 | ① 粘贴 URL 一键下载 ② 预置词库下拉一键导入 ③ 上传本地词表文件 ④ 内置获取指引 |
 | 测验 | 卡片式背单词（先回忆→看答案→认识/不认识），进度计入绑定的主人聊天流 |
 | 进度 | 各流总览 + 单流详情（箱分布、待复习词单） |
 
@@ -97,28 +129,45 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 - 进度、箱子、到期时间与 QQ 私聊**完全共用同一份数据**——网页上答对的词，QQ 里也不会重复考。
 - 网页测验不使用 pending 待判定机制（会话由前端跟踪）；但提交判定时若 QQ 侧恰有同一词的待判定题会顺手清除，避免互相卡住。
 
+## Bot 空闲攒题（v0.10.0）
+
+配置 `[author].enabled = true` 启用 Bot 空闲攒题引擎。插件在后台周期检查聊天空闲状态
+（`idle_threshold_minutes` 内无对话即视为空闲），空闲时调用 LLM 自动生成题目并存入卡组。
+
+- 攒题按 `[author].interval_minutes` 间隔循环检查（一次性调度 + 每次触发后重排，对齐墙钟时间）
+- 每次生成 `batch_size` 题，严格 JSON Schema 校验 + 题干去重
+- 生成进度写入 `decks` 表的 `build_state` / `built_count` / `target_count` 字段，Web UI 仪表盘实时显示
+- 攒题完成时触发提醒，通知主人卡组已就绪
+- 单卡组词数上限 `max_words`，防止无限膨胀
+
 ## 词库获取
 
 ### 1. 内置起步词表
 
 首次启动词书为空时自动播种 30 个常用词（`sources/__init__.py` 内 `STARTER_WORDS`）。
 
-### 2. 文件导入
+### 2. 内置预置词库
+
+插件内置 CET-4 / CET-6 词库 JSON 文件（`sources/cet4.json`、`sources/cet6.json`），
+Web UI 一键导入或通过 `word_import` 的 `preset` 参数使用。
+
+### 3. 文件导入
 
 词表文件放入 `data/word_coach/imports/`，对 Bot 说"同步词表"（LLM 调用 `word_import` 的 `sync` 动作）。支持四种格式：
 
 - **JSON 数组**：`[{"word": "...", "phonetic": "...", "meaning": "...", "example": "..."}]`
 - **JSON 字典**：`{"apple": "n. 苹果"}`
 - **CSV/TSV**：带表头（`word/单词`、`meaning/释义`、`phonetic/音标`、`example/例句`、`tags/标签`，中英列名均可）或无表头（位置列同上顺序）
-- **纯文本**：每行一个词，可带释义（Tab 或空格分隔），`#` 开头为注释
+- **纯文本**：每行一个词，可带释义（Tab 或空格分隔），`#` 开头为注释；兼容主流开源词库字段别名（name/trans/usphone 等）
 
 编码要求 UTF-8（兼容 Excel 导出的 UTF-8 BOM）。
 
-### 3. 远程 URL 下载
+### 4. 远程 URL 下载
 
-对 Bot 说"下载词库 <直链>"，或直接调用 `word_import` 的 `download` 动作（传 `url` 或 `preset`）。支持 `.json/.csv/.tsv/.txt`，未知后缀自动嗅探内容（JSON → CSV/TSV → 纯文本行）。
+对 Bot 说"下载词库 <直链>"，或直接调用 `word_import` 的 `download` 动作（传 `url` 或 `preset`）。
+支持 `.json/.csv/.tsv/.txt`，未知后缀自动嗅探内容（JSON → CSV/TSV → 纯文本行）。
 
-### 4. 启动自动导入
+### 5. 启动自动导入
 
 词书为空且配置了 `[source].auto_import_urls` 时，启动后后台自动下载导入（不阻塞启动，失败仅记日志，成功即停）。
 
@@ -135,7 +184,10 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 | `cancel` | — | 关闭待判定题（作废场景，不记进度） |
 | `due_count` | — | 查询当前待复习词数 |
 
-**进度防漏记机制**：出题后题目进入服务端 pending 状态；`word_pending_reminder` 事件处理器监听 `ON_MESSAGE_RECEIVED`——只要存在未提交判定的题且用户发来新消息，就往 actor system-reminder 注入"必须提交判定"的提醒；提交/取消后自动清除。未处理待判定题前，`next` 取新题会被挡住，从机制上杜绝"LLM 忘记更新进度"。
+**进度防漏记机制**：出题后题目进入服务端 pending 状态；`word_pending_reminder` 事件处理器监听
+`ON_MESSAGE_RECEIVED`——只要存在未提交判定的题且用户发来新消息，就往 actor system-reminder
+注入"必须提交判定"的提醒；提交/取消后自动清除。未处理待判定题前，`next` 取新题会被挡住，
+从机制上杜绝"LLM 忘记更新进度"。
 
 ### word_lookup — 查词
 
@@ -166,7 +218,9 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 
 ## 可见性与权限
 
-- **工具门控**：`word_stream_gate` 监听框架 `BEFORE_TOOL_FILTER` 事件，每轮 LLM 调用前按 `stream_id` 动态剔除/保留 word 工具。未命中白名单的流默认不可见（fail-closed）；`tools_in_groups=false` 时群聊即使白名单也不注入工具（仅私聊）。
+- **工具门控**：`word_stream_gate` 监听框架 `BEFORE_TOOL_FILTER` 事件，每轮 LLM 调用前按
+  `stream_id` 动态剔除/保留 word 工具。未命中白名单的流默认不可见（fail-closed）；
+  `tools_in_groups=false` 时群聊即使白名单也不注入工具（仅私聊）。
 - **命令权限**：`/背单词` 为 `OWNER` 级，走框架标准命令权限门。
 - **命令与推送不受工具门控影响**：门控只作用于 LLM 工具可见性。
 
@@ -182,15 +236,19 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 - 数据库：`data/word_coach/words.db`（SQLite，`data/` 不入库）。
 - 表：
   - `words`：词条（word、phonetic、meaning、example、source、tags）。
+  - `decks`：卡组（name、kind、origin、description、build_state、built_count、target_count）。
   - `progress`：学习进度（user_key、word_id、platform、user_id、box、due_at、计数）。
-- **进度按聊天流隔离**：`user_key = stream_id`。私聊天然按人（一人一流）；群聊为群级进度（全群共享一个 key，不区分成员）。各流互不影响。
-- **进度可读化**：progress 记录 `platform/user_id`（工具提交时从触发消息提取），主人查询时显示 `qq:2583090218` 而非哈希；老库自动迁移补列，历史行回退显示 user_key。
+- **进度按聊天流隔离**：`user_key = stream_id`。私聊天然按人（一人一流）；群聊为群级进度
+  （全群共享一个 key，不区分成员）。各流互不影响。
+- **进度可读化**：progress 记录 `platform/user_id`（工具提交时从触发消息提取），主人查询时
+  显示 `qq:2583090218` 而非哈希；老库自动迁移补列，历史行回退显示 user_key。
 
 ## 扩展开发
 
 ### 新增词源适配器
 
-词源统一归一化为 `[{word, phonetic, meaning, example, tags}, ...]` 后调用 `service.import_entries()` 入库。新增来源只需：
+词源统一归一化为 `[{word, phonetic, meaning, example, tags}, ...]` 后调用 `service.import_entries()`
+入库。新增来源只需：
 
 1. 在 `sources/` 下实现抓取/解析函数（参考 `sources/__init__.py` 的 `fetch_and_parse_url`）。
 2. 复用 `service.import_url()` / `service.import_entries()` 公共入库入口（自动去重计数）。
@@ -198,15 +256,16 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 ### 代码质量
 
 - 代码风格：`ruff check` / `ruff format` 全绿。
-- 回归测试：各版本迭代均含数据层回归（解析、入库、Leitner、进度隔离、门控、命令权限）。
+- 回归测试：各版本迭代均含数据层回归（解析、入库、Leitner、进度隔离、门控、命令权限、词源解析）。
 
-## 路线图（规划中，方向指导）
+## 路线图
 
-以下为已确认的方向，尚未实现；按顺序推进，每项落地前会更新本 README 与版本号。
+以下为已确认的方向，尚未实现：
 
 ### 1. 常用语 / 短语支持（轻量）
 
-- 词表结构不限制词条为单个单词：`add_word("give up", "放弃")`、导入短语表（phrasal verbs / 惯用语 TSV）即可直接进入现有 `word_quiz` 测验与每日推送流程。
+- 词表结构不限制词条为单个单词：`add_word("give up", "放弃")`、导入短语表即可直接进入现有
+  `word_quiz` 测验与每日推送流程。
 - 需补充：常用短语/惯用语词库内容；可选按 `tags` 过滤出题（如 phrasal / idiom / slang）。
 
 ### 2. 句子本模块（进阶）
@@ -214,13 +273,14 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 新增 `sentences(sentence, translation, source, tags)` 数据模型，扩展以下能力：
 
 - **每日句子推送**：与每日单词推送并行，按计划推送句子 + 翻译。
-- **例句联想**：`word_lookup` / `word_quiz` 查词或出题时，带出词库中含该词的句子（例句与词条双向关联）。
+- **例句联想**：`word_lookup` / `word_quiz` 查词或出题时，带出词库中含该词的句子。
 - **句子测验**：挖空、翻译回填等题型（复用 `word_quiz` 的对话式交互）。
 - **句子收藏**：聊天中说"收藏这句"，由 LLM 调工具存句。
 
 ### 3. 发音 / 听力（可选编排）
 
-- 本插件不实现 TTS。若部署环境存在可用的朗读能力（平台语音消息、其他 TTS 插件等），可编排 LLM 在背单词/句子推送时触发朗读；实现方式由部署方自行接入，本插件仅预留编排点。
+- 本插件不实现 TTS。若部署环境存在可用的朗读能力（平台语音消息、其他 TTS 插件等），
+  可编排 LLM 在背单词/句子推送时触发朗读；实现方式由部署方自行接入，本插件仅预留编排点。
 
 ### 4. 其他待评估
 
@@ -228,8 +288,16 @@ Neo-MoFox 插件的背单词助手：词库导入、Leitner 间隔复习、每�
 
 ## 版本历史
 
-- **0.9.0**：内置 Web UI（仪表盘/词书增删改查/一键导入词库/进度看板/网页测验，绑定主人聊天流）；`_normalize_entry` 支持主流开源词库字段别名（name/trans/usphone 等）；`manifest.json` 补声明 httpx 依赖；修复 `word_lookup` 引导到已移除添加命令的过期文案。
-- **0.8.0**：测验防漏记——服务端 pending 待判定题 + ON_MESSAGE_RECEIVED 自动提醒，`next` 挡住未闭环题目；新增 `cancel`；进度记录 platform/user_id 可读化，老库自动迁移。
+- **0.10.1**：Web UI 鉴权（`[web].token` 配置 + Bearer token 校验）；修复 gate.py 误导性注释，
+  改用 `EventType.BEFORE_TOOL_FILTER` 枚举。感谢 [中生 (XIEYUANSHEN)](https://github.com/XIEYUANSHEN) 贡献。
+- **0.10.0**：Bot 空闲攒题引擎（`[author]` 配置节 + `DeckBuildAction` / `WordActivityTracker`）；
+  卡组系统（`decks` 表 + 卡组 CRUD + 攒题进度跟踪）；内置 CET-4/CET-6 词库；Web UI 新增
+  主题/配色/背景图自定义、局域网直连（`lan_server.py`）；`plugin_description` 更新。
+- **0.9.0**：内置全功能 Web UI（仪表盘/词书增删改查/一键导入词库/进度看板/网页测验，
+  绑定主人聊天流）；`_normalize_entry` 支持主流开源词库字段别名（name/trans/usphone 等）；
+  `manifest.json` 补声明 httpx 依赖；修复 `word_lookup` 引导到已移除添加命令的过期文案。
+- **0.8.0**：测验防漏记——服务端 pending 待判定题 + ON_MESSAGE_RECEIVED 自动提醒，
+  `next` 挡住未闭环题目；新增 `cancel`；进度记录 platform/user_id 可读化，老库自动迁移。
 - **0.7.2**：新增 `[scope].tools_in_groups` 开关（默认群聊不注入工具）。
 - **0.7.1**：查询命令简化为「平台 + ID」输入。
 - **0.7.0**：命令收敛为 owner 查询（进度总览/单流详情/词库总览）。
