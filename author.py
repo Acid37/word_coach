@@ -167,7 +167,12 @@ async def run_authoring_tick(
         {ok, deck, deck_id, generated, added, skipped, built, target, done, errors/message}
     """
     decks = await service.list_decks()
-    targets = [d for d in decks if d.get("build_state") == "building"]
+    # 只对 Bot 自己的卡组攒题：防止正式卡组被误标 building 后混入生成的题
+    targets = [
+        d
+        for d in decks
+        if d.get("build_state") == "building" and d.get("origin") == "bot"
+    ]
     if deck_id is not None:
         targets = [d for d in targets if int(d["id"]) == deck_id]
     if not targets:
@@ -251,6 +256,8 @@ class DeckBuildAction(BaseAction):
         "（如『我想刷驾考科目一』『帮我攒个唐诗题库』），用 action=start 发起；"
         "Bot 会在空闲时间自动分批攒出整个题库，攒好的题在网页 Bot 笔记本里练习。"
     )
+    # rc.2 契约：Action 必须声明非空 associated_types
+    associated_types = ["text"]
 
     async def execute(
         self,
@@ -275,6 +282,12 @@ class DeckBuildAction(BaseAction):
             )
             if not ok:
                 return False, message
+            deck = await service.get_deck(deck_id)
+            if deck is not None and deck.get("origin") != "bot":
+                return False, (
+                    f"「{topic_clean}」已经是导入的正式卡组了，"
+                    "换个主题名让我攒一份新的吧"
+                )
             await service.update_deck_build(
                 deck_id, build_state="building", target_count=max(target_count, 1), built_count=0
             )
