@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>word_coach · 背单词助手</title>
+<style>
+  /* Quicksand (OFL) - 圆体展示字体，仅拉丁/数字，中文回退系统字体 */
+  @font-face{font-family:'Quicksand';font-style:normal;font-weight:700;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');}
+  :root {
+    --bg: #fff0f6;
+    --card: rgba(255, 255, 255, var(--card-alpha));
+    --card-rgb: 255, 255, 255;
+    --card-alpha: .62;
+    --text: #4a3a52;
+    --muted: #b48aa8;
+    --primary: #ff7eb3;
+    --primary-rgb: 255, 126, 179;
+    --primary-2: #b28dff;
+    --primary-dark: #f05a96;
+    --primary-tint: rgba(var(--primary-rgb), .12);
+    --grad: linear-gradient(135deg, var(--primary), var(--primary-2));
+    --green: #2ec4a6;
+    --green-tint: rgba(46, 196, 166, .14);
+    --red: #ff6b81;
+    --red-tint: rgba(255, 107, 129, .13);
+    --amber: #e8a93c;
+    --gold: #f5cf6b;
+    --border: rgba(255, 255, 255, .78);
+    --border-soft: rgba(120, 60, 100, .10);
+    --radius: 18px;
+    --shadow: 0 8px 32px rgba(255, 150, 200, .18);
+    --glow: 0 6px 24px rgba(var(--primary-rgb), .4);
+    --input-bg: rgba(255, 255, 255, .6);
+    --hover-bg: rgba(255, 255, 255, .52);
+    --stripe-bg: rgba(255, 214, 235, .26);
+    --track-bg: rgba(120, 60, 100, .09);
+    --code-bg: #3d2b3e;
+    --guide-bg: rgba(255, 255, 255, .42);
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1424;
+    --card: rgba(58, 42, 70, var(--card-alpha));
+    --card-rgb: 58, 42, 70;
+    --card-alpha: .55;
+    --text: #f5e8f0;
+    --muted: #b595c0;
+    --primary: #ff9ecb;
+    --primary-rgb: 255, 158, 203;
+    --primary-2: #c39bff;
+    --primary-dark: #f57fb4;
+    --primary-tint: rgba(var(--primary-rgb), .16);
+    --green: #4ad6b0;
+    --green-tint: rgba(74, 214, 176, .14);
+    --red: #ff7a8e;
+    --red-tint: rgba(255, 122, 142, .15);
+    --amber: #ffd166;
+    --gold: #ffd98e;
+    --border: rgba(255, 190, 225, .15);
+    --border-soft: rgba(255, 190, 225, .08);
+    --shadow: 0 8px 32px rgba(0, 0, 0, .45);
+    --glow: 0 6px 28px rgba(var(--primary-rgb), .35);
+    --input-bg: rgba(30, 20, 40, .5);
+    --hover-bg: rgba(255, 190, 225, .07);
+    --stripe-bg: rgba(255, 190, 225, .045);
+    --track-bg: rgba(255, 190, 225, .12);
+    --code-bg: #150e1d;
+    --guide-bg: rgba(255, 190, 225, .05);
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: rgba(var(--primary-rgb), .35); }
+  body::-webkit-scrollbar { width: 10px; }
+  body::-webkit-scrollbar-track { background: transparent; }
+  body::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), .35); border-radius: 99px; }
+  body {
+    margin: 0; color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15px;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(2.2px 2.2px at 12% 22%, rgba(255, 255, 255, .95), transparent 60%),
+      radial-gradient(1.6px 1.6px at 78% 13%, rgba(245, 207, 107, .95), transparent 60%),
+      radial-gradient(2px 2px at 88% 58%, rgba(255, 255, 255, .75), transparent 60%),
+      radial-gradient(1.6px 1.6px at 20% 76%, rgba(255, 182, 220, .95), transparent 60%),
+      radial-gradient(1.4px 1.4px at 55% 7%, rgba(255, 255, 255, .85), transparent 60%),
+      radial-gradient(1.6px 1.6px at 44% 90%, rgba(245, 207, 107, .8), transparent 60%),
+      radial-gradient(1.2px 1.2px at 68% 84%, rgba(255, 255, 255, .7), transparent 60%),
+      radial-gradient(920px 540px at 85% -10%, rgba(var(--primary-rgb), .26), transparent 62%),
+      radial-gradient(740px 540px at -8% 32%, rgba(178, 141, 255, .20), transparent 62%),
+      radial-gradient(660px 440px at 52% 112%, rgba(245, 207, 107, .16), transparent 62%);
+    background-attachment: fixed;
+    transition: color .3s;
+  }
+  :root[data-theme="dark"] body {
+    background-image:
+      radial-gradient(2.2px 2.2px at 12% 22%, rgba(255, 220, 240, .8), transparent 60%),
+      radial-gradient(1.6px 1.6px at 78% 13%, rgba(255, 217, 142, .85), transparent 60%),
+      radial-gradient(2px 2px at 88% 58%, rgba(255, 220, 240, .55), transparent 60%),
+      radial-gradient(1.6px 1.6px at 20% 76%, rgba(255, 158, 203, .7), transparent 60%),
+      radial-gradient(1.4px 1.4px at 55% 7%, rgba(255, 255, 255, .6), transparent 60%),
+      radial-gradient(1.6px 1.6px at 44% 90%, rgba(255, 217, 142, .6), transparent 60%),
+      radial-gradient(1.2px 1.2px at 68% 84%, rgba(195, 155, 255, .6), transparent 60%),
+      radial-gradient(920px 540px at 85% -10%, rgba(var(--primary-rgb), .18), transparent 62%),
+      radial-gradient(740px 540px at -8% 32%, rgba(195, 155, 255, .14), transparent 62%),
+      radial-gradient(660px 440px at 52% 112%, rgba(255, 217, 142, .08), transparent 62%);
+  }
+  body[data-bg="1"] {
+    background-image: var(--user-bg, none);
+    background-size: cover; background-position: center; background-attachment: fixed;
+  }
+  body[data-bg="1"] .card, body[data-bg="1"] header {
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+  }
+  header {
+    background: rgba(var(--card-rgb), .62);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 14px 24px 12px; position: sticky; top: 0; z-index: 10;
+    transition: background .3s, border-color .3s;
+  }
+  header h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .3px; }
+  header h1 .grad-title {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sparkle {
+    position: absolute; color: var(--gold); pointer-events: none;
+    font-size: 14px; animation: twinkle 2.4s ease-in-out infinite;
+  }
+  .sparkle.s1 { top: 14px; right: 22px; }
+  .sparkle.s2 { top: 40px; right: 46px; font-size: 9px; animation-delay: 1.2s; }
+  @keyframes twinkle { 0%, 100% { opacity: .35; transform: scale(.8) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(18deg); } }
+  /* ---- 吉祥物：小星灵（原创 SVG） ---- */
+  .card.hero > .mascot {
+    position: absolute; right: 14px; bottom: 10px; width: 76px; pointer-events: none;
+    filter: drop-shadow(0 5px 10px rgba(90, 40, 75, .28));
+    animation: mascotBob 3.4s ease-in-out infinite;
+  }
+  .mascot svg { display: block; width: 100%; height: auto; }
+  @keyframes mascotBob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(4deg); } }
+  .mascot .mbody { fill: url(#mascot-g); stroke: url(#mascot-g); stroke-width: 14; stroke-linejoin: round; }
+  .mascot .mface { fill: none; stroke: #6b5570; stroke-width: 2.4; stroke-linecap: round; }
+  .mascot .mblush { fill: #ff9ecb; opacity: .55; }
+  .mascot .mspark { fill: #f5cf6b; opacity: .9; }
+  .mascot .mspark2 { fill: #ff9ecb; opacity: .8; }
+  /* 硬核形态：MOSS 式瞄准环（醒目但不卖萌） */
+  .mascot .m-scifi { display: none; }
+  [data-style="scifi"] .mascot .m-dream { display: none; }
+  [data-style="scifi"] .mascot .m-scifi { display: block; }
+  [data-style="scifi"] .mascot .ap-ticks {
+    transform-box: view-box; transform-origin: center;
+    animation: orbitSpin 14s linear infinite;
+  }
+  [data-style="scifi"] .mascot .ap-core { animation: corePulse 2.6s ease-in-out infinite; }
+  @keyframes corePulse {
+    0%, 100% { opacity: .75; filter: drop-shadow(0 0 3px rgba(255, 106, 61, .6)); }
+    50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(255, 106, 61, .95)); }
+  }
+  [data-style="scifi"] .card.hero > .mascot { animation: none; filter: drop-shadow(0 0 8px rgba(255, 140, 60, .3)); }
+  header .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav button {
+    border: none; background: transparent; padding: 8px 16px; cursor: pointer;
+    font-size: 13.5px; color: var(--muted); border-radius: 11px; font-weight: 500;
+    transition: color .15s, background .2s, box-shadow .2s;
+  }
+  nav button:hover { color: var(--text); background: var(--hover-bg); }
+  nav button.active {
+    color: #fff; background: var(--grad); font-weight: 600; box-shadow: var(--glow);
+  }
+  main { max-width: 1020px; margin: 0 auto; padding: 22px 16px 60px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  h2 { font-size: 17px; margin: 24px 0 12px; padding-left: 10px; border-left: 3px solid; border-image: linear-gradient(180deg, var(--primary), var(--primary-2)) 1; }
+  h2:first-child { margin-top: 4px; }
+
+  .card {
+    background: var(--card);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .6);
+    padding: 16px 18px; margin-bottom: 14px;
+    transition: background .3s, border-color .3s, box-shadow .25s, transform .25s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .95); box-shadow: 0 12px 40px rgba(31, 38, 90, .16), inset 0 1px 0 rgba(255, 255, 255, .78); }
+  :root[data-theme="dark"] .card { box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 190, 225, .10); }
+  :root[data-theme="dark"] .card:hover { border-color: rgba(255, 190, 225, .32); box-shadow: 0 12px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 190, 225, .16); }
+  .card.hero { border: 1.5px solid transparent; background: var(--grad) border-box; position: relative; }
+  .card.hero::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255,255,255,.7), rgba(255,255,255,.05)), var(--grad);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .card.hero > * { position: relative; z-index: 1; }
+  :root[data-theme="dark"] .card.hero { color: #fff; }
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .bento { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); }
+  .bento .card { margin-bottom: 0; }
+  .b-hero { grid-column: span 2; grid-row: span 2; display: flex; flex-direction: column; }
+  .b-wide { grid-column: 1 / -1; }
+  .grad-num {
+    background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    color: transparent; font-variant-numeric: tabular-nums;
+    filter: drop-shadow(0 2px 8px rgba(var(--primary-rgb), .28));
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+  .stat .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .lbl { color: var(--muted); font-size: 12.5px; }
+  .stat.hero .num { font-size: clamp(44px, 8vw, 64px); line-height: 1.1; animation: numBreath 4.6s ease-in-out infinite; }
+  @keyframes numBreath {
+    0%, 100% { filter: drop-shadow(0 4px 14px rgba(255, 255, 255, .22)); }
+    50% { filter: drop-shadow(0 6px 24px rgba(255, 255, 255, .48)); }
+  }
+  .stat .stat-ico {
+    font-size: 19px; line-height: 1; width: 38px; height: 38px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), .20), rgba(var(--primary-rgb), .05));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+    margin-bottom: 8px;
+  }
+  /* 圆体展示字体（内嵌 Quicksand，仅拉丁/数字；中文自动回退系统字体） */
+  .num, .grad-num, .ring-num, .pi-val, .timeline-count, h1 .grad-title {
+    font-family: "Quicksand", "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .stat .num { letter-spacing: .01em; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .pill {
+    display: inline-block; padding: 1px 9px; border-radius: 999px;
+    background: var(--primary-tint); color: var(--primary); font-size: 12px; margin: 1px 2px;
+  }
+  .pill.gray { background: var(--track-bg); color: var(--muted); }
+  .pill.green { background: var(--green-tint); color: var(--green); }
+  .pill.red { background: var(--red-tint); color: var(--red); }
+
+  button.btn {
+    border: none; border-radius: 10px; padding: 9px 18px; cursor: pointer;
+    background: var(--grad); color: #fff; font-size: 14px; font-weight: 500;
+    transition: filter .15s, transform .15s, box-shadow .25s, opacity .2s;
+    box-shadow: 0 4px 14px rgba(var(--primary-rgb), .3);
+    position: relative; overflow: hidden;
+  }
+  button.btn::after {
+    content: ""; position: absolute; top: -20%; bottom: -20%; left: -75%; width: 50%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .4), transparent);
+    transform: skewX(-18deg); transition: left .55s ease; pointer-events: none;
+  }
+  button.btn:hover::after { left: 125%; }
+  button.btn:disabled::after { display: none; }
+  button.btn:hover { filter: brightness(1.1); box-shadow: 0 6px 22px rgba(var(--primary-rgb), .45); transform: translateY(-1px); }
+  button.btn:active { transform: scale(.97); }
+  button.btn.ghost {
+    background: var(--primary-tint); color: var(--primary);
+    box-shadow: none; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  button.btn.ghost:hover { filter: none; box-shadow: none; transform: none; opacity: .85; }
+  button.btn.green { background: var(--green); }
+  button.btn.green:hover { box-shadow: 0 3px 10px rgba(46, 184, 114, .3); }
+  button.btn.red { background: var(--red); }
+  button.btn.red:hover { box-shadow: 0 3px 10px rgba(229, 72, 77, .3); }
+  button.btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  button.link {
+    border: none; background: none; color: var(--primary); cursor: pointer;
+    font-size: 13px; padding: 2px 6px; transition: opacity .15s;
+  }
+  button.link:hover { opacity: .75; }
+  button.link.danger { color: var(--red); }
+
+  input[type=range], input[type=color], select { accent-color: var(--primary); }
+  input[type=text], input[type=search], select, textarea {
+    border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 10px;
+    font-size: 14px; background: var(--input-bg); color: var(--text);
+    transition: border-color .15s, background .3s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=search]:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), .15);
+  }
+  input[type=search] { width: 260px; }
+  input[type=file] { font-size: 13px; }
+  textarea { width: 100%; min-height: 64px; resize: vertical; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  td .word { font-weight: 700; font-size: 15px; }
+  tbody tr:nth-child(even) td { background: var(--stripe-bg); }
+  tbody tr:hover td { background: var(--hover-bg); }
+
+  /* 条形图 */
+  .bars { display: flex; flex-direction: column; gap: 7px; }
+  .bars .bar-row { display: grid; grid-template-columns: 88px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; }
+  .bars .bar-track { display: block; background: var(--track-bg); border-radius: 6px; height: 16px; overflow: hidden; }
+  .bars .bar-fill { display: block; background: var(--grad); height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s ease; transform-origin: left; animation: fillGrow .8s cubic-bezier(.22, .9, .36, 1) backwards; }
+  @keyframes fillGrow { from { transform: scaleX(0); } }
+  .curve-bar { animation: barGrow .8s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+  @keyframes barGrow { from { height: 0; opacity: .15; } }
+  .curve-num { animation: numRise .55s ease backwards; }
+  @keyframes numRise { from { opacity: 0; transform: translateY(5px); } }
+
+  /* SVG 圆环 */
+  .ring-wrap { display: flex; align-items: center; gap: 14px; }
+  .ring { width: 84px; height: 84px; }
+  .ring .bg { fill: none; stroke: var(--track-bg); stroke-width: 3.8; }
+  .ring .fg { fill: none; stroke: var(--green); stroke-width: 3.8; stroke-linecap: round;
+    stroke-dasharray: 0 100; transform: rotate(-90deg); transform-origin: center; transition: stroke-dasharray .5s; }
+  .ring-num { font-size: 20px; font-weight: 700; }
+
+  /* 测验卡片 */
+  .quiz-card { text-align: center; padding: 36px 24px; animation: fadeIn .25s ease; }
+  .quiz-card .q-word { font-size: clamp(32px, 8vw, 52px); font-weight: 700; letter-spacing: .5px; font-family: "Quicksand", "Segoe UI", "Microsoft YaHei", sans-serif; }
+  .quiz-card .q-phonetic { color: var(--muted); font-size: 17px; margin-top: 6px; }
+  .quiz-card .q-answer { margin-top: 22px; border-top: 1px dashed var(--border); padding-top: 18px; text-align: left; }
+  .quiz-card .q-meaning { font-size: 19px; margin-bottom: 6px; }
+  .quiz-card .q-example { color: var(--muted); font-size: 14px; font-style: italic; }
+  .quiz-progress { height: 8px; background: var(--track-bg); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .quiz-progress > div { height: 100%; background: var(--grad); width: 0; transition: width .4s ease; }
+  .quiz-verdict { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+  .quiz-verdict button { padding: 10px 26px; font-size: 15px; }
+
+  /* 选择题选项 */
+  .quiz-option {
+    display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; text-align: left;
+    padding: 12px 16px; font-size: 15px; border-radius: 10px;
+    background: var(--card); border: 1.5px solid var(--border); color: var(--text);
+    cursor: pointer; transition: border-color .15s, background .15s, transform .1s;
+  }
+  .quiz-option .opt-key {
+    flex: none; width: 24px; height: 24px; border-radius: 8px; font-size: 12.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--track-bg); color: var(--muted);
+  }
+  .quiz-option.correct .opt-key { background: var(--green-tint); color: var(--green); }
+  .quiz-option.wrong .opt-key { background: var(--red-tint); color: var(--red); }
+  .quiz-option:hover { border-color: var(--primary); background: var(--primary-tint); }
+  .quiz-option.correct { background: var(--green-tint); border-color: var(--green); animation: pop .3s ease; }
+  .quiz-option.wrong { background: var(--red-tint); border-color: var(--red); animation: shake .35s ease; }
+  @keyframes pop { 0% { transform: scale(.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .quiz-result-icon { font-size: 40px; animation: pop .35s ease; }
+  .quiz-answer-input { transition: border-color .15s, box-shadow .15s; }
+  .quiz-answer-input.wrong-shake { animation: shake .35s ease; border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(229, 72, 77, .15) !important; }
+
+  details.guide { background: var(--guide-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-top: 14px; }
+  details.guide summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+  details.guide pre {
+    background: var(--code-bg); color: #e8eaf6; border-radius: 8px; padding: 12px 14px;
+    font-size: 12.5px; overflow-x: auto; line-height: 1.55;
+  }
+  details.guide h4 { margin: 14px 0 6px; font-size: 14px; }
+  details.guide p, details.guide li { font-size: 13.5px; line-height: 1.7; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+    background: var(--code-bg); color: #fff; padding: 10px 22px; border-radius: 99px;
+    font-size: 14px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 99;
+    max-width: 86vw; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { background: var(--red); }
+
+  #modal-mask, #edit-mask {
+    position: fixed; inset: 0; background: rgba(60, 30, 60, .45); display: none;
+    align-items: center; justify-content: center; z-index: 50;
+  }
+  #modal-mask.open, #edit-mask.open { display: flex; animation: fadeIn .2s ease; }
+  #modal, #edit-modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 460px; max-width: 92vw;
+    padding: 20px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.18);
+    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+  }
+  #modal h3 { margin: 0 0 14px; font-size: 16px; }
+  #modal label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  #modal input, #modal textarea { width: 100%; }
+
+  .pager { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  #settings-btn {
+    position: fixed; right: 16px; bottom: 16px; z-index: 20;
+    width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--grad); color: #fff; font-size: 22px; box-shadow: var(--glow);
+    transition: transform .2s, box-shadow .2s;
+  }
+  #settings-btn:hover { transform: rotate(45deg) scale(1.06); box-shadow: 0 6px 22px rgba(var(--primary-rgb), .5); }
+  #drawer-mask {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    background: rgba(60, 30, 60, .35); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  }
+  #drawer-mask.open { display: block; animation: fadeIn .2s ease; }
+  #settings-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 45;
+    width: 380px; max-width: 100vw; display: flex; flex-direction: column;
+    background: var(--card); border-left: 1px solid var(--border);
+    padding: 18px 20px 20px; overflow-y: auto;
+    box-shadow: -12px 0 48px rgba(60, 30, 60, .25);
+    backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+    transform: translateX(105%); transition: transform .28s ease;
+  }
+  #settings-panel.open { transform: none; }
+  #settings-panel h3 { margin: 0; font-size: 16px; }
+  #settings-panel .sec { margin-top: 18px; }
+  #settings-panel .sec > .sec-title { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .seg { display: flex; background: var(--track-bg); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 8px 0; border-radius: 9px;
+    cursor: pointer; color: var(--muted); font-size: 13.5px; transition: background .2s, color .2s;
+  }
+  .seg button.active { background: var(--grad); color: #fff; font-weight: 600; box-shadow: var(--glow); }
+  .swatches { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55); transition: transform .15s, border-color .15s;
+    padding: 0;
+  }
+  .swatch:hover { transform: scale(1.14); }
+  .swatch.active { border-color: var(--text); transform: scale(1.08); }
+  .swatch-custom {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+    background: conic-gradient(#ff7eb3, #f5cf6b, #2ec4a6, #5b6cff, #b28dff, #ff7eb3);
+  }
+  .swatch-custom input[type=color] { position: absolute; inset: -10px; opacity: 0; cursor: pointer; }
+  .bg-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bg-pick {
+    position: relative; height: 76px; border-radius: 12px; cursor: pointer; overflow: hidden;
+    border: 2px solid var(--border-soft); transition: border-color .15s, box-shadow .15s, transform .15s;
+    padding: 0; background: none;
+  }
+  .bg-pick:hover { transform: translateY(-1px); }
+  .bg-pick.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), .25); }
+  .bg-pick img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .bg-pick .bg-spot-preview {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(60px 40px at 80% 0%, rgba(255, 126, 179, .5), transparent 65%),
+      radial-gradient(50px 40px at 0% 60%, rgba(178, 141, 255, .4), transparent 65%),
+      radial-gradient(46px 32px at 55% 110%, rgba(245, 207, 107, .38), transparent 65%),
+      #fff0f6;
+  }
+  .bg-pick .tag {
+    position: absolute; left: 6px; bottom: 6px; font-size: 11px; color: #fff;
+    background: rgba(0, 0, 0, .45); padding: 2px 9px; border-radius: 99px;
+  }
+  .bg-pick .noimg-tip {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    font-size: 11.5px; color: var(--muted); text-align: center; padding: 0 8px; background: var(--track-bg);
+  }
+  .bg-pick.noimg .noimg-tip { display: flex; }
+  .bg-pick.noimg img { display: none; }
+  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .plan-item {
+    background: var(--track-bg); border: 1px solid var(--border-soft); border-radius: 14px;
+    padding: 14px 12px; text-align: center; cursor: pointer; color: var(--text); font-family: inherit;
+    transition: border-color .15s, transform .15s, box-shadow .25s;
+  }
+  .plan-item:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--glow); }
+  .plan-item .pi-lbl { font-size: 12px; color: var(--muted); }
+  .plan-item .pi-val { font-size: 26px; font-weight: 700; margin: 4px 0; font-variant-numeric: tabular-nums; }
+  .plan-item .pi-desc { font-size: 11px; color: var(--muted); }
+  .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .timeline { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; }
+  .timeline-node { min-width: 70px; text-align: center; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--grad); margin: 0 auto 4px; }
+  .timeline-date { font-size: 10px; color: var(--muted); }
+  .timeline-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ---- 「生命感」动效：飘落花瓣 / 卡片错落入场 / hero 渐变流动 ---- */
+  @keyframes popIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes petal-fall {
+    0% { transform: translate3d(0, -6vh, 0) rotate(0deg); }
+    100% { transform: translate3d(var(--drift, 6vw), 106vh, 0) rotate(var(--spin, 320deg)); }
+  }
+  @keyframes petal-sway {
+    from { transform: translateX(calc(var(--sway, 14px) * -1)) rotate(-14deg); }
+    to { transform: translateX(var(--sway, 14px)) rotate(14deg); }
+  }
+  #petal-layer { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+  #petal-layer.off { display: none; }
+  #petal-layer.paused .petal { animation-play-state: paused; }
+  .petal {
+    position: absolute; top: 0; left: var(--x, 50vw); will-change: transform;
+    animation: petal-fall var(--dur, 12s) linear var(--delay, 0s) infinite;
+  }
+  .petal i {
+    display: block; width: var(--s, 12px); height: var(--s, 12px);
+    background: linear-gradient(135deg, rgba(255, 158, 203, .85), rgba(255, 126, 179, .5));
+    border-radius: 150% 6% 150% 6%;
+    box-shadow: 0 1px 4px rgba(255, 126, 179, .22);
+    animation: petal-sway var(--sway-dur, 2.6s) ease-in-out var(--delay, 0s) infinite alternate;
+  }
+  :root[data-theme="dark"] .petal i {
+    background: linear-gradient(135deg, rgba(255, 158, 203, .48), rgba(195, 155, 255, .32));
+    box-shadow: 0 1px 4px rgba(255, 158, 203, .16);
+  }
+  /* hero 渐变流动：双倍尺寸渐变缓慢平移 */
+  .card.hero {
+    background: linear-gradient(120deg, var(--primary), var(--primary-2) 45%, var(--primary) 80%, var(--primary-2)) border-box;
+    background-size: 280% 280%;
+    animation: heroFlow 16s ease-in-out infinite;
+  }
+  @keyframes heroFlow { 0% { background-position: 0% 30%; } 50% { background-position: 100% 70%; } 100% { background-position: 0% 30%; } }
+
+  /* 抽屉里的氛围开关 */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; padding: 6px 2px; cursor: pointer; }
+  .switch-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch-ui { flex: none; width: 42px; height: 24px; border-radius: 999px; background: var(--track-bg); position: relative; transition: background .2s; }
+  .switch-ui::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); transition: transform .2s;
+  }
+  .switch-row input:checked + .switch-ui { background: var(--grad); }
+  .switch-row input:checked + .switch-ui::after { transform: translateX(18px); }
+
+  /* ---- 梦境光晕背景（纯径向渐变模拟柔光，无 blur 滤镜开销） ---- */
+  #dream-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  #dream-layer .blob { position: absolute; display: block; border-radius: 50%; will-change: transform; }
+  .blob-1 {
+    width: 46vmax; height: 46vmax; left: -14vmax; top: -16vmax;
+    background: radial-gradient(circle, rgba(255, 126, 179, .32), rgba(255, 126, 179, 0) 62%);
+    animation: drift1 44s ease-in-out infinite alternate;
+  }
+  .blob-2 {
+    width: 40vmax; height: 40vmax; right: -12vmax; top: 16vh;
+    background: radial-gradient(circle, rgba(178, 141, 255, .28), rgba(178, 141, 255, 0) 62%);
+    animation: drift2 56s ease-in-out infinite alternate;
+  }
+  .blob-3 {
+    width: 42vmax; height: 40vmax; left: 24vw; bottom: -20vmax;
+    background: radial-gradient(circle, rgba(245, 207, 107, .24), rgba(245, 207, 107, 0) 62%);
+    animation: drift3 50s ease-in-out infinite alternate;
+  }
+  @keyframes drift1 { to { transform: translate(10vw, 8vh) scale(1.14); } }
+  @keyframes drift2 { to { transform: translate(-9vw, 12vh) scale(1.18); } }
+  @keyframes drift3 { to { transform: translate(7vw, -9vh) scale(1.12); } }
+  :root[data-theme="dark"] #dream-layer .blob { opacity: .55; }
+
+  /* ================= 硬核科幻（流浪地球式工业风） ================= */
+  :root[data-style="scifi"] {
+    --bg: #0a0c0e;
+    --card: rgba(22, 26, 32, .8);
+    --card-rgb: 22, 26, 32;
+    --card-alpha: .8;
+    --text: #e8e4da;
+    --muted: #8a94a2;
+    --primary: #ffb454;
+    --primary-rgb: 255, 180, 84;
+    --primary-2: #ff7847;
+    --primary-dark: #e8931f;
+    --primary-tint: rgba(255, 180, 84, .12);
+    --green: #5ec269; --green-tint: rgba(94, 194, 105, .13);
+    --red: #ff5d5d; --red-tint: rgba(255, 93, 93, .14);
+    --amber: #ffb454; --gold: #ffd08a;
+    --border: rgba(255, 180, 84, .26);
+    --border-soft: rgba(255, 180, 84, .12);
+    --shadow: 0 4px 14px rgba(0, 0, 0, .5);
+    --glow: 0 0 14px rgba(255, 180, 84, .22);
+    --input-bg: rgba(10, 13, 16, .72);
+    --hover-bg: rgba(255, 180, 84, .07);
+    --stripe-bg: rgba(255, 180, 84, .05);
+    --track-bg: rgba(255, 180, 84, .12);
+    --code-bg: #0d1117;
+    --guide-bg: rgba(255, 180, 84, .05);
+    --radius: 4px;
+    /* 金属渐变：导航胶囊/渐变数字共用（亮-暗-亮的锻压光泽） */
+    --grad: linear-gradient(180deg, #ffd9a0, #ffb454 45%, #e8931f 58%, #ffcf8a);
+  }
+  [data-style="scifi"] body {
+    background-color: #0a0c0e;
+    /* background-size:auto 抵消自定义背景的 cover，防止星空被拉成色块 */
+    background-size: auto;
+    background-image:
+      radial-gradient(1.3px 1.3px at 12% 22%, rgba(255, 220, 170, .55), transparent 55%),
+      radial-gradient(1px 1px at 78% 13%, rgba(255, 220, 170, .4), transparent 55%),
+      radial-gradient(1.2px 1.2px at 88% 58%, rgba(220, 230, 240, .4), transparent 55%),
+      radial-gradient(1px 1px at 20% 76%, rgba(255, 180, 84, .45), transparent 55%),
+      radial-gradient(1px 1px at 55% 7%, rgba(255, 255, 255, .38), transparent 55%),
+      radial-gradient(1px 1px at 44% 90%, rgba(255, 150, 80, .4), transparent 55%),
+      radial-gradient(900px 520px at 85% -10%, rgba(255, 150, 60, .07), transparent 62%),
+      radial-gradient(720px 520px at -8% 32%, rgba(255, 120, 71, .06), transparent 62%);
+  }
+  /* 硬核模式下用户自定义背景仍然生效（星空让位，HUD 层保留） */
+  [data-style="scifi"] body[data-bg="1"] {
+    background-image: var(--user-bg, none);
+    background-size: cover;
+    background-position: center;
+  }
+  /* 光斑 → 极淡琥珀地雾 */
+  [data-style="scifi"] .blob-1 { background: radial-gradient(circle, rgba(255, 150, 60, .07), rgba(255, 150, 60, 0) 62%); }
+  [data-style="scifi"] .blob-2 { background: radial-gradient(circle, rgba(255, 120, 71, .06), rgba(255, 120, 71, 0) 62%); }
+  [data-style="scifi"] .blob-3 { background: radial-gradient(circle, rgba(255, 180, 84, .05), rgba(255, 180, 84, 0) 62%); }
+  /* 工业网格地面 */
+  [data-style="scifi"] #dream-layer .grid-floor {
+    position: absolute; left: -6vw; right: -6vw; bottom: -12vh; height: 46vh; display: block;
+    background:
+      repeating-linear-gradient(90deg, rgba(255, 180, 84, .10) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(0deg, rgba(255, 180, 84, .08) 0 1px, transparent 1px 36px);
+    transform: perspective(430px) rotateX(57deg);
+    transform-origin: top center;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 34%);
+    mask-image: linear-gradient(180deg, transparent, #000 34%);
+    animation: gridMove 3.2s linear infinite;
+  }
+  @keyframes gridMove { to { background-position: 64px 0, 0 36px; } }
+  /* 扫描线（细、慢、克制） */
+  [data-style="scifi"] #dream-layer .scan {
+    position: absolute; left: 0; right: 0; top: 0; height: 1.5px; display: block; opacity: .35;
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 84, .6) 30%, rgba(255, 120, 71, .6) 70%, transparent);
+    animation: scanSweep 11s linear infinite;
+  }
+  @keyframes scanSweep { from { transform: translateY(-3vh); } to { transform: translateY(104vh); } }
+  /* 数据流光（琥珀） */
+  [data-style="scifi"] #dream-layer .stream {
+    position: absolute; display: block; height: 1px; width: 34vw; opacity: .7;
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 84, .8), transparent);
+    background-size: 250% 100%;
+    animation: streamFlow 3.6s linear infinite;
+  }
+  [data-style="scifi"] #dream-layer .stream.s1 { top: 18vh; left: -6vw; }
+  [data-style="scifi"] #dream-layer .stream.s2 { top: 47vh; left: 40vw; animation-duration: 4.8s; animation-delay: -2.2s; transform: rotate(7deg); }
+  [data-style="scifi"] #dream-layer .stream.s3 { top: 76vh; left: 12vw; animation-duration: 4.2s; animation-delay: -1.1s; transform: rotate(-4deg); }
+  @keyframes streamFlow { from { background-position: 250% 0; } to { background-position: -150% 0; } }
+  /* 樱花瓣 → 琥珀数据雨碎片 */
+  [data-style="scifi"] .petal i {
+    background: linear-gradient(135deg, rgba(255, 180, 84, .9), rgba(255, 120, 71, .55));
+    border-radius: 1px;
+    box-shadow: 0 0 5px rgba(255, 160, 70, .5);
+  }
+  [data-style="scifi"] .sparkle { color: #ffd08a; }
+  /* HUD 卡片：拉丝金属面板（四角刻线+铆钉+受光/背光倒角） */
+  [data-style="scifi"] .card {
+    --sci: rgba(255, 180, 84, .55);
+    background-color: #171b21;
+    background-image:
+      linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
+      linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
+      linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
+      linear-gradient(var(--sci), var(--sci)), linear-gradient(var(--sci), var(--sci)),
+      radial-gradient(circle 2.5px at 9px 9px, rgba(255, 214, 150, .38) 0 1.2px, rgba(0, 0, 0, .65) 1.6px 2.4px, transparent 2.8px),
+      radial-gradient(circle 2.5px at calc(100% - 9px) 9px, rgba(255, 214, 150, .38) 0 1.2px, rgba(0, 0, 0, .65) 1.6px 2.4px, transparent 2.8px),
+      radial-gradient(circle 2.5px at 9px calc(100% - 9px), rgba(255, 214, 150, .38) 0 1.2px, rgba(0, 0, 0, .65) 1.6px 2.4px, transparent 2.8px),
+      radial-gradient(circle 2.5px at calc(100% - 9px) calc(100% - 9px), rgba(255, 214, 150, .38) 0 1.2px, rgba(0, 0, 0, .65) 1.6px 2.4px, transparent 2.8px),
+      linear-gradient(180deg, rgba(255, 225, 170, .05), rgba(255, 255, 255, 0) 18%, rgba(0, 0, 0, .16)),
+      repeating-linear-gradient(180deg, rgba(255, 255, 255, .018) 0 1px, rgba(0, 0, 0, .045) 1px 2px, transparent 2px 3px);
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+    background-size: 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px, 15px 1.5px, 1.5px 15px, auto, auto, auto, auto, auto, auto;
+    background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+    border-color: rgba(255, 210, 150, .16);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 224, 170, .09), inset 0 -1px 0 rgba(0, 0, 0, .55);
+  }
+  [data-style="scifi"] .card:hover {
+    border-color: rgba(255, 190, 110, .45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .6), 0 0 12px rgba(255, 170, 80, .07), inset 0 1px 0 rgba(255, 224, 170, .16), inset 0 -1px 0 rgba(0, 0, 0, .55);
+  }
+  /* hero：拉丝主机面板 + 顶部危险条纹 + 克制呼吸 */
+  [data-style="scifi"] .card.hero {
+    background:
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, .012) 0 2px, transparent 2px 5px),
+      linear-gradient(135deg, rgba(255, 180, 84, .09), rgba(255, 120, 71, .05) 55%, rgba(255, 180, 84, .03)),
+      linear-gradient(180deg, rgba(255, 255, 255, .03), transparent 22%, rgba(0, 0, 0, .14));
+    border: 1px solid rgba(255, 180, 84, .4);
+    animation: heroPulse 6s ease-in-out infinite;
+  }
+  [data-style="scifi"] .card.hero::after {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: repeating-linear-gradient(-45deg, rgba(255, 180, 84, .8) 0 9px, rgba(12, 10, 8, .92) 9px 18px);
+    border-radius: 3px 3px 0 0;
+  }
+  [data-style="scifi"] .card.hero::before { display: none; }
+  @keyframes heroPulse {
+    0%, 100% { box-shadow: 0 0 14px rgba(255, 150, 60, .08), inset 0 1px 0 rgba(255, 220, 170, .08); }
+    50% { box-shadow: 0 0 26px rgba(255, 150, 60, .18), inset 0 1px 0 rgba(255, 220, 170, .14); }
+  }
+  /* 数字辉光收敛（硬核=锐利不发糖） */
+  [data-style="scifi"] .grad-num { filter: drop-shadow(0 1px 5px rgba(255, 180, 84, .3)); }
+  /* 条形图/曲线柱：琥珀条纹 */
+  [data-style="scifi"] .bars .bar-fill {
+    background: repeating-linear-gradient(90deg, rgba(255, 180, 84, .9) 0 8px, rgba(255, 180, 84, .38) 8px 16px);
+    animation: fillGrow .8s cubic-bezier(.22, .9, .36, 1) backwards, barFlow 1.2s linear infinite;
+  }
+  @keyframes barFlow { to { background-position: 16px 0; } }
+  [data-style="scifi"] .curve-bar {
+    background: linear-gradient(180deg, rgba(255, 210, 138, .95), rgba(255, 180, 84, .3) 62%, rgba(255, 120, 71, .4));
+    animation: barGrow .8s cubic-bezier(.34, 1.56, .64, 1) backwards;
+  }
+
+  /* 进度环旋转虚线轨道（仅科幻） */
+  .ring .orbit { display: none; }
+  [data-style="scifi"] .ring .orbit {
+    display: block; stroke: rgba(255, 180, 84, .5);
+    transform-box: view-box; transform-origin: center;
+    animation: orbitSpin 9s linear infinite;
+  }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+
+  /* ---- 硬核科幻：工业 HUD 边框 / 描边按钮 / 等宽排印 ---- */
+  /* 屏幕四角工业括号 */
+  [data-style="scifi"] body::before {
+    content: ""; position: fixed; inset: 8px; pointer-events: none; z-index: 60; opacity: .5;
+    --hud: rgba(255, 180, 84, .75);
+    background:
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud)),
+      linear-gradient(var(--hud), var(--hud)), linear-gradient(var(--hud), var(--hud));
+    background-repeat: no-repeat;
+    background-size: 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px, 24px 2px, 2px 24px;
+    background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+  }
+  /* 硬边直角 */
+  [data-style="scifi"] button.btn, [data-style="scifi"] .quiz-option,
+  [data-style="scifi"] input[type=text], [data-style="scifi"] input[type=search],
+  [data-style="scifi"] select, [data-style="scifi"] textarea,
+  [data-style="scifi"] .plan-item, [data-style="scifi"] .pill, [data-style="scifi"] .seg,
+  [data-style="scifi"] details.guide, [data-style="scifi"] #modal, [data-style="scifi"] #edit-modal {
+    border-radius: 3px;
+  }
+  /* 按钮改金属按键：多段渐变 + 倒角 + 刻字阴影 */
+  [data-style="scifi"] button.btn {
+    background: linear-gradient(180deg, rgba(255, 205, 130, .22), rgba(255, 180, 84, .10) 45%, rgba(110, 70, 30, .18));
+    border: 1px solid rgba(255, 190, 110, .55);
+    border-top-color: rgba(255, 230, 180, .7);
+    color: #ffe8c8;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .55);
+    box-shadow: inset 0 1px 0 rgba(255, 230, 180, .18), inset 0 -1px 0 rgba(0, 0, 0, .35);
+  }
+  [data-style="scifi"] button.btn:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 150, .3), rgba(255, 190, 110, .16) 45%, rgba(130, 85, 40, .22));
+    filter: none;
+    box-shadow: 0 0 12px rgba(255, 170, 80, .22), inset 0 1px 0 rgba(255, 230, 180, .26), inset 0 -1px 0 rgba(0, 0, 0, .35);
+  }
+  [data-style="scifi"] button.btn.ghost { background: transparent; border-color: rgba(255, 180, 84, .3); box-shadow: none; }
+  [data-style="scifi"] button.btn.green { background: rgba(94, 194, 105, .08); border-color: rgba(94, 194, 105, .6); color: #d9f2d9; box-shadow: none; }
+  [data-style="scifi"] button.btn.red { background: rgba(255, 93, 93, .08); border-color: rgba(255, 93, 93, .6); color: #ffdcdc; box-shadow: none; }
+  /* 排印：等宽字体 + 大写宽字距 + // 前缀 */
+  [data-style="scifi"] body, [data-style="scifi"] .num, [data-style="scifi"] .grad-num,
+  [data-style="scifi"] .ring-num, [data-style="scifi"] .pi-val, [data-style="scifi"] .timeline-count,
+  [data-style="scifi"] h1 .grad-title, [data-style="scifi"] .q-word {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  }
+  [data-style="scifi"] h1 .grad-title { text-transform: uppercase; letter-spacing: .14em; }
+  [data-style="scifi"] header .sub { letter-spacing: .1em; }
+  [data-style="scifi"] nav button { letter-spacing: .12em; }
+  [data-style="scifi"] h2::before { content: "// "; color: var(--primary); }
+  [data-style="scifi"] h2 { letter-spacing: .04em; }
+  /* bento 图标 chip → 工位代号牌（DB/SRC/CHN/STR） */
+  [data-style="scifi"] .stat-ico {
+    font-size: 0;
+    border: 1px solid rgba(255, 180, 84, .45);
+    border-radius: 3px;
+    background: rgba(255, 180, 84, .07);
+  }
+  [data-style="scifi"] .stat-ico::before {
+    content: attr(data-code);
+    font-size: 12px; font-weight: 700; letter-spacing: .14em;
+    color: var(--primary);
+  }
+  /* 测验进度条琥珀条纹流动 */
+  [data-style="scifi"] .quiz-progress > div {
+    background: repeating-linear-gradient(90deg, rgba(255, 180, 84, .9) 0 8px, rgba(255, 180, 84, .4) 8px 16px);
+    animation: barFlow 1.2s linear infinite;
+  }
+  /* 控制台提示条 */
+  [data-style="scifi"] #toast {
+    background: rgba(13, 17, 23, .94);
+    border: 1px solid rgba(255, 180, 84, .45);
+    box-shadow: 0 0 12px rgba(255, 180, 84, .18);
+  }
+  /* 金属舱门：抽屉与弹窗 */
+  [data-style="scifi"] #settings-panel, [data-style="scifi"] #modal, [data-style="scifi"] #edit-modal {
+    background: linear-gradient(180deg, #1b2027, #12161c);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    border-left-color: rgba(255, 180, 84, .3);
+  }
+  /* 输入框 = 凹陷机加工槽 */
+  [data-style="scifi"] input[type=text], [data-style="scifi"] input[type=search],
+  [data-style="scifi"] select, [data-style="scifi"] textarea {
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .55), inset 0 -1px 0 rgba(255, 220, 170, .05);
+  }
+  /* 次级面板：工位牌/测验选项的金属倒角 */
+  [data-style="scifi"] .plan-item, [data-style="scifi"] .quiz-option {
+    background: linear-gradient(180deg, rgba(255, 225, 170, .035), rgba(0, 0, 0, .12));
+    box-shadow: inset 0 1px 0 rgba(255, 224, 170, .06), inset 0 -1px 0 rgba(0, 0, 0, .3);
+  }
+  [data-style="scifi"] .quiz-option:hover { background: rgba(255, 180, 84, .1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #petal-layer { display: none; }
+    #dream-layer .blob, #dream-layer .grid-floor, #dream-layer .scan, #dream-layer .stream,
+    .stat.hero .num, .curve-bar, .curve-num, .bars .bar-fill, .ring .orbit,
+    .mascot .ap-ticks, .mascot .ap-core { animation: none !important; }
+    .mascot { animation: none !important; }
+    button.btn::after { transition: none !important; }
+    .card.hero, .petal, .petal i { animation: none !important; }
+    .quiz-option.correct, .quiz-option.wrong, .quiz-result-icon { animation: none !important; }
+  }
+  @media (max-width: 640px) {
+    main { padding: 10px 8px 60px; }
+    header { padding: 10px 12px 10px; }
+    nav { flex-wrap: wrap; }
+    nav button { padding: 8px 10px; font-size: 13px; }
+    .grid { grid-template-columns: 1fr 1fr !important; }
+    .binding-grid { grid-template-columns: 1fr !important; }
+    .plan-grid { grid-template-columns: 1fr; }
+    .import-grid { grid-template-columns: 1fr; }
+    .bento { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .b-hero { grid-column: span 2; grid-row: auto; }
+    .b-wide { grid-column: span 2; }
+    table { font-size: 13px; }
+    th, td { padding: 6px 4px; }
+    #settings-panel { width: 100vw; }
+    .quiz-card { padding: 24px 14px; }
+    .card.hero > .mascot { width: 54px; right: 10px; bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="dream-layer" aria-hidden="true"><span class="blob blob-1"></span><span class="blob blob-2"></span><span class="blob blob-3"></span><span class="grid-floor"></span><span class="scan"></span><span class="stream s1"></span><span class="stream s2"></span><span class="stream s3"></span></div>
+
+<header>
+  <h1>📚 <span class="grad-title">word_coach · 背单词助手</span></h1>
+  <div class="sub">内置 Web UI · 多卡组学习平台 · 与聊天流共用同一份进度</div>
+  <nav>
+    <button data-tab="dashboard" class="active">📌 学习</button>
+    <button data-tab="quiz">✏️ 测验</button>
+    <button data-tab="words">📖 词书</button>
+    <button data-tab="progress">📊 进度</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ 仪表盘 ============ -->
+  <section class="tab active" id="tab-dashboard">
+    <div class="bento" id="dash-stats"></div>
+    <h2>我的学习 <span class="pill" id="dash-binding-label">加载中…</span></h2>
+    <div class="card" id="dash-binding"></div>
+    <div class="card" id="plan-settings-card"><div class="muted">加载中…</div></div>
+    <details class="guide" id="push-preview-details" ontoggle="if(this.open && !this.dataset.loaded){this.dataset.loaded=1; loadPushPreview();}">
+      <summary>🔔 推送预览（看看下次推送会发什么词，不实际发送）</summary>
+      <div id="push-preview-content" style="margin-top:10px;"><span class="muted">展开时加载…</span></div>
+    </details>
+    <h2>各聊天流进度</h2>
+    <div id="dash-streams"></div>
+  </section>
+
+  <!-- ============ 词书（含导入） ============ -->
+  <section class="tab" id="tab-words">
+    <div class="card" style="margin-bottom:14px;">
+      <details id="import-panel" ontoggle="if(this.open && !this.dataset.loaded){this.dataset.loaded=1; loadPresets(); loadBuiltins();}">
+        <summary style="cursor:pointer; font-weight:600; color:var(--primary); font-size:15px;">📥 导入词库（URL / 预置 / 内置四六级 / 本地文件）</summary>
+        <div class="import-grid" style="margin-top:14px;">
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">🔗 从 URL 下载</div>
+            <input type="text" id="import-url" placeholder="词库直链（.json/.csv/.tsv/.txt）" style="width:100%; margin-bottom:8px;">
+            <button class="btn" id="import-url-btn" onclick="importUrl()" style="width:100%;">下载导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">未知后缀自动嗅探内容</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">⭐ 预置词库</div>
+            <select id="import-preset" style="width:100%; margin-bottom:8px;"></select>
+            <button class="btn" id="import-preset-btn" onclick="importPreset()" style="width:100%;">一键导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;" id="preset-hint">加载中…</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">💿 内置词库</div>
+            <div id="builtin-list" style="display:grid; gap:8px;"><div class="muted">加载中…</div></div>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">四级/六级离线包，点一下直接导入</div>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-weight:700; margin-bottom:8px;">📁 本地文件</div>
+            <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt" style="width:100%; margin-bottom:8px; font-size:12.5px;">
+            <button class="btn" id="import-file-btn" onclick="importFile()" style="width:100%;">上传导入</button>
+            <div class="muted" style="margin-top:6px; font-size:11.5px;">UTF-8 编码的 json/csv/tsv/txt</div>
+          </div>
+        </div>
+        <div id="import-result" style="margin-top:12px;"></div>
+
+        <details class="guide" style="margin-top:12px;">
+          <summary>📖 词库获取与配置指引（怎么找到自己的词库）</summary>
+
+          <h4>四种支持的词表格式</h4>
+          <p><b>JSON 数组</b>（推荐，字段最全）：</p>
+<pre>[
+  {"word": "apple", "phonetic": "/ˈæpl/", "meaning": "n. 苹果", "example": "an apple a day"},
+  {"word": "give up", "meaning": "放弃"}
+]</pre>
+          <p><b>JSON 字典</b>（最简，只有词和释义）：</p>
+<pre>{"apple": "n. 苹果", "book": "n. 书 v. 预订"}</pre>
+          <p><b>CSV / TSV</b>（Excel 另存为 UTF-8 CSV 即可）：带表头时列名支持中英双语
+          （word/单词、meaning/释义、phonetic/音标、example/例句、tags/标签）；无表头时按此顺序排列。</p>
+          <p><b>纯文本</b>：每行一个词，后面可跟释义（Tab 或空格分隔），# 开头为注释。</p>
+
+          <h4>开源词库字段也能直接用</h4>
+          <p>主流开源词库常用的字段名已自动兼容：
+          <code>name/entry → word</code>、<code>trans/definition/chinese → 释义</code>、
+          <code>usphone/ukphone/pron → 音标</code>、<code>sentence → 例句</code>。</p>
+
+          <h4>更多词库怎么找</h4>
+          <p>内置的四六级词库来自 <a href="https://github.com/kajweb/dict" target="_blank">kajweb/dict</a>（3500+ Star），
+          该仓库还有雅思、托福、GRE、SAT 等词库，但都是 zip 打包的 JSON Lines 格式（每行一个 JSON 对象），
+          需要下载解压后用「上传本地文件」导入。另一个大词典项目是
+          <a href="https://github.com/skywind3000/ECDICT" target="_blank">ECDICT</a>（8000+ Star），
+          提供完整英汉词典 CSV（65MB），适合需要大量词条的场景。</p>
+
+          <h4>怎么拿到 GitHub 上词库的直链</h4>
+          <p>在 GitHub 打开词库文件 → 点右上角「Raw」→ 复制浏览器地址栏的
+          <code>raw.githubusercontent.com/…</code> 链接，粘贴到上面「从 URL 下载导入」即可。</p>
+
+          <h4>配置自己的预置词库（让「一键导入」更方便）</h4>
+          <p>编辑 <code>config/plugins/word_coach/config.toml</code> 的 <code>[source]</code> 节：</p>
+<pre>[source]
+preset_urls = { kaoyan = "https://example.com/kaoyan.json", ielts = "https://example.com/ielts.json" }</pre>
+          <p>保存后重启 Bot，页面「预置词库」下拉框即可一键导入；聊天里也可以直接说
+          「下载词库 kaoyan」。另外 <code>auto_import_urls</code> 可在词书为空的启动时自动下载（按顺序尝试，成功即停）。</p>
+        </details>
+      </details>
+    </div>
+    <div class="row" style="margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <input type="search" id="words-search" placeholder="搜索单词或释义…" style="min-width:160px;">
+      <select id="words-deck" style="min-width:130px;" onchange="loadWords(0)"><option value="">全部卡组</option></select>
+      <select id="words-source" style="min-width:100px;"><option value="">全部来源</option></select>
+      <select id="words-sort" style="min-width:100px;">
+        <option value="word">按字母</option>
+        <option value="source">按来源</option>
+        <option value="created">按时间</option>
+      </select>
+      <button class="btn ghost" onclick="loadWords(0)">搜索</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" onclick="exportWords('json')">导出 JSON</button>
+      <button class="btn ghost" onclick="exportWords('csv')">导出 CSV</button>
+      <button class="btn" onclick="openWordModal()">＋ 添加</button>
+    </div>
+    <div class="card scroll-x">
+      <div class="row" style="margin-bottom:8px; gap:8px;">
+        <label style="font-size:13px;"><input type="checkbox" id="words-select-all" onchange="toggleSelectAll(this)"> 全选</label>
+        <span id="words-selected-count" class="muted" style="font-size:12px;"></span>
+        <span style="flex:1"></span>
+        <button class="btn ghost" style="font-size:12px; padding:4px 10px;" onclick="batchDelete()">批量删除</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:30px;"><input type="checkbox" id="words-select-all-head" onchange="toggleSelectAll(this)"></th>
+          <th>单词</th><th>音标</th><th>释义</th><th>来源</th><th style="width:120px;">操作</th>
+        </tr></thead>
+        <tbody id="words-body"></tbody>
+      </table>
+      <div class="pager">
+        <button class="btn ghost" id="words-prev" onclick="wordsPage(-1)">上一页</button>
+        <span class="muted" id="words-pageinfo"></span>
+        <button class="btn ghost" id="words-next" onclick="wordsPage(1)">下一页</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ 测验 ============ -->
+  <section class="tab" id="tab-quiz">
+    <div class="card" id="bot-notebook" style="margin-bottom:14px;"><div class="muted">加载中…</div></div>
+    <div class="card" id="quiz-panel"></div>
+  </section>
+
+  <!-- ============ 进度 ============ -->
+  <section class="tab" id="tab-progress">
+    <div class="card scroll-x" id="progress-streams-card">
+      <table>
+        <thead><tr><th>聊天流</th><th>已学</th><th>复习次数</th><th>正确率</th><th>今日待复习</th><th></th></tr></thead>
+        <tbody id="progress-streams"></tbody>
+      </table>
+    </div>
+    <div id="progress-detail"></div>
+  </section>
+
+</main>
+
+<!-- 设置面板 -->
+<button id="settings-btn" onclick="toggleSettings()">⚙</button>
+<div id="drawer-mask" onclick="closeSettings()"></div>
+<div id="settings-panel">
+  <div class="row" style="justify-content:space-between; align-items:center;">
+    <h3>✨ 外观设置</h3>
+    <button class="link" onclick="closeSettings()">✕ 关闭</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">明暗模式</div>
+    <div class="seg">
+      <button id="seg-light" onclick="segTheme('light')">☀️ 浅色</button>
+      <button id="seg-dark" onclick="segTheme('dark')">🌙 深色</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">风格</div>
+    <div class="seg">
+      <button id="seg-dream" onclick="segStyle('dream')">✨ 梦幻</button>
+      <button id="seg-scifi" onclick="segStyle('scifi')">🛰 硬核</button>
+    </div>
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">硬核：琥珀色工业控制台 + 网格地面 + 数据流 + 等宽字体，数字解码翻滚</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">主题色（渐变起点）</div>
+    <div class="swatches" id="swatch-row"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">背景</div>
+    <div class="bg-picks">
+      <button class="bg-pick" id="bg-pick-spot" onclick="pickBg('')">
+        <span class="bg-spot-preview"></span>
+        <span class="tag">梦幻光斑（默认）</span>
+      </button>
+      <button class="bg-pick" id="bg-pick-builtin" onclick="pickBg('bg.jpg')">
+        <img src="bg.jpg" alt="" onerror="this.parentNode.classList.add('noimg')">
+        <span class="noimg-tip">未放置 web/bg.jpg</span>
+        <span class="tag">内置背景</span>
+      </button>
+    </div>
+    <input type="text" id="set-bg-url" placeholder="或粘贴图片 URL（network 图直链）" style="width:100%; margin-top:10px;" oninput="onBgUrlInput()">
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">卡片透明度 <span id="opacity-val" style="color:var(--primary);"></span></div>
+    <input type="range" id="set-bg-opacity" min="0.3" max="1.0" step="0.05" style="width:100%;" oninput="onOpacityInput()">
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">数值越低卡片越透，背景（图/光斑）越明显</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">氛围</div>
+    <label class="switch-row">🌸 飘落花瓣
+      <input type="checkbox" id="set-petals" onchange="onPetalsToggle(this.checked)">
+      <span class="switch-ui"></span>
+    </label>
+    <div class="muted" style="font-size:11.5px; margin-top:4px;">樱花瓣缓缓飘落，关掉即恢复安静背景</div>
+  </div>
+
+  <div style="margin-top:auto; padding-top:18px;">
+    <button class="btn" id="save-settings-btn" style="width:100%;" onclick="saveSettings()">保存设置</button>
+    <div class="muted" style="font-size:11.5px; text-align:center; margin-top:8px;">改动立即预览，保存后对所有浏览器生效</div>
+  </div>
+</div>
+
+<!-- 添加/编辑词条弹窗 -->
+<div id="modal-mask">
+  <div id="modal">
+    <h3 id="modal-title">添加单词</h3>
+    <input type="hidden" id="f-id">
+    <label>单词 *</label><input type="text" id="f-word" placeholder="apple">
+    <label>释义</label><input type="text" id="f-meaning" placeholder="n. 苹果">
+    <label>音标</label><input type="text" id="f-phonetic" placeholder="/ˈæpl/">
+    <label>例句</label><input type="text" id="f-example" placeholder="an apple a day">
+    <label>标签</label><input type="text" id="f-tags" placeholder="如：cet4, 食物">
+    <div class="row" style="justify-content:flex-end; margin-top:16px;">
+      <button class="btn ghost" onclick="closeWordModal()">取消</button>
+      <button class="btn" onclick="saveWord()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通用输入弹窗（替代原生 prompt，避免被浏览器拦截） -->
+<div id="edit-mask">
+  <div id="edit-modal">
+    <h3 id="edit-title">修改</h3>
+    <label id="edit-label"></label>
+    <input type="text" id="edit-input">
+    <div class="row" style="justify-content:flex-end; margin-top:16px;">
+      <button class="btn ghost" id="edit-cancel">取消</button>
+      <button class="btn" id="edit-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- 基础工具 ---------------- */
+
+const $ = (s) => document.querySelector(s);
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+let toastTimer = null;
+function toast(msg, isErr = false) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.className = "show" + (isErr ? " err" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ""; }, 2600);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) { /* 非 JSON */ }
+  if (!res.ok) {
+    const detail = body && (body.detail || body.message);
+    throw new Error(typeof detail === "string" ? detail : `请求失败（HTTP ${res.status}）`);
+  }
+  return body;
+}
+
+/* ---------------- 「生命感」动效工具 ---------------- */
+
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)");
+
+// 卡片错落入场：给容器内目标元素按序加 popIn 动画，结束后清掉内联样式，
+// 让 .card:hover 的 transform 过渡不受 animation fill 影响
+function staggerIn(root, selector = ".card", step = 70, cap = 480) {
+  if (!root || REDUCED_MOTION.matches) return;
+  root.querySelectorAll(selector).forEach((el, i) => {
+    el.style.animation = "popIn .5s cubic-bezier(.22,.9,.36,1) backwards";
+    el.style.animationDelay = `${Math.min(i * step, cap)}ms`;
+    el.addEventListener("animationend", () => {
+      el.style.animation = "";
+      el.style.animationDelay = "";
+    }, { once: true });
+  });
+}
+
+// 数字流动：普通模式缓动滚入；科幻模式「解码翻滚」——随机数字从左到右逐位锁定成真值
+function countUpIn(root) {
+  if (!root || REDUCED_MOTION.matches) return;
+  const scifi = document.documentElement.dataset.style === "scifi";
+  root.querySelectorAll(".num, .grad-num").forEach((el) => {
+    const m = /^([\d,]+)(.*)$/.exec(el.textContent.trim());
+    if (!m) return;
+    const raw = m[1];
+    const suffix = m[2] || "";
+    if (scifi) { decodeIn(el, raw, suffix); return; }
+    const target = parseInt(raw.replace(/,/g, ""), 10);
+    if (!Number.isFinite(target) || target === 0) return;
+    const DUR = 900;
+    const fmt = (n) => String(n);
+    const t0 = performance.now();
+    const tick = (t) => {
+      const p = Math.min((t - t0) / DUR, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(target * eased)) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+function decodeIn(el, str, suffix) {
+  const chars = "0123456789";
+  const DUR = 820;
+  const t0 = performance.now();
+  const tick = (t) => {
+    const p = Math.min((t - t0) / DUR, 1);
+    const locked = Math.floor(p * str.length);
+    let out = str.slice(0, locked);
+    for (let i = locked; i < str.length; i++) out += chars[(Math.random() * 10) | 0];
+    el.textContent = out + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = str + suffix;
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ---------------- Tab 切换 ---------------- */
+
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
+    btn.classList.add("active");
+    const name = btn.dataset.tab;
+    $("#tab-" + name).classList.add("active");
+    if (name === "dashboard") loadDashboard();
+    if (name === "words") loadWords(0);
+    if (name === "quiz") { loadBotNotebook(); quizIntro(); }
+    if (name === "progress") loadProgress();
+  });
+});
+
+/* ---------------- 仪表盘 ---------------- */
+
+async function loadDashboard() {
+  let data;
+  try { data = await api("api/overview"); } catch (e) { toast(e.message, true); return; }
+
+  const book = data.book || { total: 0, by_source: {} };
+  const streams = data.streams || [];
+  const dueTotal = streams.reduce((a, s) => a + (s.due_now || 0), 0);
+  const learnedMax = streams.length ? Math.max(...streams.map((s) => s.learned || 0)) : 0;
+
+  // 填充词书页来源下拉框
+  const sourceSelect = $("#words-source");
+  if (sourceSelect) {
+    const current = sourceSelect.value;
+    const sources = Object.keys(book.by_source || {});
+    sourceSelect.innerHTML = '<option value="">全部来源</option>' +
+      sources.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+    if (sources.includes(current)) sourceSelect.value = current;
+  }
+
+  // 加载卡组并填充词书页卡组下拉
+  await loadDecks();
+  const deckSelect = $("#words-deck");
+  if (deckSelect) {
+    const curDeck = deckSelect.value;
+    deckSelect.innerHTML = '<option value="">全部卡组</option>' +
+      deckState.decks.map(d => `<option value="${d.id}">${esc(d.name)}（${d.item_count || 0}）</option>`).join("");
+    if (curDeck !== "" && [...deckSelect.options].some(o => o.value === curDeck)) deckSelect.value = curDeck;
+  }
+
+  // 计划设置卡数据（未绑定时静默失败）
+  let planDetail = null;
+  try { planDetail = await api("api/plan/detail"); } catch (e) { /* 未绑定 */ }
+
+  // 绑定流数据提前解构（hero 卡也要用）
+  const b = data.binding;
+  const plan = (b && b.plan) || {};
+  const streak = plan.streak || 0;
+  const dueNowBind = (b && b.due_now) || 0;
+
+  // Bento 网格：渐变 hero 大卡 + 4 张小卡
+  $("#dash-stats").innerHTML = `
+    <div class="card stat hero b-hero">
+      <span class="sparkle s1">✦</span><span class="sparkle s2">✦</span>
+      <span class="mascot" aria-hidden="true">
+        <svg class="m-dream" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="mascot-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fffdf8"/>
+              <stop offset="100%" stop-color="#ffeaf4"/>
+            </linearGradient>
+          </defs>
+          <path class="mbody" d="M50 18 L58.8 39.9 L82.3 41.5 L64.3 56.6 L70 79.5 L50 67 L30 79.5 L35.7 56.6 L17.7 41.5 L41.2 39.9 Z"/>
+          <path class="mface" d="M39 52 q3.5 -4.5 7 0"/>
+          <path class="mface" d="M56 52 q3.5 -4.5 7 0"/>
+          <path class="mface" d="M47.5 60.5 q3 3.4 6 0"/>
+          <ellipse class="mblush" cx="35" cy="58" rx="4.4" ry="2.7"/>
+          <ellipse class="mblush" cx="66" cy="58" rx="4.4" ry="2.7"/>
+          <path class="mspark" d="M88 22 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z"/>
+          <path class="mspark mspark2" d="M12 34 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3 z"/>
+        </svg>
+        <svg class="m-scifi" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 180, 84, .5)" stroke-width="1.5"/>
+          <circle class="ap-ticks" cx="50" cy="50" r="34" fill="none" stroke="rgba(255, 180, 84, .8)" stroke-width="2.5" stroke-dasharray="5 9"/>
+          <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255, 180, 84, .35)" stroke-width="1"/>
+          <line x1="50" y1="6" x2="50" y2="94" stroke="rgba(255, 180, 84, .16)" stroke-width="1"/>
+          <line x1="6" y1="50" x2="94" y2="50" stroke="rgba(255, 180, 84, .16)" stroke-width="1"/>
+          <circle class="ap-core" cx="50" cy="50" r="11" fill="#ff6a3d"/>
+          <circle cx="50" cy="50" r="15.5" fill="none" stroke="#ff6a3d" stroke-width="1" opacity=".55"/>
+        </svg>
+      </span>
+      <span class="lbl" style="color:rgba(255,255,255,.82); font-size:13px;">今日待复习（全部流）</span>
+      <span class="num" style="color:#fff;">${dueTotal}</span>
+      ${b
+        ? `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:2px;">连续打卡 ${streak} 天 · 答对 ${b.correct || 0} / 答错 ${b.wrong || 0}</div>
+      <button class="btn" style="margin-top:auto; align-self:flex-start; background:rgba(255,255,255,.22); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:none; font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,.32)'" onmouseout="this.style.background='rgba(255,255,255,.22)'" onclick="switchTab('quiz')">开始测验${dueNowBind > 0 ? ` · ${dueNowBind} 词` : ""}</button>`
+        : `<div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:6px;">未绑定聊天流，配置 owner_list 后自动绑定</div>`}
+    </div>
+    <div class="card stat"><span class="stat-ico" data-code="DB">📚</span><span class="num grad-num">${book.total}</span><span class="lbl">条目总数</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="SRC">🗂️</span><span class="num grad-num">${Object.keys(book.by_source || {}).length}</span><span class="lbl">词库来源数</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="CHN">💬</span><span class="num grad-num">${streams.length}</span><span class="lbl">有进度的聊天流</span></div>
+    <div class="card stat"><span class="stat-ico" data-code="STR">🔥</span><span class="num grad-num">${streak}</span><span class="lbl">连续打卡天数</span></div>`;
+
+  staggerIn($("#dash-stats"), ".card", 90, 450);
+  countUpIn($("#dash-stats"));
+
+  // 绑定流卡片
+  if (!b) {
+    $("#dash-binding-label").textContent = "未绑定";
+    $("#dash-binding").innerHTML = `<div class="muted">未配置网页绑定的聊天流。请在框架
+      <code>[permissions].owner_list</code> 填写 <code>platform:user_id</code>
+      （如 qq:2750694203），重启后网页测验将自动绑定你的私人聊天流。</div>`;
+  } else {
+    const acc = b.accuracy || 0;
+    $("#dash-binding-label").textContent = b.label || b.stream_id || "?";
+    const learned = plan.learned || 0;
+    const bookSize = plan.book_size || b.book_size || 0;
+    const progressPct = bookSize ? Math.round(learned / bookSize * 100) : 0;
+    const estDays = plan.estimated_days || 0;
+    const dailyNew = plan.daily_new_count || 3;
+    const boxDist = plan.box_dist || {};
+
+    // 遗忘曲线：纯 CSS 条形图，自适应高度
+    const intervals = [1, 2, 4, 7, 15];
+    const maxBox = Math.max(...Object.values(boxDist), 1);
+    const curveBars = intervals.map((days, i) => {
+      const count = boxDist[i + 1] || 0;
+      const pct = Math.round(count / maxBox * 100);
+      const h = Math.max(pct, count > 0 ? 8 : 4);
+      return `<div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:40px;">
+        <div class="curve-num" style="font-size:13px; font-weight:700; margin-bottom:4px; animation-delay:${i * 90}ms;">${count || "0"}</div>
+        <div class="curve-bar" style="width:60%; min-height:4px; max-height:120px; height:var(--h); --h:${h}px; background:var(--grad); box-shadow:0 2px 8px rgba(var(--primary-rgb), .35); opacity:${0.45 + count / maxBox * 0.55}; border-radius:5px 5px 2px 2px; animation-delay:${i * 90}ms;"></div>
+        <div style="font-size:10px; color:var(--muted); margin-top:4px;">${days}天</div>
+      </div>`;
+    }).join("");
+
+    // 左右双栏：左侧进度环+计划，右侧统计+遗忘曲线
+    const hasCurve = Object.values(boxDist).some(v => v > 0);
+    $("#dash-binding").innerHTML = `
+      <div class="binding-grid" style="display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:center;">
+
+        <!-- 左栏：进度环 + 计划 -->
+        <div style="text-align:center;">
+          <div class="row" style="justify-content:center; gap:16px;">
+            <svg class="ring" viewBox="0 0 36 36" style="width:92px; height:92px;">
+              <defs>
+                <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="var(--primary)"/>
+                  <stop offset="100%" stop-color="var(--primary-2)"/>
+                </linearGradient>
+              </defs>
+              <circle class="bg" cx="18" cy="18" r="15.9"/>
+              <circle class="orbit" cx="18" cy="18" r="17.4" fill="none" stroke-width="1" stroke-dasharray="2 3.4"/>
+              <circle class="fg" id="dash-ring-fg" cx="18" cy="18" r="15.9" style="stroke:url(#ring-grad); filter:drop-shadow(0 0 5px rgba(var(--primary-rgb), .5));"/>
+            </svg>
+            <div>
+              <div class="grad-num" style="font-size:30px; font-weight:800;">${progressPct}%</div>
+              <div class="muted" style="font-size:12px;">${learned}/${bookSize} 词</div>
+            </div>
+          </div>
+          <div class="row" style="justify-content:center; margin-top:14px; gap:8px; flex-wrap:wrap;">
+            <span class="muted" style="font-size:13px;">每天</span>
+            <b style="cursor:pointer; color:var(--primary); font-size:16px;" onclick="editPlan(${dailyNew})">${dailyNew} 个新词</b>
+            <span class="pill gray" style="font-size:11px;">约 ${estDays} 天学完</span>
+          </div>
+        </div>
+
+        <!-- 右栏：统计 + 遗忘曲线 -->
+        <div>
+          <div class="grid" style="grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:14px;">
+            <div class="stat" style="text-align:center;"><span class="num grad-num" style="font-size:22px;">${b.total_reviews}</span><span class="lbl">复习次数</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--green); font-size:22px;">${b.correct}</span><span class="lbl">答对</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--red); font-size:22px;">${b.wrong}</span><span class="lbl">答错</span></div>
+            <div class="stat" style="text-align:center;"><span class="num" style="color:var(--amber); font-size:22px;">${acc}%</span><span class="lbl">正确率</span></div>
+          </div>
+            <div>
+              <div class="muted" style="margin-bottom:4px; font-size:12px;">遗忘曲线</div>
+              ${hasCurve ? `<div style="display:flex; align-items:flex-end; gap:4px; padding:8px 0;">${curveBars}</div>` : '<div class="muted" style="font-size:13px; padding:20px 0; text-align:center;">还没有复习数据，开始测验后这里会显示</div>'}
+          </div>
+        </div>
+
+      </div>`;
+    // inline style 才能覆盖 CSS 的 stroke-dasharray:0 100 兜底；rAF 触发从 0 生长的过渡
+    requestAnimationFrame(() => {
+      const fg = document.getElementById("dash-ring-fg");
+      if (fg) fg.style.strokeDasharray = `${progressPct} 100`;
+    });
+    staggerIn($("#dash-binding"));
+    countUpIn($("#dash-binding"));
+  }
+
+  // 各流卡片
+  if (!streams.length) {
+    $("#dash-streams").innerHTML = `<div class="card empty">还没有任何聊天流产生进度</div>`;
+  } else {
+    const bars = streams.map((s) => {
+      const pct = learnedMax ? Math.round((s.learned / learnedMax) * 100) : 0;
+      return `<div class="bar-row">
+        <span title="${esc(s.user_key || "")}">${esc(s.label || s.user_key || "?")}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span>
+        <span>${s.learned} 词</span>
+      </div>`;
+    }).join("");
+    $("#dash-streams").innerHTML =
+      `<div class="card"><div class="bars">${bars}</div>
+       <div class="muted" style="margin-top:8px;">条形为已学词数对比；详情见「进度」页。</div></div>`;
+    staggerIn($("#dash-streams"));
+  }
+
+  renderPlanSettings(planDetail);
+}
+
+function renderPlanSettings(pd) {
+  const el = $("#plan-settings-card");
+  if (!el) return;
+  if (!pd || !pd.label) {
+    el.innerHTML = `<div class="muted">未绑定聊天流，计划设置不可用。绑定后在 <code>[permissions].owner_list</code> 生效。</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <h2 style="margin-top:0;">⚙️ 计划设置</h2>
+    <div class="plan-grid">
+      <button class="plan-item" onclick="editPushTime('${esc(pd.push_time || "09:00")}')">
+        <div class="pi-lbl">每日推送时间</div>
+        <div class="pi-val">${esc(pd.push_time || "09:00")}</div>
+        <div class="pi-desc">每天此时推送词单 · 点击修改</div>
+      </button>
+      <button class="plan-item" onclick="editPlan(${pd.daily_new_count})">
+        <div class="pi-lbl">每日新词数</div>
+        <div class="pi-val" style="color:var(--primary);">${pd.daily_new_count}</div>
+        <div class="pi-desc">推送和测验加入的新词 · 点击修改</div>
+      </button>
+      <button class="plan-item" onclick="editWordCount(${pd.daily_word_count})">
+        <div class="pi-lbl">每次推送词数</div>
+        <div class="pi-val">${pd.daily_word_count}</div>
+        <div class="pi-desc">每日推送总词数 · 点击修改</div>
+      </button>
+    </div>`;
+  staggerIn(el, ".plan-item", 90, 360);
+}
+
+function switchTab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
+  document.querySelector(`nav button[data-tab="${name}"]`).classList.add("active");
+  $("#tab-" + name).classList.add("active");
+  if (name === "quiz") { loadBotNotebook(); quizIntro(); }
+}
+
+// 自定义输入弹窗（Promise 化）；原生 prompt 在部分浏览器/内嵌环境会被静默拦截
+function askText(title, label, value) {
+  return new Promise((resolve) => {
+    $("#edit-title").textContent = title;
+    $("#edit-label").textContent = label || "";
+    const input = $("#edit-input");
+    input.value = value || "";
+    const mask = $("#edit-mask");
+    mask.classList.add("open");
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+    const done = (val) => {
+      mask.classList.remove("open");
+      $("#edit-ok").onclick = null;
+      $("#edit-cancel").onclick = null;
+      input.onkeydown = null;
+      mask.onclick = null;
+      resolve(val);
+    };
+    $("#edit-ok").onclick = () => done(input.value);
+    $("#edit-cancel").onclick = () => done(null);
+    mask.onclick = (e) => { if (e.target === mask) done(null); };
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") { e.preventDefault(); done(input.value); }
+      if (e.key === "Escape") done(null);
+    };
+  });
+}
+
+async function editPlan(current) {
+  const input = await askText("每日新词数", `每天学几个新词？（当前 ${current}，范围 1-50）`, String(current));
+  if (input === null) return;
+  const n = parseInt(input, 10);
+  if (!n || n < 1 || n > 50) { toast("请输入 1-50 的整数", true); return; }
+  try {
+    await api("api/plan", { method: "POST", body: JSON.stringify({ daily_new_count: n }) });
+    toast(`已设为每天 ${n} 个新词`);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function editPushTime(current) {
+  const input = await askText("每日推送时间", `24 小时制 HH:MM（当前 ${current}）`, current);
+  if (input === null) return;
+  const m = input.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m || parseInt(m[1]) > 23 || parseInt(m[2]) > 59) { toast("格式不对，应为 HH:MM（如 09:00）", true); return; }
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify({ push_time: input.trim() }) });
+    toast(`已设为 ${input.trim()} 推送`);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function editWordCount(current) {
+  const input = await askText("每次推送词数", `每日推送的总词数（当前 ${current}，范围 1-50）`, String(current));
+  if (input === null) return;
+  const n = parseInt(input, 10);
+  if (!n || n < 1 || n > 50) { toast("请输入 1-50 的整数", true); return; }
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify({ daily_word_count: String(n) }) });
+    toast(`已设为每次 ${n} 词`);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 词书管理 ---------------- */
+
+let wordsState = { q: "", offset: 0, limit: 50, total: 0, source: "", sort: "word", rows: [] };
+
+async function loadWords(offset) {
+  if (offset !== undefined) wordsState.offset = offset;
+  wordsState.q = $("#words-search").value;
+  wordsState.deck = $("#words-deck") ? $("#words-deck").value : "";
+  wordsState.source = $("#words-source") ? $("#words-source").value : "";
+  wordsState.sort = $("#words-sort") ? $("#words-sort").value : "word";
+  const p = new URLSearchParams({
+    q: wordsState.q, offset: wordsState.offset, limit: wordsState.limit,
+    source: wordsState.source, sort: wordsState.sort,
+  });
+  if (wordsState.deck) p.set("deck_id", wordsState.deck);
+  let data;
+  try { data = await api("api/words?" + p); } catch (e) { toast(e.message, true); return; }
+  wordsState.total = data.total;
+  wordsState.rows = data.words;
+
+  const rows = data.words.map((w) => `
+    <tr>
+      <td><input type="checkbox" class="word-checkbox" value="${w.id}"></td>
+      <td><span class="word">${esc(w.word)}</span>${w.qtype && w.qtype !== "vocab" ? ` <span class="pill">${qtypeLabel(w.qtype)}</span>` : ""}</td>
+      <td class="muted">${esc(w.phonetic || "")}</td>
+      <td>${esc(w.meaning || "（待补充）")}
+        ${w.example ? `<div class="muted">${esc(w.example)}</div>` : ""}</td>
+      <td><span class="pill gray">${esc(w.source || "manual")}</span></td>
+      <td>
+        <button class="link" onclick="openWordModalById(${w.id})">编辑</button>
+        <button class="link danger" onclick="deleteWordById(${w.id})">删除</button>
+      </td>
+    </tr>`).join("");
+  $("#words-body").innerHTML =
+    rows || `<tr><td colspan="6" class="empty">没有匹配的内容</td></tr>`;
+
+  const page = Math.floor(wordsState.offset / wordsState.limit) + 1;
+  const pages = Math.max(1, Math.ceil(wordsState.total / wordsState.limit));
+  $("#words-pageinfo").textContent =
+    wordsState.total ? `共 ${wordsState.total} 条 · 第 ${page}/${pages} 页` : "共 0 条";
+  $("#words-prev").disabled = wordsState.offset <= 0;
+  $("#words-next").disabled = wordsState.offset + wordsState.limit >= wordsState.total;
+  updateSelectedCount();
+}
+
+function toggleSelectAll(checkbox) {
+  document.querySelectorAll(".word-checkbox").forEach(cb => cb.checked = checkbox.checked);
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const n = document.querySelectorAll(".word-checkbox:checked").length;
+  if ($("#words-selected-count")) $("#words-selected-count").textContent = n ? `已选 ${n} 个` : "";
+}
+
+async function batchDelete() {
+  const ids = Array.from(document.querySelectorAll(".word-checkbox:checked")).map(cb => parseInt(cb.value));
+  if (!ids.length) { toast("请先勾选要删除的词条", true); return; }
+  if (!confirm(`确定删除 ${ids.length} 个词条？`)) return;
+  try {
+    const data = await api("api/words/batch", { method: "POST", body: JSON.stringify({ ids, action: "delete" }) });
+    toast(data.message);
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function exportWords(fmt) {
+  try {
+    const data = await api("api/words/export?fmt=" + fmt);
+    const blob = new Blob([data.data], { type: fmt === "csv" ? "text/csv" : "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `word_coach_export.${fmt}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(`已导出 ${fmt.toUpperCase()}`);
+  } catch (e) { toast(e.message, true); }
+}
+
+function wordsPage(delta) {
+  loadWords(Math.max(0, wordsState.offset + delta * wordsState.limit));
+}
+
+let wordsSearchTimer = null;
+
+$("#words-search").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    clearTimeout(wordsSearchTimer);
+    loadWords(0);
+  }
+});
+
+$("#words-search").addEventListener("input", () => {
+  clearTimeout(wordsSearchTimer);
+  wordsSearchTimer = setTimeout(() => loadWords(0), 400);
+});
+
+function openWordModal(word) {
+  $("#modal-title").textContent = word ? "编辑单词" : "添加单词";
+  $("#f-id").value = word ? word.id : "";
+  $("#f-word").value = word ? word.word : "";
+  $("#f-meaning").value = word ? (word.meaning || "") : "";
+  $("#f-phonetic").value = word ? (word.phonetic || "") : "";
+  $("#f-example").value = word ? (word.example || "") : "";
+  $("#f-tags").value = word ? (word.tags || "") : "";
+  $("#modal-mask").classList.add("open");
+  $("#f-word").focus();
+}
+
+function findWordById(id) {
+  return (wordsState.rows || []).find(w => w.id === id);
+}
+
+function openWordModalById(id) {
+  const w = findWordById(id);
+  if (w) openWordModal(w);
+}
+
+async function deleteWordById(id) {
+  const w = findWordById(id);
+  if (!w) return;
+  await deleteWord(id, w.word);
+}
+
+function closeWordModal() { $("#modal-mask").classList.remove("open"); }
+
+$("#modal-mask").addEventListener("click", (e) => {
+  if (e.target === $("#modal-mask")) closeWordModal();
+});
+
+async function saveWord() {
+  const id = $("#f-id").value;
+  const payload = {
+    word: $("#f-word").value.trim(),
+    meaning: $("#f-meaning").value.trim(),
+    phonetic: $("#f-phonetic").value.trim(),
+    example: $("#f-example").value.trim(),
+    tags: $("#f-tags").value.trim(),
+  };
+  if (!payload.word) { toast("单词不能为空", true); return; }
+  try {
+    if (id) {
+      await api("api/words/" + id, { method: "PUT", body: JSON.stringify(payload) });
+      toast("已更新 " + payload.word);
+    } else {
+      await api("api/words", { method: "POST", body: JSON.stringify(payload) });
+      toast("已添加 " + payload.word);
+    }
+    closeWordModal();
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteWord(id, word) {
+  if (!confirm(`确定删除「${word}」？该词在所有聊天流的进度也会一并清除。`)) return;
+  try {
+    await api("api/words/" + id, { method: "DELETE" });
+    toast("已删除 " + word);
+    loadWords();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 词库导入 ---------------- */
+
+async function loadPresets() {
+  let data;
+  try { data = await api("api/import/presets"); } catch (e) { return; }
+  const presets = Object.entries(data.presets || {});
+  const sel = $("#import-preset");
+  if (!presets.length) {
+    sel.innerHTML = `<option value="">（未配置预置词库）</option>`;
+    sel.disabled = true;
+    $("#preset-hint").innerHTML =
+      `还没有配置预置词库。在 <code>config/plugins/word_coach/config.toml</code> 的
+       <code>[source].preset_urls</code> 添加「名字 = 直链」后重启即可，详见下方指引。`;
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = presets.map(([k, v]) =>
+      `<option value="${esc(k)}">${esc(k)}</option>`).join("");
+    $("#preset-hint").textContent = `共 ${presets.length} 个预置词库，选择后点「导入」。`;
+  }
+}
+
+function showImportResult(data) {
+  $("#import-result").innerHTML = `
+    <div class="card">
+      <b>✅ 导入完成：${esc(data.message)}</b>
+      ${data.errors && data.errors.length
+        ? `<div class="muted" style="margin-top:6px;">失败详情：${data.errors.slice(0, 5).map(esc).join("；")}${data.errors.length > 5 ? "…" : ""}</div>`
+        : ""}
+    </div>`;
+}
+
+async function importUrl() {
+  const url = $("#import-url").value.trim();
+  if (!url) { toast("请先粘贴词库直链", true); return; }
+  const btn = $("#import-url-btn");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  toast("正在下载…");
+  try {
+    const data = await api("api/import/url", { method: "POST", body: JSON.stringify({ url }) });
+    showImportResult(data);
+    $("#import-url").value = "";
+    loadDashboard();
+  } catch (e) { toast(e.message, true); $("#import-result").innerHTML = ""; }
+  finally { btn.disabled = false; }
+}
+
+async function importPreset() {
+  const name = $("#import-preset").value;
+  if (!name) { toast("没有可选的预置词库", true); return; }
+  const btn = $("#import-preset-btn");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  toast("正在下载…");
+  try {
+    const data = await api("api/import/preset", { method: "POST", body: JSON.stringify({ name }) });
+    showImportResult(data);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+  finally { btn.disabled = false; }
+}
+
+async function loadBuiltins() {
+  try {
+    const data = await api("api/import/builtin");
+    const list = data.builtins || [];
+    if (!list.length) {
+      $("#builtin-list").innerHTML = '<span class="muted">无内置词库</span>';
+      return;
+    }
+    $("#builtin-list").innerHTML = list.map(b => `
+      <button class="btn ghost" style="text-align:left; padding:12px 14px;" onclick="importBuiltin('${esc(b.name)}', this)">
+        <div style="font-weight:700; font-size:15px;">${esc(b.label)} <span class="muted" style="font-size:11px; font-weight:400;">${esc(b.size)}</span></div>
+        <div class="muted" style="font-size:11px;">点击导入</div>
+      </button>`).join("");
+  } catch (e) { $("#builtin-list").innerHTML = '<span class="muted">加载失败</span>'; }
+}
+
+async function importBuiltin(name, btn) {
+  if (btn && btn.disabled) return;
+  if (btn) btn.disabled = true;
+  toast("正在导入…");
+  try {
+    const data = await api("api/import/builtin", { method: "POST", body: JSON.stringify({ name }) });
+    showImportResult(data);
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+  finally { if (btn) btn.disabled = false; }
+}
+
+async function importFile() {
+  const input = $("#import-file");
+  const file = input.files && input.files[0];
+  if (!file) { toast("请先选择词表文件", true); return; }
+  const btn = $("#import-file-btn");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try {
+    const content = await file.text();
+    const data = await api("api/import/file", {
+      method: "POST",
+      body: JSON.stringify({ filename: file.name, content }),
+    });
+    showImportResult(data);
+    input.value = "";
+    loadDashboard();
+  } catch (e) { toast(e.message, true); }
+  finally { btn.disabled = false; }
+}
+
+/* ---------------- 网页测验（选择题+拼写题） ---------------- */
+
+const deckState = { decks: [], current: null };
+
+async function loadDecks() {
+  try {
+    const data = await api("api/decks");
+    deckState.decks = data.decks || [];
+  } catch (e) { deckState.decks = []; }
+  if ((deckState.current == null || !deckState.decks.some(d => d.id === deckState.current)) && deckState.decks.length) {
+    deckState.current = deckState.decks[0].id;
+  }
+}
+
+function qtypeLabel(q) {
+  return ({ vocab: "单词", judge: "判断", single: "单选", multi: "多选" })[q] || q;
+}
+
+/* ---------------- Bot 笔记本（Bot 空闲攒题） ---------------- */
+
+async function loadBotNotebook() {
+  const el = $("#bot-notebook");
+  if (!el) return;
+  await loadDecks();
+  const botDecks = deckState.decks.filter(d => d.origin === "bot");
+  const stateLabel = { building: "攒题中", paused: "已暂停", ready: "已就绪" };
+  const rows = botDecks.map(d => {
+    const target = d.target_count || 0;
+    const built = d.built_count || 0;
+    const pct = target ? Math.min(100, Math.round(built / target * 100)) : 0;
+    const state = stateLabel[d.build_state] || "待启动";
+    return `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--track-bg); flex-wrap:wrap;">
+      <span style="font-weight:600; min-width:120px;">${esc(d.name)}</span>
+      <span class="pill ${d.build_state === "building" ? "green" : "gray"}">${state}</span>
+      <div style="flex:1; min-width:100px; height:8px; background:var(--track-bg); border-radius:4px; overflow:hidden;">
+        <div style="height:100%; width:${pct}%; background:var(--grad, var(--primary)); transition:width .5s;"></div>
+      </div>
+      <span class="muted" style="font-size:12px; min-width:70px; text-align:right;">${built}/${target || "?"} 题</span>
+      ${d.build_state === "building" ? `<button class="link" onclick="botDeckBuild(${d.id}, 'pause')">暂停</button>` : ""}
+      ${d.build_state === "paused" ? `<button class="link" onclick="botDeckBuild(${d.id}, 'resume')">继续</button>` : ""}
+      ${d.build_state !== "ready" ? `<button class="link" onclick="botTickNow(${d.id})">立即攒一批</button>` : ""}
+      <button class="link danger" onclick="deleteBotDeck(${d.id}, '${esc(d.name).replace(/'/g, "\\'")}')">删除</button>
+    </div>`;
+  }).join("");
+  el.innerHTML = `
+    <div style="font-weight:700; margin-bottom:6px;">🤖 Bot 笔记本 <span class="pill gray">Bot 攒的题单独放这里，不混进正式卡组</span></div>
+    ${rows || '<div class="muted" style="padding:6px 0;">Bot 还没攒过题。给它一个主题，它会在聊天空闲时一批批攒出整个题库。</div>'}
+    <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
+      <input type="text" id="bot-topic" placeholder="想让 Bot 攒什么题？如：驾考科目一 / 唐诗鉴赏 / 高数极限" style="flex:1; min-width:180px;">
+      <select id="bot-target" style="min-width:110px;">
+        <option value="30">攒 30 题</option>
+        <option value="50" selected>攒 50 题</option>
+        <option value="100">攒 100 题</option>
+        <option value="200">攒 200 题</option>
+      </select>
+      <button class="btn" onclick="botStartBuild()">开工！</button>
+    </div>`;
+}
+
+async function botStartBuild() {
+  const topicEl = $("#bot-topic");
+  const topic = topicEl ? topicEl.value.trim() : "";
+  if (!topic) { toast("先告诉 Bot 攒什么主题", true); return; }
+  const target = parseInt(($("#bot-target") || {}).value, 10) || 50;
+  try {
+    const data = await api("api/decks/build", { method: "POST", body: JSON.stringify({ topic, target_count: target }) });
+    toast(data.message || "Bot 已开工");
+    if (topicEl) topicEl.value = "";
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function botDeckBuild(deckId, action) {
+  try {
+    const data = await api(`api/decks/${deckId}/build`, { method: "POST", body: JSON.stringify({ action }) });
+    toast(data.message || "OK");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function botTickNow(deckId) {
+  toast("Bot 正在攒题，请稍等十几秒…");
+  try {
+    const data = await api(`api/decks/${deckId}/tick`, { method: "POST", body: "{}" });
+    toast(data.message || "完成");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteBotDeck(deckId, name) {
+  if (!confirm(`删除「${name}」及其所有题目？`)) return;
+  try {
+    await api(`api/decks/${deckId}`, { method: "DELETE" });
+    toast("已删除");
+    loadBotNotebook();
+  } catch (e) { toast(e.message, true); }
+}
+
+const quiz = { total: 0, correct: 0, wrong: 0, wrongWords: [], current: null, busy: false, qmode: "mixed", count: 10, onlyNew: false };
+
+function quizIntro() {
+  quiz.total = 0; quiz.correct = 0; quiz.wrong = 0; quiz.wrongWords = []; quiz.current = null;
+  const deckOptions = deckState.decks.map(d =>
+    `<option value="${d.id}" ${deckState.current === d.id ? "selected" : ""}>${esc(d.name)}（${d.item_count || 0}）</option>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    <div style="text-align:center; padding:20px 0;">
+      <div style="font-size:42px;">✏️</div>
+      <h2 style="margin-top:8px; border-left:none; padding-left:0;">刷题测验</h2>
+      <p class="muted">按卡组出题：单词卡组有选择/拼写，题库卡组有判断/单选/多选。测完结果会注入 Bot 上下文，由它自然提起。</p>
+      <div class="row" style="justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap;">
+        <select id="quiz-deck" style="min-width:150px;" onchange="quizDeckChanged()">${deckOptions || '<option value="">暂无卡组</option>'}</select>
+        <select id="quiz-count" style="min-width:100px;">
+          <option value="5">5 题</option>
+          <option value="10" selected>10 题</option>
+          <option value="20">20 题</option>
+        </select>
+        <select id="quiz-qtype" style="min-width:130px;">
+          <option value="mixed" selected>混合（选择+拼写）</option>
+          <option value="choice">只出选择题</option>
+          <option value="spell">只出拼写题</option>
+        </select>
+        <select id="quiz-mode" style="min-width:120px;">
+          <option value="mixed" selected>复习+新内容</option>
+          <option value="new">只考新内容</option>
+        </select>
+      </div>
+      <button class="btn" style="margin-top:14px;" onclick="quizStart()">开始测验</button>
+      <div class="muted" style="margin-top:10px; font-size:12px;">键盘党：选择/判断按 1-4 选答案，多选按数字切换后按 Enter 提交，判定后按 Enter 下一题</div>
+      <div style="margin-top:6px;"><button class="link" onclick="loadQuizHistory()">查看测验历史</button></div>
+    </div>`;
+  syncQuizQtypeVisibility();
+  staggerIn($("#quiz-panel"));
+}
+
+function quizDeckChanged() {
+  const el = $("#quiz-deck");
+  if (el) deckState.current = parseInt(el.value, 10) || null;
+  syncQuizQtypeVisibility();
+}
+
+function syncQuizQtypeVisibility() {
+  const deck = deckState.decks.find(d => d.id === deckState.current);
+  const qtypeSel = $("#quiz-qtype");
+  if (qtypeSel) qtypeSel.parentElement.style.display = (deck && deck.kind === "vocab") ? "" : "none";
+}
+
+async function loadQuizHistory() {
+  $("#quiz-panel").innerHTML = '<div class="muted" style="text-align:center; padding:20px 0;">加载中…</div>';
+  try {
+    const data = await api("api/quiz/history?limit=20");
+    const results = data.results || [];
+    if (!results.length) {
+      $("#quiz-panel").innerHTML = `<div class="empty">还没有测验记录<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`;
+      return;
+    }
+    const rows = results.map(r => {
+      const date = (r.created_at || "").replace("T", " ").slice(0, 16);
+      const wrong = (r.wrong_words || []).map(w => esc(w.word || "?")).join("、");
+      return `<tr>
+        <td class="muted" style="white-space:nowrap;">${esc(date)}</td>
+        <td style="text-align:center;">${r.total}</td>
+        <td style="text-align:center; color:var(--green);">${r.correct}</td>
+        <td style="text-align:center; color:var(--red);">${r.wrong}</td>
+        <td style="text-align:center;">${r.accuracy}%</td>
+        <td class="muted" style="font-size:12px;">${wrong ? esc(wrong) : "—"}</td>
+      </tr>`;
+    }).join("");
+    $("#quiz-panel").innerHTML = `
+      <div class="card scroll-x">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h2 style="margin:0;">测验历史</h2>
+          <button class="link" onclick="quizIntro()">← 返回</button>
+        </div>
+        <table>
+          <thead><tr><th>时间</th><th>总题数</th><th>答对</th><th>答错</th><th>正确率</th><th>错词</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (e) { $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`; }
+}
+
+async function quizStart() {
+  // 配置元素可能已被结果页替换，读不到就用上次的 quiz 状态
+  const deckEl = $("#quiz-deck");
+  const countEl = $("#quiz-count");
+  const qtypeEl = $("#quiz-qtype");
+  const modeEl = $("#quiz-mode");
+  if (deckEl) deckState.current = parseInt(deckEl.value, 10) || null;
+  if (countEl) quiz.count = parseInt(countEl.value, 10) || 10;
+  if (qtypeEl) quiz.qmode = qtypeEl.value;
+  if (modeEl) quiz.onlyNew = modeEl.value === "new";
+  quiz.total = quiz.count; quiz.correct = 0; quiz.wrong = 0; quiz.wrongWords = [];
+  await quizNext();
+}
+
+async function quizNext() {
+  const params = new URLSearchParams({ count: "1", mode: quiz.qmode });
+  if (quiz.onlyNew) params.set("only_new", "true");
+  if (deckState.current != null) params.set("deck_id", deckState.current);
+  quiz.busy = true;
+  quizRenderLoading("出题中…");
+  try {
+    const data = await api("api/quiz/next?" + params);
+    if (!data.word_id) { quizFinish(); return; }
+    quiz.current = data;
+    const qt = data.question_type;
+    if (qt === "choice") quizRenderChoice();
+    else if (qt === "spell") quizRenderSpell();
+    else if (qt === "multi") quizRenderMulti();
+    else quizRenderFixed();
+  } catch (e) {
+    $("#quiz-panel").innerHTML = `<div class="empty">${esc(e.message)}<br><br><button class="btn ghost" onclick="quizIntro()">返回</button></div>`;
+  }
+  quiz.busy = false;
+}
+
+function quizRenderLoading(msg) {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
+  $("#quiz-panel").innerHTML = `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="muted" style="text-align:center; padding:30px 0;">${esc(msg)}</div>`;
+}
+
+function quizProgress() {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
+  const c = quiz.current;
+  return `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="muted" style="text-align:center; margin-bottom:8px;">
+      第 ${done + 1} / ${quiz.total} 题 ·
+      ${c.is_new ? '<span class="pill green">✨ 新</span>' : `<span class="pill">🔁 箱${c.box}</span>`}
+    </div>`;
+}
+
+function quizRenderChoice() {
+  const c = quiz.current;
+  const opts = c.options || [];
+  const optsHtml = opts.map((opt, i) =>
+    `<button class="quiz-option" onclick="quizJudgeChoice(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">这个词的释义是？</div>
+      <div class="q-word">${esc(c.word)}</div>
+      <div class="q-phonetic">${esc(c.phonetic || "")}</div>
+    </div>
+    <div style="margin-top:12px; max-width:560px; margin-left:auto; margin-right:auto;">${optsHtml}</div>`;
+}
+
+function quizRenderSpell() {
+  const c = quiz.current;
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">拼写出这个单词</div>
+      <div class="q-word" style="font-size:clamp(20px,5vw,30px);">${esc(c.question)}</div>
+    </div>
+    <div class="row" style="margin-top:14px; gap:8px; max-width:560px; margin-left:auto; margin-right:auto;">
+      <input type="text" id="quiz-answer" class="quiz-answer-input" placeholder="输入英文单词…" style="flex:1;"
+        onkeydown="if(event.key==='Enter') quizJudgeSpell()">
+      <button class="btn" onclick="quizJudgeSpell()">提交</button>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px; text-align:center;">按 Enter 提交 · 不区分大小写 · 严格匹配拼写</div>`;
+  $("#quiz-answer").focus();
+}
+
+function quizRenderFixed() {
+  const c = quiz.current;
+  const isJudge = c.question_type === "judge";
+  const optsHtml = c.options.map((opt, i) =>
+    `<button class="quiz-option" onclick="quizJudgeChoice(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">${isJudge ? "判断题" : "单选题"}</div>
+      <div class="q-word" style="font-size:clamp(16px,4vw,22px); line-height:1.6;">${esc(c.stem || c.word)}</div>
+    </div>
+    <div style="margin-top:12px; max-width:560px; margin-left:auto; margin-right:auto;">${optsHtml}</div>`;
+}
+
+function quizRenderMulti() {
+  const c = quiz.current;
+  quiz._multiSelected = new Set();
+  const optsHtml = c.options.map((opt, i) =>
+    `<button class="quiz-option" onclick="quizToggleMulti(${i}, this)"><span class="opt-key">${i + 1}</span><span>${esc(opt || "（空）")}</span></button>`
+  ).join("");
+  $("#quiz-panel").innerHTML = `
+    ${quizProgress()}
+    <div class="quiz-card">
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">多选题 · 可选多个答案</div>
+      <div class="q-word" style="font-size:clamp(16px,4vw,22px); line-height:1.6;">${esc(c.stem || c.word)}</div>
+    </div>
+    <div style="margin-top:12px; max-width:560px; margin-left:auto; margin-right:auto;">${optsHtml}</div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="btn" id="quiz-multi-submit" onclick="quizJudgeMulti()">提交答案</button>
+    </div>`;
+}
+
+function quizToggleMulti(i, el) {
+  if (quiz.busy) return;
+  const sel = quiz._multiSelected || (quiz._multiSelected = new Set());
+  if (sel.has(i)) { sel.delete(i); el.classList.remove("selected"); }
+  else { sel.add(i); el.classList.add("selected"); }
+}
+
+async function quizJudgeMulti() {
+  if (quiz.busy) return;
+  const sel = quiz._multiSelected;
+  if (!sel || !sel.size) { toast("请至少选择一个答案", true); return; }
+  quiz.busy = true;
+  const c = quiz.current;
+  const selected = [...sel].sort((a, b) => a - b);
+  const expected = (c.correct_indices || []).slice().sort((a, b) => a - b);
+  const correct = selected.length === expected.length && selected.every((v, i) => v === expected[i]);
+  quiz._lastSelectedMulti = selected;
+  document.querySelectorAll(".quiz-option").forEach((btn, i) => {
+    btn.disabled = true;
+    if (expected.includes(i)) btn.classList.add("correct");
+    else if (selected.includes(i)) btn.classList.add("wrong");
+    btn.classList.remove("selected");
+  });
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: "multi",
+        selected_indices: selected, correct_indices: expected,
+        word: c.stem || c.word, meaning: c.meaning, example: c.example, explanation: c.explanation || "",
+      }),
+    });
+    if (correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.stem || c.word, meaning: c.meaning }); }
+    await new Promise(r => setTimeout(r, correct ? 400 : 700));
+    quizRenderJudgeResult(data, c, correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); }
+  quiz.busy = false;
+}
+
+async function quizJudgeChoice(selectedIndex, el) {
+  if (quiz.busy) return;
+  quiz.busy = true;
+  const c = quiz.current;
+  const correct = selectedIndex === c.correct_index;
+  quiz._lastSelected = selectedIndex;
+  // 先在选项上标色反馈，再调后端
+  document.querySelectorAll(".quiz-option").forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === c.correct_index) btn.classList.add("correct");
+    if (i === selectedIndex && !correct) btn.classList.add("wrong");
+  });
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: c.question_type || "choice",
+        selected_index: selectedIndex, correct_index: c.correct_index,
+        word: c.stem || c.word, meaning: c.meaning, example: c.example, explanation: c.explanation || "",
+      }),
+    });
+    if (correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.word, meaning: c.meaning }); }
+    await new Promise(r => setTimeout(r, correct ? 400 : 700));
+    quizRenderJudgeResult(data, c, correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); }
+  quiz.busy = false;
+}
+
+async function quizJudgeSpell() {
+  if (quiz.busy) return;
+  const input = $("#quiz-answer");
+  const answer = input.value.trim();
+  if (!answer) { toast("请输入答案", true); return; }
+  quiz.busy = true;
+  const c = quiz.current;
+  // 先本地判定做即时视觉反馈，再走后端
+  const correct = answer.toLowerCase() === c.word.toLowerCase();
+  if (!correct) {
+    input.classList.remove("wrong-shake");
+    void input.offsetWidth;
+    input.classList.add("wrong-shake");
+  }
+  try {
+    const data = await api("api/quiz/judge", {
+      method: "POST",
+      body: JSON.stringify({
+        word_id: c.word_id, question_type: "spell", answer: answer,
+        word: c.word, meaning: c.meaning, example: c.example,
+      }),
+    });
+    if (data.correct) { quiz.correct++; }
+    else { quiz.wrong++; quiz.wrongWords.push({ word: c.word, meaning: c.meaning }); }
+    await new Promise(r => setTimeout(r, correct ? 300 : 700));
+    quizRenderJudgeResult(data, c, data.correct, () => quizNextContinue());
+  } catch (e) { toast(e.message, true); quizRenderSpell(); }
+  quiz.busy = false;
+}
+
+function quizRenderJudgeResult(data, c, correct, onContinue) {
+  const done = quiz.correct + quiz.wrong;
+  const pct = quiz.total ? Math.round(done / quiz.total * 100) : 0;
+  const isMulti = c.question_type === "multi";
+  const isVocab = !c.question_type || c.question_type === "choice" || c.question_type === "spell";
+  const correctSet = isMulti ? (c.correct_indices || []) : (c.correct_index == null ? [] : [c.correct_index]);
+  const pickedSet = isMulti
+    ? (quiz._lastSelectedMulti || [])
+    : (quiz._lastSelected == null ? [] : [quiz._lastSelected]);
+  // 选项列表带标色回放（拼写题无选项）
+  let optsHtml = "";
+  if (c.options) {
+    optsHtml = c.options.map((opt, i) => {
+      const isCorrect = correctSet.includes(i);
+      const isPicked = pickedSet.includes(i);
+      const cls = isCorrect ? "correct" : (isPicked ? "wrong" : "");
+      const mark = isCorrect ? "✓" : (isPicked ? "✗" : "");
+      return `<div class="quiz-option ${cls}" style="cursor:default; margin-top:8px;"><span class="opt-key">${mark || i + 1}</span><span>${esc(opt || "（空）")}</span></div>`;
+    }).join("");
+  }
+  const explanation = data.explanation || c.explanation || "";
+  $("#quiz-panel").innerHTML = `
+    <div class="quiz-progress"><div style="width:${pct}%"></div></div>
+    <div class="quiz-card">
+      <div class="quiz-result-icon">${correct ? "✅" : "❌"}</div>
+      <div class="q-word" style="margin-top:8px; font-size:${isVocab ? "clamp(22px,5vw,32px)" : "clamp(16px,4vw,22px)"}; ${isVocab ? "" : "line-height:1.6;"}">${esc(c.stem || c.word)}</div>
+      ${isVocab && c.phonetic ? `<div class="q-phonetic">${esc(c.phonetic)}</div>` : ""}
+      ${c.meaning ? `<div class="q-meaning" style="margin-top:10px;">${isVocab ? "释义" : "正确答案"}：${esc(c.meaning)}</div>` : ""}
+      ${c.example ? `<div class="q-example" style="margin-top:4px;">例句：${esc(c.example)}</div>` : ""}
+      ${optsHtml}
+      ${explanation ? `<div style="margin-top:10px; padding:10px 12px; background:var(--primary-tint); border-radius:10px; font-size:13.5px; line-height:1.6;">💡 ${esc(explanation)}</div>` : ""}
+      <div class="muted" style="margin-top:10px;">${correct ? `答对！进入第 ${data.box} 箱，${data.due_in_days} 天后再复习` : `答错，回到第 1 箱明天再见`}</div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="btn" id="quiz-next-btn" onclick="">下一题</button>
+    </div>`;
+  const nb = document.getElementById("quiz-next-btn");
+  nb.onclick = onContinue;
+  nb.focus();
+}
+
+async function quizNextContinue() {
+  const done = quiz.correct + quiz.wrong;
+  if (done >= quiz.total) return quizFinish();
+  await quizNext();
+}
+
+async function quizFinish() {
+  const acc = quiz.total ? Math.round(quiz.correct / quiz.total * 100) : 0;
+  $("#quiz-panel").innerHTML = `
+    <div style="text-align:center; padding:24px 0;">
+      <div style="font-size:42px;">🎉</div>
+      <h2>本轮完成！</h2>
+      <p>${quiz.correct} 题答对 · ${quiz.wrong} 题答错 · 正确率 ${acc}%</p>
+      <div id="finish-push" class="muted">正在将结果注入 Bot 上下文…</div>
+      <div class="row" style="justify-content:center; margin-top:14px;">
+        <button class="btn" onclick="quizStart()">再来一轮</button>
+        <button class="btn ghost" onclick="quizIntro()">返回</button>
+      </div>
+    </div>`;
+  try {
+    const data = await api("api/quiz/finish", {
+      method: "POST",
+      body: JSON.stringify({ total: quiz.total, correct: quiz.correct, wrong_words: quiz.wrongWords }),
+    });
+    $("#finish-push").textContent = data.message || "已推送";
+    loadDashboard(); // 刷新仪表盘统计
+  } catch (e) { $("#finish-push").textContent = "推送失败：" + e.message; }
+}
+
+async function loadPushPreview() {
+  $("#push-preview-content").innerHTML = '<span class="muted">加载中…</span>';
+  try {
+    const d = await api("api/push/preview");
+    if (!d.preview || !d.preview.length) {
+      $("#push-preview-content").innerHTML = '<span class="muted">没有待推送的词（今日词单已学完或词书为空）</span>';
+      return;
+    }
+    const lines = d.preview.map(l => `<div style="padding:4px 0; border-bottom:1px solid var(--border); font-size:14px;">${esc(l)}</div>`).join("");
+    $("#push-preview-content").innerHTML = `
+      <div class="muted" style="margin-bottom:6px;">推送时间 ${esc(d.push_time)} · ${d.total_words} 词（新 ${d.new_words} / 复习 ${d.review_words}）</div>
+      ${lines}`;
+  } catch (e) { $("#push-preview-content").innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+}
+
+/* ---------------- 外观设置（右侧抽屉） ---------------- */
+
+const PRESET_COLORS = ["#ff7eb3", "#ff6b81", "#f59e0b", "#2ec4a6", "#5b6cff", "#8b5cf6"];
+const uiSettings = { theme: "light", primary_color: "#ff7eb3", bg_url: "", bg_opacity: "", petals: "1", style: "dream" };
+let settingsDirty = false;
+
+function toggleSettings() {
+  const p = $("#settings-panel");
+  if (p.classList.contains("open")) closeSettings();
+  else {
+    $("#drawer-mask").classList.add("open");
+    p.classList.add("open");
+  }
+}
+
+function closeSettings() {
+  if (settingsDirty && !confirm("有未保存的外观更改，确定丢弃？")) return;
+  settingsDirty = false;
+  $("#drawer-mask").classList.remove("open");
+  $("#settings-panel").classList.remove("open");
+}
+
+function markDirty() {
+  settingsDirty = true;
+  applySettings(uiSettings);
+  renderSettingsControls();
+}
+
+function segTheme(mode) { uiSettings.theme = mode; markDirty(); }
+
+function segStyle(mode) { uiSettings.style = mode === "scifi" ? "scifi" : "dream"; markDirty(); }
+
+function pickColor(hex) { uiSettings.primary_color = hex; markDirty(); }
+
+function pickBg(url) { uiSettings.bg_url = url; markDirty(); }
+
+function onBgUrlInput() { uiSettings.bg_url = $("#set-bg-url").value.trim(); markDirty(); }
+
+function onOpacityInput() {
+  uiSettings.bg_opacity = $("#set-bg-opacity").value;
+  markDirty();
+}
+
+function onPetalsToggle(checked) {
+  uiSettings.petals = checked ? "1" : "0";
+  markDirty();
+}
+
+/* ---------------- 氛围：飘落花瓣 ---------------- */
+
+const PETAL_COUNT = 14;
+let petalLayer = null;
+
+function buildPetals() {
+  if (petalLayer) return;
+  petalLayer = document.createElement("div");
+  petalLayer.id = "petal-layer";
+  for (let i = 0; i < PETAL_COUNT; i++) {
+    const p = document.createElement("span");
+    p.className = "petal";
+    const dur = 9 + Math.random() * 9;
+    // 负 delay 让花瓣加载时已经散落在半空，而不是齐刷刷从顶上出发
+    p.style.cssText =
+      `--x:${(Math.random() * 100).toFixed(1)}vw;` +
+      `--s:${(8 + Math.random() * 8).toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${(-Math.random() * dur).toFixed(1)}s;` +
+      `--drift:${(Math.random() * 16 - 8).toFixed(1)}vw;` +
+      `--spin:${Math.round(240 + Math.random() * 240)}deg;` +
+      `--sway:${Math.round(8 + Math.random() * 14)}px;` +
+      `--sway-dur:${(1.8 + Math.random() * 1.6).toFixed(1)}s;`;
+    p.appendChild(document.createElement("i"));
+    petalLayer.appendChild(p);
+  }
+  document.body.appendChild(petalLayer);
+  // 页面切到后台时暂停，回来继续，省电不抢帧
+  document.addEventListener("visibilitychange", () => {
+    if (petalLayer) petalLayer.classList.toggle("paused", document.hidden);
+  });
+}
+
+function applyPetals(on) {
+  if (on) {
+    buildPetals();
+    petalLayer.classList.remove("off");
+  } else if (petalLayer) {
+    petalLayer.classList.add("off");
+  }
+}
+
+function renderSettingsControls() {
+  // 明暗分段
+  $("#seg-light").classList.toggle("active", uiSettings.theme !== "dark");
+  $("#seg-dark").classList.toggle("active", uiSettings.theme === "dark");
+  // 风格分段
+  $("#seg-dream").classList.toggle("active", uiSettings.style !== "scifi");
+  $("#seg-scifi").classList.toggle("active", uiSettings.style === "scifi");
+  // 色板（首次构建）
+  const row = $("#swatch-row");
+  if (!row.dataset.built) {
+    row.innerHTML = PRESET_COLORS.map(c =>
+      `<button class="swatch" style="background:${c};" data-c="${c}" title="${c}" onclick="pickColor('${c}')"></button>`
+    ).join("") +
+    `<span class="swatch swatch-custom" title="自定义颜色">🎨<input type="color" id="set-primary-color" value="${uiSettings.primary_color}" oninput="pickColor(this.value)"></span>`;
+    row.dataset.built = "1";
+  }
+  row.querySelectorAll(".swatch[data-c]").forEach(el =>
+    el.classList.toggle("active", el.dataset.c.toLowerCase() === (uiSettings.primary_color || "").toLowerCase()));
+  const custom = $("#set-primary-color");
+  if (custom && custom.value.toLowerCase() !== (uiSettings.primary_color || "").toLowerCase()) custom.value = uiSettings.primary_color;
+  const customWrap = row.querySelector(".swatch-custom");
+  if (customWrap) customWrap.classList.toggle("active", !PRESET_COLORS.includes((uiSettings.primary_color || "").toLowerCase()));
+  // 背景选中态（选内置时输入框留空避免歧义）
+  const u = uiSettings.bg_url || "";
+  $("#bg-pick-spot").classList.toggle("active", u === "");
+  $("#bg-pick-builtin").classList.toggle("active", u === "bg.jpg");
+  const urlInput = $("#set-bg-url");
+  if (urlInput.value !== (u === "bg.jpg" ? "" : u)) urlInput.value = u === "bg.jpg" ? "" : u;
+  // 透明度
+  const op = uiSettings.bg_opacity || "0.62";
+  $("#set-bg-opacity").value = op;
+  $("#opacity-val").textContent = op;
+  // 氛围开关
+  const petalsCb = $("#set-petals");
+  if (petalsCb) petalsCb.checked = uiSettings.petals !== "0";
+}
+
+async function loadSettings() {
+  try {
+    const s = await api("api/settings");
+    Object.assign(uiSettings, s);
+    applySettings(uiSettings);
+    renderSettingsControls();
+  } catch (e) { /* 静默 */ }
+}
+
+function hexToRgb(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return null;
+  const v = parseInt(m[1], 16);
+  return `${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}`;
+}
+
+function hexShiftHue(hex, deg) {
+  // 色相偏移 deg 度，返回 "r, g, b"（用于主色渐变的辅色）
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return null;
+  const v = parseInt(m[1], 16);
+  const r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, sat = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  h = (h + deg / 360 + 1) % 1;
+  const hue2 = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  let r2, g2, b2;
+  if (sat === 0) { r2 = g2 = b2 = l; }
+  else {
+    const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat;
+    const p = 2 * l - q;
+    r2 = hue2(p, q, h + 1 / 3);
+    g2 = hue2(p, q, h);
+    b2 = hue2(p, q, h - 1 / 3);
+  }
+  const to = (x) => Math.round(x * 255);
+  return `${to(r2)}, ${to(g2)}, ${to(b2)}`;
+}
+
+function applySettings(s) {
+  const root = document.documentElement;
+  root.dataset.theme = s.theme === "dark" ? "dark" : "light";
+  const scifi = s.style === "scifi";
+  if (scifi) root.dataset.style = "scifi";
+  else delete root.dataset.style;
+  if (!scifi && s.primary_color) {
+    root.style.setProperty("--primary", s.primary_color);
+    const rgb = hexToRgb(s.primary_color);
+    if (rgb) root.style.setProperty("--primary-rgb", rgb);
+    // 樱花粉为默认主题：保留 CSS 的粉→紫渐变，不计算辅色
+    const isDefault = s.primary_color.toLowerCase() === "#ff7eb3";
+    const rgb2 = isDefault ? null : hexShiftHue(s.primary_color, -60);
+    if (rgb2) root.style.setProperty("--primary-2", `rgb(${rgb2})`);
+    else if (isDefault) root.style.removeProperty("--primary-2");
+  }
+  if (scifi) {
+    // 科幻模式配色固定为霓虹青，用户主题色不内联覆盖
+    root.style.removeProperty("--primary");
+    root.style.removeProperty("--primary-rgb");
+    root.style.removeProperty("--primary-2");
+  }
+  if (s.bg_url) {
+    root.style.setProperty("--user-bg", `url("${s.bg_url}")`);
+    document.body.dataset.bg = "1";
+  } else {
+    root.style.removeProperty("--user-bg");
+    delete document.body.dataset.bg;
+  }
+  // 透明度滑块直接控制玻璃卡片 alpha（深浅模式各有默认值）
+  if (s.bg_opacity) root.style.setProperty("--card-alpha", String(s.bg_opacity));
+  // 氛围：飘落花瓣（prefers-reduced-motion 下 CSS 已隐藏花瓣层）
+  applyPetals(s.petals !== "0" && !REDUCED_MOTION.matches);
+}
+
+async function saveSettings() {
+  const btn = $("#save-settings-btn");
+  try {
+    await api("api/settings", { method: "POST", body: JSON.stringify(uiSettings) });
+    settingsDirty = false;
+    applySettings(uiSettings);
+    btn.textContent = "✓ 已保存";
+    toast("外观已保存");
+    setTimeout(() => { btn.textContent = "保存设置"; }, 1600);
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 进度 ---------------- */
+
+let progressState = { streams: [], userKey: "", label: "", due: [] };
+
+async function loadProgress() {
+  let data;
+  try { data = await api("api/progress/streams"); } catch (e) { toast(e.message, true); return; }
+  const streams = data.streams || [];
+  progressState.streams = streams;
+  if (!streams.length) {
+    $("#progress-streams").innerHTML = `<tr><td colspan="6" class="empty">还没有任何聊天流产生进度</td></tr>`;
+    $("#progress-detail").innerHTML = "";
+    return;
+  }
+  $("#progress-streams").innerHTML = streams.map((s, i) => `
+    <tr>
+      <td><b>${esc(s.label || s.user_key)}</b></td>
+      <td>${s.learned} 词</td>
+      <td>${s.total_reviews} 次</td>
+      <td>${s.accuracy}%</td>
+      <td>${s.due_now ? `<span class="pill">${s.due_now}</span>` : "0"}</td>
+      <td><button class="link" onclick="openStreamDetail(${i})">详情</button></td>
+    </tr>`).join("");
+}
+
+function openStreamDetail(i) {
+  const s = progressState.streams[i];
+  if (s) loadStreamDetail(s.user_key, s.label || s.user_key);
+}
+
+async function loadStreamDetail(userKey, label) {
+  let d;
+  try { d = await api("api/progress/stream?user_key=" + encodeURIComponent(userKey)); }
+  catch (e) { toast(e.message, true); return; }
+
+  progressState.userKey = userKey;
+  progressState.label = label;
+  progressState.due = d.due_list || [];
+
+  const dist = Object.entries(d.box_dist || {}).sort((a, b) => a[0] - b[0]);
+  const distMax = dist.length ? Math.max(...dist.map(([, c]) => c)) : 1;
+  const intervals = { 1: "1天", 2: "2天", 3: "4天", 4: "7天", 5: "15天" };
+  const bars = dist.map(([box, count]) => `
+    <div class="bar-row">
+      <span>箱${box}（${intervals[box] || "?"}）</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${Math.round(count / distMax * 100)}%"></span></span>
+      <span>${count}</span>
+    </div>`).join("");
+
+  const dueRows = progressState.due.map((w) => `
+    <tr>
+      <td><b>${esc(w.word)}</b></td>
+      <td class="muted">${esc(w.phonetic || "")}</td>
+      <td>${esc(w.meaning || "")}</td>
+      <td><span class="pill gray">箱${w.box}</span></td>
+      <td>${w.last_result === 1 ? '<span class="pill green">上次对</span>' : w.last_result === 0 ? '<span class="pill red">上次错</span>' : '<span class="pill gray">未测</span>'}</td>
+      <td><button class="link danger" onclick="deleteWordProgressAt(${w.word_id})">删除</button></td>
+    </tr>`).join("");
+
+  $("#progress-detail").innerHTML = `
+    <div class="card scroll-x" style="margin-top:14px;">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <h2 style="margin:0;">📖 ${esc(label)}</h2>
+        <button class="link" onclick="closeStreamDetail()">← 返回列表</button>
+      </div>
+      <div class="row" style="justify-content:flex-end; margin-bottom:10px;">
+        <button class="btn red" onclick="clearStreamProgressCached()">清空该流进度</button>
+      </div>
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="stat"><span class="num">${d.learned}</span><span class="lbl">已学单词</span></div>
+        <div class="stat"><span class="num">${d.total_reviews}</span><span class="lbl">复习次数</span></div>
+        <div class="stat"><span class="num" style="color:var(--green)">${d.accuracy}%</span><span class="lbl">正确率</span></div>
+        <div class="stat"><span class="num" style="color:var(--amber)">${d.due_now}</span><span class="lbl">今日待复习</span></div>
+      </div>
+      <h2>箱分布</h2>
+      <div class="bars">${bars || '<div class="muted">暂无数据</div>'}</div>
+      <h2>待复习词单</h2>
+      ${dueRows
+        ? `<table><thead><tr><th>单词</th><th>音标</th><th>释义</th><th>箱子</th><th>状态</th><th style="width:60px;">操作</th></tr></thead><tbody>${dueRows}</tbody></table>`
+        : `<div class="muted">没有到期的复习词 🎉</div>`}
+    </div>`;
+  staggerIn($("#progress-detail"));
+  countUpIn($("#progress-detail"));
+}
+
+function closeStreamDetail() {
+  $("#progress-detail").innerHTML = "";
+}
+
+function clearStreamProgressCached() {
+  clearStreamProgress(progressState.userKey, progressState.label);
+}
+
+async function clearStreamProgress(userKey, label) {
+  if (!confirm(`确定清空「${label}」的所有进度？\n词条不会删除，但所有箱/复习记录/正确率都会归零。`)) return;
+  try {
+    const data = await api("api/progress/stream?user_key=" + encodeURIComponent(userKey), { method: "DELETE" });
+    toast(data.message);
+    loadProgress();
+    loadStreamDetail(userKey, label);
+  } catch (e) { toast(e.message, true); }
+}
+
+async function deleteWordProgressAt(wordId) {
+  const w = progressState.due.find(x => x.word_id === wordId);
+  await deleteWordProgress(progressState.userKey, wordId, w ? w.word : "该词");
+}
+
+async function deleteWordProgress(userKey, wordId, word) {
+  if (!confirm(`删除「${word}」在这条流的进度记录？\n词条保留，只重置这一个词。`)) return;
+  try {
+    const data = await api(`api/progress/stream/${wordId}?user_key=` + encodeURIComponent(userKey), { method: "DELETE" });
+    toast(data.message);
+    loadStreamDetail(progressState.userKey, progressState.label);
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ---------------- 键盘快捷键 ---------------- */
+
+document.addEventListener("keydown", (e) => {
+  // Esc 优先：关闭弹窗 / 设置抽屉
+  if (e.key === "Escape") {
+    closeWordModal();
+    closeSettings();
+    return;
+  }
+  // 测验键盘流：Enter 下一题，1-4 选答案
+  if (!$("#tab-quiz").classList.contains("active")) return;
+  const nextBtn = document.getElementById("quiz-next-btn");
+  if (nextBtn) {
+    if (e.target === nextBtn) return; // 按钮已聚焦时让原生 click 处理，避免双跳
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      nextBtn.click();
+      return;
+    }
+  }
+  // 多选题：Enter 提交（数字键切换选中）
+  const multiBtn = document.getElementById("quiz-multi-submit");
+  if (multiBtn && !multiBtn.disabled && e.key === "Enter") {
+    e.preventDefault();
+    multiBtn.click();
+    return;
+  }
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return;
+  if (quiz.busy || !quiz.current || !quiz.current.options) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= quiz.current.options.length) {
+    const btns = document.querySelectorAll(".quiz-option");
+    if (btns[n - 1] && !btns[n - 1].disabled) btns[n - 1].click();
+  }
+});
+
+/* ---------------- 启动（懒加载：各 tab 首次进入时再拉数据） ---------------- */
+
+loadSettings();
+loadDashboard();
+</script>
+</body>
+</html>

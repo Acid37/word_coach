@@ -1,8 +1,8 @@
 {
   "name": "word_coach",
   "display_name": "背单词助手",
-  "version": "0.8.0",
-  "description": "背单词助手：文件/远程词库导入（含启动自动导入）+ Leitner 间隔复习 + 每日定时推送 + LLM 对话式测验（待判定题挂起+自动提醒，避免进度漏记）+ 自然语言词库管理；主人可用命令查询各聊天流（session）的背单词进度/状态，工具按聊天流白名单动态注入",
+  "version": "0.10.0",
+  "description": "多卡组学习平台：背单词 + 任意题库卡组（判断/单选/多选，文件/URL 导入）+ Leitner 间隔复习 + 每日定时推送 + LLM 对话式测验 + Bot 空闲自主攒题（Bot 笔记本，主人发起主题后 Bot 分批攒出整个题库）+ 内置 Web UI（卡组切换/刷题/进度看板，绑定主人聊天流；支持局域网直连）",
   "author": "可可",
   "dependencies": {
     "plugins": [],
@@ -52,6 +52,24 @@
       "enabled": true
     },
     {
+      "component_type": "event_handler",
+      "component_name": "word_activity_tracker",
+      "dependencies": [],
+      "enabled": true
+    },
+    {
+      "component_type": "action",
+      "component_name": "deck_build",
+      "dependencies": [],
+      "enabled": true
+    },
+    {
+      "component_type": "router",
+      "component_name": "word_coach_web",
+      "dependencies": [],
+      "enabled": true
+    },
+    {
       "component_type": "config",
       "component_name": "config",
       "dependencies": [],
@@ -67,6 +85,6 @@
     "event_api": "1.0.0",
     "log_api": "1.0.0"
   },
-  "python_dependencies": ["aiosqlite>=0.22.1"],
+  "python_dependencies": ["aiosqlite>=0.22.1", "httpx"],
   "dependencies_required": true
 }

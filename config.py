@@ -18,8 +18,8 @@ from src.core.components.base.config import (
 class WordCoachConfig(BaseConfig):
     """word_coach 背单词助手插件配置。"""
 
-    name: ClassVar[str] = "config"
-    description: ClassVar[str] = "背单词助手插件配置"
+    config_name: ClassVar[str] = "config"
+    config_description: ClassVar[str] = "背单词助手插件配置"
 
     @config_section("plugin")
     class PluginSection(SectionBase):
@@ -55,7 +55,7 @@ class WordCoachConfig(BaseConfig):
         """工具可见范围配置。"""
 
         allowed_targets: list[str] = Field(
-            default=["qq:user:2583090218"],
+            default=[],
             description=(
                 "word_quiz / word_lookup 工具可见的聊天流白名单，"
                 "格式：platform:user:ID（私聊）或 platform:group:ID（群聊），"
@@ -79,6 +79,64 @@ class WordCoachConfig(BaseConfig):
                 "word_quiz/word_lookup/word_import 也不会出现在群聊（工具仅私聊可用，"
                 "命令与每日推送不受影响）"
             ),
+        )
+
+    @config_section("web")
+    class WebSection(SectionBase):
+        """内置 Web UI 配置。"""
+
+        owner_target: str = Field(
+            default="",
+            description=(
+                "网页测验与网页进度绑定的主人聊天流，"
+                "格式：platform:user:ID（如 qq:user:2583090218）。"
+                "留空时回退 [scope].allowed_targets 的第一项。"
+                "网页端背单词的进度与该聊天流（QQ 私聊）完全共用。"
+            ),
+        )
+
+        quiz_count: int = Field(
+            default=10,
+            description="网页测验每次会话取词总数（到期复习优先）",
+        )
+
+        quiz_new: int = Field(
+            default=3,
+            description="网页测验每次会话中的新词数量上限",
+        )
+
+        theme: str = Field(
+            default="light",
+            description="Web UI 明暗主题（light/dark）",
+        )
+
+        primary_color: str = Field(
+            default="#5b6cff",
+            description="Web UI 主题色（十六进制，如 #5b6cff）",
+        )
+
+        bg_url: str = Field(
+            default="",
+            description="Web UI 背景图 URL（留空=纯色背景，支持任意图片直链）",
+        )
+
+        bg_opacity: float = Field(
+            default=0.85,
+            description="有背景图时内容区的透明度（0.0-1.0）",
+        )
+
+        lan_enabled: bool = Field(
+            default=True,
+            description=(
+                "局域网直连：插件自己额外监听 0.0.0.0:lan_port，"
+                "手机/平板在同一局域网直接输 http://<本机IP>:lan_port/ 即可用 Web UI。"
+                "只开插件自己的端口，核心 [http_router] 的 127.0.0.1 绑定不受影响。"
+            ),
+        )
+
+        lan_port: int = Field(
+            default=8900,
+            description="局域网直连端口（1024-65535，默认 8900）",
         )
 
     @config_section("source")
@@ -109,6 +167,40 @@ class WordCoachConfig(BaseConfig):
             ),
         )
 
+    @config_section("author")
+    class AuthorSection(SectionBase):
+        """Bot 自主攒题配置（空闲时间为 Bot 笔记本卡组批量生成题目）。"""
+
+        enabled: bool = Field(
+            default=True,
+            description="是否启用 Bot 空闲攒题（Bot 笔记本）",
+        )
+
+        model: str = Field(
+            default="deepseek-v4-flash",
+            description=(
+                "攒题使用的模型名（config/model.toml 中 models 列表的 name）；"
+                "建议选廉价快速模型，攒题分批进行成本很低"
+            ),
+        )
+
+        idle_threshold_minutes: int = Field(
+            default=30,
+            description="最近一条消息距今超过该分钟数才视为空闲并开始攒题",
+        )
+
+        interval_minutes: int = Field(
+            default=10,
+            description="攒题检查间隔（分钟）；到点且空闲时攒一批",
+        )
+
+        batch_size: int = Field(
+            default=10,
+            description="每批生成的题目数量",
+        )
+
     plugin: PluginSection = Field(default_factory=PluginSection)
     scope: ScopeSection = Field(default_factory=ScopeSection)
+    web: WebSection = Field(default_factory=WebSection)
     source: SourceSection = Field(default_factory=SourceSection)
+    author: AuthorSection = Field(default_factory=AuthorSection)

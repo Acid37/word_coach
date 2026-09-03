@@ -1,10 +1,13 @@
 """word_coach 插件入口。
 
 - 组件：服务（词书 + Leitner 复习）、word_quiz / word_lookup 工具、
-  /背单词 命令、word_stream_gate 可见性门控
+  /背单词 命令、word_stream_gate 可见性门控、内置 Web UI（router 组件）
 - 每日定时推送：按 [plugin].push_time（默认 09:00）向白名单目标流推送今日词单，
   用一次性调度 + 每次触发后重排下一次（调度器只支持 interval/delay 触发，
   不支持 cron，因此用「到点重排」模式对齐墙钟时间）
+- Web UI：挂载到框架统一的内嵌 HTTP 服务器（见 router.py），启动时打印实际地址；
+  另提供局域网直连（lan_server.py，插件自己监听 0.0.0.0:lan_port，手机输网址直接用，
+  不动核心 [http_router] 的绑定）
 """
 
 from __future__ import annotations
@@ -18,10 +21,21 @@ from src.app.plugin_system.api.send_api import send_text
 from src.app.plugin_system.base import BasePlugin, register_plugin
 from src.kernel.concurrency import get_task_manager
 
+from .author import (
+    ACTOR_BUCKET,
+    DeckBuildAction,
+    WordActivityTracker,
+    _AUTHOR_REMINDER_NAME,
+    author_reminder_content,
+    run_authoring_tick,
+    seconds_since_last_activity,
+)
 from .command import WordCommand
 from .config import WordCoachConfig
 from .gate import WordStreamGate
+from .lan_server import LanServer
 from .reminder import WordPendingReminder
+from .router import WordCoachWebRouter
 from .service import WordCoachService, resolve_stream_id
 from .tool import WordImportTool, WordLookupTool, WordQuizTool
 
@@ -55,8 +69,8 @@ class WordCoachPlugin(BasePlugin):
     """背单词助手插件。"""
 
     plugin_name = "word_coach"
-    plugin_description = "背单词助手：词书 + Leitner 复习 + 每日推送 + 对话测验"
-    plugin_version = "0.8.0"
+    plugin_description = "多卡组学习平台：背单词 + 任意题库卡组 + Leitner 复习 + 每日推送 + Bot 空闲自主攒题"
+    plugin_version = "0.10.0"
 
     configs: list[type] = [WordCoachConfig]
     dependent_components: list[str] = []
@@ -65,7 +79,10 @@ class WordCoachPlugin(BasePlugin):
         super().__init__(config)
         self._service: WordCoachService | None = None
         self._schedule_ids: list[str] = []
+        self._authoring_schedule_ids: list[str] = []
         self._register_task_id: str | None = None
+        self._authoring_task_id: str | None = None
+        self._lan_server: LanServer | None = None
 
     # ------------------------------------------------------------------
     # 组件注册
@@ -75,7 +92,7 @@ class WordCoachPlugin(BasePlugin):
         cfg = self.config
         if isinstance(cfg, WordCoachConfig) and not cfg.plugin.enabled:
             return []
-        return [
+        components: list[type] = [
             WordCoachService,
             WordQuizTool,
             WordLookupTool,
@@ -83,7 +100,11 @@ class WordCoachPlugin(BasePlugin):
             WordCommand,
             WordStreamGate,
             WordPendingReminder,
+            WordCoachWebRouter,
         ]
+        if isinstance(cfg, WordCoachConfig) and cfg.author.enabled:
+            components.extend([DeckBuildAction, WordActivityTracker])
+        return components
 
     # ------------------------------------------------------------------
     # 生命周期
@@ -114,6 +135,16 @@ class WordCoachPlugin(BasePlugin):
             )
             self._register_task_id = task.task_id
 
+        # Bot 空闲攒题：注册周期调度（到点且聊天空闲时攒一批）
+        if isinstance(cfg, WordCoachConfig) and cfg.author.enabled:
+            tm = get_task_manager()
+            task = tm.create_task(
+                self._schedule_authoring_when_ready(),
+                name="word_coach_schedule_authoring",
+                daemon=True,
+            )
+            self._authoring_task_id = task.task_id
+
         # 词书为空且配置了自动下载 URL 时，后台自动导入（不阻塞启动）
         if isinstance(cfg, WordCoachConfig) and cfg.source.auto_import_if_empty:
             urls = [u.strip() for u in cfg.source.auto_import_urls if u and u.strip()]
@@ -124,6 +155,54 @@ class WordCoachPlugin(BasePlugin):
                     name="word_coach_auto_import",
                     daemon=True,
                 )
+
+        self._log_web_ui_url()
+        self._start_lan_server()
+
+    def _start_lan_server(self) -> None:
+        """按 [web].lan_enabled/lan_port 启动局域网直连（插件自己的端口，不动核心绑定）。"""
+        cfg = self.config
+        if not isinstance(cfg, WordCoachConfig) or not cfg.web.lan_enabled:
+            return
+        port = cfg.web.lan_port
+        if not (1024 <= port <= 65535):
+            logger.warning(f"word_coach 局域网直连端口非法: {port}（需 1024-65535），已跳过")
+            return
+        # 专用路由实例：与核心挂载的那份互不影响，端点共用同一个服务实例
+        self._lan_server = LanServer(WordCoachWebRouter(self).app, port=port)
+        tm = get_task_manager()
+        tm.create_task(self._lan_start_job(), name="word_coach_lan_server", daemon=True)
+
+    async def _lan_start_job(self) -> None:
+        if self._lan_server is None:
+            return
+        try:
+            await self._lan_server.start()
+            logger.info(
+                f"word_coach 局域网直连已就绪: {self._lan_server.url}"
+                "（同一局域网的手机/平板直接输网址即可用）"
+            )
+        except Exception as exc:
+            logger.warning(f"word_coach 局域网直连启动失败（不影响本机访问）: {exc}")
+
+    def _log_web_ui_url(self) -> None:
+        """打印 Web UI 实际访问地址（读框架 HTTP 服务器单例的 host:port，不假设 8000）。"""
+        try:
+            # 公开 api 层未导出该入口，按规范 §6 回退到内部模块路径
+            from src.core.transport.router.http_server import get_http_server
+
+            server = get_http_server()
+            if server.is_running():
+                logger.info(
+                    f"word_coach Web UI 已就绪: {server.get_base_url()}/word-coach/"
+                )
+            else:
+                logger.info(
+                    "word_coach Web UI 路由已注册，但框架 HTTP 服务器未运行"
+                    "（如需访问请开启核心配置 [http_router].enable_http_router）"
+                )
+        except Exception as exc:
+            logger.warning(f"word_coach Web UI 地址探测失败（不影响插件功能）: {exc}")
 
     async def _auto_import_urls(self, urls: list[str]) -> None:
         """词书为空时按顺序尝试自动下载导入词库；成功后停止。"""
@@ -152,13 +231,21 @@ class WordCoachPlugin(BasePlugin):
         """清理调度与数据库连接。"""
         from src.kernel.scheduler import get_unified_scheduler
 
+        if self._lan_server is not None:
+            try:
+                await self._lan_server.stop()
+            except Exception:
+                pass
+            self._lan_server = None
+
         scheduler = get_unified_scheduler()
-        for schedule_id in list(self._schedule_ids):
+        for schedule_id in list(self._schedule_ids) + list(self._authoring_schedule_ids):
             try:
                 await scheduler.remove_schedule(schedule_id)
             except Exception:
                 pass
         self._schedule_ids.clear()
+        self._authoring_schedule_ids.clear()
 
         if self._register_task_id:
             try:
@@ -166,6 +253,13 @@ class WordCoachPlugin(BasePlugin):
             except Exception:
                 pass
             self._register_task_id = None
+
+        if self._authoring_task_id:
+            try:
+                get_task_manager().cancel_task(self._authoring_task_id)
+            except Exception:
+                pass
+            self._authoring_task_id = None
 
         if self._service is not None:
             await self._service.close()
@@ -242,10 +336,13 @@ class WordCoachPlugin(BasePlugin):
             if not stream_id:
                 logger.warning(f"word_coach 推送目标解析失败: {target}")
                 continue
+            plan = await service.get_plan(
+                stream_id, fallback_new_count=cfg.plugin.daily_new_count
+            )
             words = await service.due_words(
                 stream_id,
                 total_limit=cfg.plugin.daily_word_count,
-                new_limit=cfg.plugin.daily_new_count,
+                new_limit=plan["daily_new_count"],
             )
             if not words:
                 continue
@@ -263,3 +360,87 @@ class WordCoachPlugin(BasePlugin):
                 )
             except Exception as exc:
                 logger.warning(f"word_coach 推送失败 ({stream_id}): {exc}")
+
+    # ------------------------------------------------------------------
+    # Bot 空闲攒题
+    # ------------------------------------------------------------------
+
+    async def _schedule_authoring_when_ready(self) -> None:
+        """等待 scheduler 就绪后注册攒题周期调度（一次性+重排，与每日推送同模式）。"""
+        from src.kernel.scheduler import get_unified_scheduler
+
+        scheduler = get_unified_scheduler()
+        for _attempt in range(600):
+            try:
+                await self._schedule_next_authoring(scheduler)
+                return
+            except RuntimeError:
+                await asyncio.sleep(0.5)
+            except Exception as exc:
+                logger.warning(f"注册攒题调度失败: {exc}")
+                await asyncio.sleep(2.0)
+        logger.warning("等待 scheduler 就绪超时，word_coach 空闲攒题未注册")
+
+    async def _schedule_next_authoring(self, scheduler: Any) -> None:
+        """注册下一次攒题检查（到点后回调里重排）。"""
+        from src.kernel.scheduler import TriggerType
+
+        cfg = self.config if isinstance(self.config, WordCoachConfig) else None
+        interval_minutes = cfg.author.interval_minutes if cfg else 10
+        delay = max(interval_minutes, 1) * 60
+
+        async def _job() -> None:
+            try:
+                await self._authoring_tick_job()
+            finally:
+                # 无论成败都排下一次；配置若已重载则用新配置
+                await self._schedule_next_authoring(scheduler)
+
+        schedule_id = await scheduler.create_schedule(
+            callback=_job,
+            trigger_type=TriggerType.TIME,
+            trigger_config={"delay_seconds": delay},
+            is_recurring=False,
+            task_name="word_coach_authoring_tick",
+            force_overwrite=True,
+        )
+        self._authoring_schedule_ids = [schedule_id]
+        logger.info(
+            f"word_coach 空闲攒题已排定（{delay / 60:.0f} 分钟后开始检查）: {schedule_id}"
+        )
+
+    async def _authoring_tick_job(self) -> None:
+        """攒题检查：聊天空闲且有进行中的攒题任务时，攒一批题。"""
+        cfg = self.config
+        service = self._service
+        if service is None or not isinstance(cfg, WordCoachConfig) or not cfg.author.enabled:
+            return
+        idle_seconds = seconds_since_last_activity()
+        if idle_seconds < cfg.author.idle_threshold_minutes * 60:
+            logger.debug(
+                f"word_coach 攒题跳过：聊天未空闲（{idle_seconds / 60:.1f} 分钟）"
+            )
+            return
+        summary = await run_authoring_tick(
+            service, model_name=cfg.author.model, batch_size=cfg.author.batch_size
+        )
+        if not summary.get("ok"):
+            message = str(summary.get("message") or "")
+            if message:
+                logger.info(f"word_coach 攒题跳过: {message}")
+            return
+        logger.info(
+            f"word_coach 攒题: {summary.get('deck')} +{summary.get('added')}"
+            f"（{summary.get('built')}/{summary.get('target')}）"
+        )
+        if summary.get("added"):
+            try:
+                from src.core.prompt import get_system_reminder_store
+
+                get_system_reminder_store().set(
+                    ACTOR_BUCKET,
+                    name=_AUTHOR_REMINDER_NAME,
+                    content=author_reminder_content(summary),
+                )
+            except Exception as exc:
+                logger.warning(f"word_coach 攒题提醒注入失败: {exc}")

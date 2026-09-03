@@ -223,8 +223,33 @@ def default_import_dir(project_root: Path) -> Path:
     return path
 
 
+def _first_str(raw: Any, keys: tuple[str, ...]) -> str:
+    """按别名顺序取第一个非空字符串值（兼容主流开源词库字段命名）。"""
+    for key in keys:
+        value = raw.get(key)
+        if value is None:
+            continue
+        if isinstance(value, list):
+            # trans 列表常见形态：["n. 苹果", "vt. 投资"]，拼接保留全部释义
+            parts = [str(item).strip() for item in value if str(item).strip()]
+            if parts:
+                return "; ".join(parts)
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
+
+
 def _normalize_entry(raw: Any) -> dict[str, str] | None:
-    """把一条记录归一化为 {word, phonetic, meaning, example, tags}。"""
+    """把一条记录归一化为 {word, phonetic, meaning, example, tags}。
+
+    字段别名（覆盖 kajiweb/dict 等主流开源词库的命名）：
+    - word: word / name / entry
+    - meaning: meaning / trans / definition / chinese
+    - phonetic: phonetic / usphone / ukphone / pron
+    - example: example / sentence
+    """
     if isinstance(raw, str):
         return {
             "word": raw.strip(),
@@ -235,14 +260,14 @@ def _normalize_entry(raw: Any) -> dict[str, str] | None:
         }
     if not isinstance(raw, dict):
         return None
-    word = str(raw.get("word") or "").strip()
+    word = _first_str(raw, ("word", "name", "entry"))
     if not word:
         return None
     return {
         "word": word,
-        "phonetic": str(raw.get("phonetic") or "").strip(),
-        "meaning": str(raw.get("meaning") or "").strip(),
-        "example": str(raw.get("example") or "").strip(),
+        "phonetic": _first_str(raw, ("phonetic", "usphone", "ukphone", "pron")),
+        "meaning": _first_str(raw, ("meaning", "trans", "definition", "chinese")),
+        "example": _first_str(raw, ("example", "sentence")),
         "tags": str(raw.get("tags") or "").strip(),
     }
 
@@ -415,6 +440,148 @@ def parse_import_file(file_path: Path) -> list[dict[str, str]]:
 
 
 # ----------------------------------------------------------------------
+# 题库卡组解析（判断/单选/多选）
+# ----------------------------------------------------------------------
+
+# 判断题固定选项
+_JUDGE_OPTIONS = ["对", "错"]
+
+_LETTER_INDEX = {chr(ord("A") + i): i for i in range(8)}
+
+
+def _normalize_qtype(raw: Any) -> str:
+    """归一化题型别名 → judge/single/multi；未知返回空串。"""
+    text = str(raw or "").strip().lower()
+    if text in ("judge", "判断", "判断题", "tf", "truefalse"):
+        return "judge"
+    if text in ("single", "单选", "单选题", "choice", "radio"):
+        return "single"
+    if text in ("multi", "多选", "多选题", "multiple", "checkbox"):
+        return "multi"
+    return ""
+
+
+def _normalize_answer_indices(raw: Any, options: list[str]) -> list[int] | None:
+    """把多种答案写法归一化为正确下标数组；无法解析返回 None。
+
+    支持：true/false 与 对/错（判断题）、"A"-"H" 字母、"AB" 组合、
+    下标 int、下标数组、字母数组。
+    """
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        return [0] if raw else [1]
+    if isinstance(raw, int):
+        return [raw]
+    if isinstance(raw, (list, tuple)):
+        indices: list[int] = []
+        for item in raw:
+            if isinstance(item, bool):
+                indices.append(0 if item else 1)
+            elif isinstance(item, int):
+                indices.append(item)
+            else:
+                text = str(item).strip().upper()
+                if text in _LETTER_INDEX:
+                    indices.append(_LETTER_INDEX[text])
+                else:
+                    return None
+        return indices or None
+    text = str(raw).strip()
+    if not text:
+        return None
+    upper = text.upper()
+    if upper in ("TRUE", "T", "对", "正确", "√", "YES", "Y"):
+        return [0]
+    if upper in ("FALSE", "F", "错", "错误", "×", "X", "NO", "N"):
+        return [1]
+    indices = []
+    for ch in upper:
+        if ch in _LETTER_INDEX:
+            indices.append(_LETTER_INDEX[ch])
+        elif ch in ",，、 ":
+            continue
+        else:
+            return None
+    return indices or None
+
+
+def _normalize_deck_item(raw: Any) -> dict[str, Any] | None:
+    """把一条题库记录归一化为 {qtype, stem, meaning, options, answer, explanation, tags}。
+
+    字段别名：stem/question/text → 题干；explanation/analysis → 解析；
+    qtype/type/question_type → 题型。answer 支持 对/错/字母/下标。
+    """
+    if not isinstance(raw, dict):
+        return None
+    qtype = _normalize_qtype(
+        _first_str(raw, ("qtype", "type", "question_type")) or "single"
+    )
+    stem = _first_str(raw, ("stem", "question", "text", "word", "title"))
+    if not qtype or not stem:
+        return None
+    options_raw = raw.get("options")
+    options: list[str] = []
+    if isinstance(options_raw, (list, tuple)):
+        options = [str(o).strip() for o in options_raw if str(o).strip()]
+    if qtype == "judge" and not options:
+        options = list(_JUDGE_OPTIONS)
+    if not options:
+        return None
+    answer = _normalize_answer_indices(raw.get("answer"), options)
+    if answer is None:
+        return None
+    if any(i < 0 or i >= len(options) for i in answer):
+        return None
+    answer = sorted(set(answer))
+    explanation = _first_str(raw, ("explanation", "analysis", "note", "jiexi"))
+    meaning = "、".join(options[i] for i in answer)
+    return {
+        "qtype": qtype,
+        "stem": stem,
+        "meaning": meaning,
+        "options": options,
+        "answer": answer,
+        "explanation": explanation,
+        "tags": str(raw.get("tags") or "").strip(),
+    }
+
+
+def parse_deck_json_text(text: str) -> dict[str, Any]:
+    """解析题库卡组 JSON 文本。
+
+    支持两种布局：
+      1) {"deck": "驾考科目1", "description": "...", "items": [题, ...]}
+      2) [题, ...]（顶层直接是条目数组，无卡组名）
+    返回 {"deck": 名称或 "", "description": 描述, "items": [归一化题目]}；
+    不是题库 schema（缺 items 或全部条目无法归一化）时抛 ValueError。
+    """
+    try:
+        data = json.loads(text)
+    except Exception as exc:
+        raise ValueError(f"JSON 解析失败: {exc}") from exc
+
+    raw_items: list[Any] = []
+    deck_name = ""
+    description = ""
+    if isinstance(data, dict):
+        deck_name = str(data.get("deck") or data.get("name") or "").strip()
+        description = str(data.get("description") or "").strip()
+        raw_items = data.get("items") or data.get("questions") or []
+    elif isinstance(data, list):
+        raw_items = data
+    else:
+        raise ValueError("不支持的题库格式（应为 dict 或 list）")
+    if not isinstance(raw_items, list):
+        raise ValueError("items 应为数组")
+
+    items = [item for item in (_normalize_deck_item(raw) for raw in raw_items) if item]
+    if not items:
+        raise ValueError("没有可识别的题目条目")
+    return {"deck": deck_name, "description": description, "items": items}
+
+
+# ----------------------------------------------------------------------
 # URL 下载导入
 # ----------------------------------------------------------------------
 
@@ -480,3 +647,20 @@ async def fetch_and_parse_url(
         except Exception:
             pass
     return parse_word_txt(text)
+
+
+async def fetch_text(
+    url: str,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> str:
+    """下载远程文本（utf-8-sig 容错解码），词库/题库导入共用。"""
+    async with httpx.AsyncClient(
+        transport=transport,
+        timeout=_DOWNLOAD_TIMEOUT_SECONDS,
+        follow_redirects=True,
+        headers={"User-Agent": "Mozilla/5.0 (word_coach plugin)"},
+    ) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        return resp.content.decode("utf-8-sig", errors="replace")
